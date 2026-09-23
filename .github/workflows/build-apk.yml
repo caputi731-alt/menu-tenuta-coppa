@@ -1,0 +1,83 @@
+name: Compila APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HA_CHIAVE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Prepara Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Copia l'app web dentro il progetto Android
+        run: |
+          DEST=android/app/src/main/assets
+          mkdir -p "$DEST"
+          cp index.html manifest.webmanifest "$DEST"/
+          cp -r assets icons vendor "$DEST"/
+          # il service worker non serve dentro l'APK: i file sono già sul telefono
+          echo "File inclusi nell'APK:" && du -sh "$DEST"
+
+      - name: Prepara Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Prepara la chiave di firma (se configurata nei Secrets)
+        if: env.HA_CHIAVE == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/menu.keystore"
+
+      - name: Compila l'APK
+        working-directory: android
+        env:
+          MENU_KEYSTORE: ${{ env.HA_CHIAVE == 'true' && format('{0}/menu.keystore', runner.temp) || '' }}
+          MENU_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          MENU_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          MENU_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: gradle assembleRelease --no-daemon
+
+      - name: Mostra con quale chiave è firmato l'APK
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs android/app/build/outputs/apk/release/*.apk | grep -E "Signer #1 certificate (DN|SHA-256)" || echo "Firma non leggibile (non bloccante)"
+
+      - name: Rinomina l'APK con il numero di build
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/*.apk "dist/menu-tenuta-coppa-build-${{ github.run_number }}.apk"
+          ls -lh dist/
+
+      - name: Pubblica l'APK come Release (download diretto dal telefono)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          body: |
+            App Menù Tenuta Coppa.
+            Commit: ${{ github.sha }}
+            ${{ github.event.head_commit.message }}
+          files: dist/*.apk
+          make_latest: true
+
+      - name: Conserva anche l'artifact (backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-tenuta-coppa-apk
+          path: dist/*.apk
+          retention-days: 7

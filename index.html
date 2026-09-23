@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4E5B31">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Menù">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>Menù Tenuta Coppa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Antic&family=Cormorant+Garamond:ital,wght@0,400;1,500&family=Figtree:wght@400;500;600;700&family=Raleway:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#FAFAF6;--ink:#22281F;--muted:#6B7064;--line:#DEDFD5;--olive:#4E5B31;--olive-2:#3E4926;--olive-soft:#E9ECDF;--wine:#7B2D3B;--r:14px;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 Figtree,system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--olive);outline-offset:2px}
+#app{position:relative;z-index:0;background:var(--paper);min-height:100vh}
+#rh{position:fixed;left:0;top:0;z-index:-1;pointer-events:none}
+
+.top{position:sticky;top:0;z-index:20;background:rgba(250,250,246,.93);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:calc(var(--st) + 8px) 12px 8px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:4px;min-height:58px}
+.top h1{font:italic 500 30px/1.1 'Cormorant Garamond',Georgia,serif;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .ib:first-child{margin-left:-10px}
+.main{padding:16px 16px calc(110px + var(--sb));max-width:720px;margin:0 auto}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + var(--sb))}
+.nav button{flex:1;border:0;background:none;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted)}
+.nav button.on{color:var(--olive);font-weight:600}
+.nav svg{width:24px;height:24px}
+.fab{position:fixed;right:18px;bottom:calc(80px + var(--sb));z-index:31;width:58px;height:58px;border-radius:50%;border:0;background:var(--olive);color:#fff;box-shadow:0 6px 18px rgba(62,73,38,.35);display:grid;place-items:center}
+.fab svg{width:28px;height:28px}
+
+.ib{border:0;background:none;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;color:var(--muted);flex:none;padding:0}
+.ib svg{width:21px;height:21px}
+.ib:active{background:var(--olive-soft)}
+.tb{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;color:var(--olive-2)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn svg{width:19px;height:19px}
+.btn.pri{background:var(--olive);color:#fff;border-color:var(--olive)}
+.btn.danger{color:var(--wine)}
+.btn.wide{width:100%}
+.btns{display:grid;gap:8px}
+.btns.two{grid-template-columns:1fr 1fr}
+
+.grp{margin:0 0 24px}
+.grp>h2{font:600 14px/1.2 Figtree,sans-serif;color:var(--muted);margin:0 0 8px 2px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.fld{display:block;margin-bottom:12px}
+.fld>span{display:block;font-size:13px;color:var(--muted);margin:0 0 4px 2px}
+.inp{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px 12px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none;min-height:46px}
+textarea.inp{min-height:96px;resize:vertical;line-height:1.4}
+select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7064' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:36px}
+.inp:focus{border-color:var(--olive);box-shadow:0 0 0 3px var(--olive-soft)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:13px;color:var(--muted);margin:4px 2px 0}
+.tog{display:flex;align-items:center;gap:10px;padding:8px 2px;font-size:15px}
+.tog input{width:20px;height:20px;accent-color:var(--olive);flex:none}
+.empty{color:var(--muted);text-align:center;padding:22px 10px;font-size:15px}
+
+.seg{display:flex;background:var(--olive-soft);border-radius:12px;padding:3px;gap:3px;margin-bottom:14px}
+.seg button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-weight:600;font-size:14px;color:var(--olive-2)}
+.seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stat{display:flex;flex-wrap:wrap;gap:8px}
+.stat button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:14px;display:flex;align-items:center;gap:7px}
+.stat button i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.stat button.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);font-weight:600}
+
+.calh{display:flex;align-items:center;gap:4px;margin-bottom:10px}
+.calh h2{flex:1;margin:0;font:italic 500 26px/1.1 'Cormorant Garamond',Georgia,serif}
+.wk,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wk span{text-align:center;font-size:12px;color:var(--muted);padding:4px 0}
+.day{aspect-ratio:1/1.08;background:#fff;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;border:1px solid var(--line)}
+.day .dn{font-size:15px;font-weight:500}
+.day .dots{display:flex;gap:3px;height:6px;align-items:center}
+.day .dots i{width:6px;height:6px;border-radius:50%}
+.day .dots em{font-style:normal;font-size:10px;line-height:6px;color:var(--muted)}
+.day.today .dn{color:var(--wine);font-weight:700}
+.day.sel{border-color:var(--olive);background:var(--olive-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:10px 2px 20px;font-size:12px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:50%}
+.dh{font:italic 500 22px/1.2 'Cormorant Garamond',Georgia,serif;margin:0 0 10px 2px}
+
+.mcard{width:100%;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:left;margin-bottom:8px}
+.mc-date{width:50px;flex:none;text-align:center;border-right:2px solid var(--ac);padding-right:10px}
+.mc-date b{display:block;font:500 28px/1 'Cormorant Garamond',Georgia,serif}
+.mc-date small{font-size:12px;color:var(--muted)}
+.mc-bar{width:4px;align-self:stretch;border-radius:4px;flex:none}
+.mc-body{flex:1;min-width:0}
+.mc-t{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-s{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;color:var(--c);background:color-mix(in srgb,var(--c) 13%,#fff);flex:none}
+
+.tchips{display:flex;gap:10px;overflow-x:auto;margin:0 -16px 20px;padding:4px 16px 6px;scrollbar-width:none}
+.tchips::-webkit-scrollbar{display:none}
+.tchip{flex:none;width:88px;border:0;background:none;padding:0;text-align:center;font-size:13px;line-height:1.25}
+.sw{display:grid;place-items:center;height:106px;border-radius:10px;border:1px solid var(--line);margin-bottom:6px;background-size:cover;background-position:center}
+.sw img{width:62px}
+.tchip.on .sw{outline:2.5px solid var(--olive);outline-offset:2px}
+.tchip.on{font-weight:600}
+
+.sec{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+.sec-h{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 8px 14px;gap:8px}
+.sec-h h3{margin:0;font:italic 500 21px/1.1 'Cormorant Garamond',Georgia,serif}
+.add{border:0;background:var(--olive-soft);color:var(--olive-2);border-radius:999px;padding:7px 12px 7px 9px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:4px}
+.add svg{width:17px;height:17px}
+.it{display:flex;align-items:center;border-top:1px solid var(--line);padding:2px 4px 2px 14px}
+.it .nm{flex:1;border:0;background:none;text-align:left;padding:9px 0;font-size:15px;min-width:0}
+.it .ib{width:36px;height:36px}
+.it .ib svg{width:18px;height:18px}
+
+.drow,.trow,.crow{width:100%;display:flex;align-items:center;gap:12px;background:#fff;border:0;border-bottom:1px solid var(--line);padding:12px 14px;text-align:left;font-size:15px}
+.list{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.list>:last-child{border-bottom:0}
+.drow span,.trow>span:nth-child(2),.crow>span{flex:1;min-width:0}
+.trow small,.crow small{display:block;font-size:13px;color:var(--muted)}
+.trow .sw{width:44px;height:56px;margin:0;border-radius:6px}
+.trow .sw img{width:32px}
+.trow>svg,.drow>svg{width:18px;height:18px;color:var(--muted);flex:none}
+.crow{padding:6px 4px 6px 14px}
+.dcat{font:italic 500 20px/1.2 'Cormorant Garamond',Georgia,serif;margin:18px 2px 8px}
+.search{margin-bottom:12px}
+
+.pv{position:relative;overflow:hidden;margin:4px 0 16px}
+.pv-scale{transform-origin:0 0;width:max-content}
+.pv .pg{box-shadow:0 10px 30px rgba(34,40,31,.2)}
+.rng{display:flex;align-items:center;gap:10px;font-size:14px;margin-bottom:6px}
+.rng span:first-child{width:78px;color:var(--muted)}
+.rng input{flex:1;accent-color:var(--olive)}
+.rng b{width:40px;text-align:right;font-weight:600}
+.clr{display:flex;align-items:center;gap:10px;font-size:15px;padding:6px 0}
+.clr input{width:44px;height:36px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff}
+
+.shbg{position:fixed;inset:0;background:rgba(20,24,18,.38);z-index:60}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:#fff;border-radius:22px 22px 0 0;max-height:88vh;overflow:auto;padding:12px 16px calc(16px + var(--sb));max-width:720px;margin:0 auto;animation:up .22s ease-out;-webkit-overflow-scrolling:touch}
+@keyframes up{from{transform:translateY(28px);opacity:.5}}
+.sh-h{display:flex;align-items:center;justify-content:space-between;margin:0 -6px 10px 0}
+.sh-h h3{margin:0;font:italic 500 26px/1.1 'Cormorant Garamond',Georgia,serif}
+.pk{width:100%;display:flex;align-items:center;gap:10px;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 4px;text-align:left;font-size:15px}
+.pk span{flex:1}
+.pk small{display:block;font-size:12px;color:var(--muted)}
+.pk i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--muted);flex:none}
+.pk i svg{width:16px;height:16px}
+.pk.on i{background:var(--olive);border-color:var(--olive);color:#fff}
+.pk.on{font-weight:600}
+#pklist{max-height:44vh;overflow:auto;margin:6px 0 12px}
+.pk-new{display:flex;gap:8px;margin-bottom:12px}
+.toast{position:fixed;left:50%;bottom:calc(150px + var(--sb));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:90;max-width:88vw;text-align:center}
+.busy{position:fixed;inset:0;background:rgba(250,250,246,.94);z-index:80;display:grid;place-items:center;text-align:center;font-weight:600;color:var(--olive-2)}
+.spin{width:38px;height:38px;border:3px solid var(--olive-soft);border-top-color:var(--olive);border-radius:50%;margin:0 auto 12px;animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}.spin{animation-duration:2s}}
+
+/* Chip preimpostati */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px}
+.chips button{border:1px dashed var(--line);background:#fff;border-radius:999px;padding:6px 11px;font-size:13px;text-align:left;color:var(--olive-2)}
+.tchip .sw,.trow .sw{background-size:contain;background-repeat:no-repeat;background-position:center}
+
+/* Pagina menù (anteprima e PDF): misure in punti, identiche ai file Canva */
+.pg{position:relative;overflow:hidden;text-align:center;flex:none}
+.pg-bg{position:absolute;left:0;top:0;width:100%;height:100%;background-size:100% 100%;background-repeat:no-repeat}
+.pg-v{font-family:Raleway,sans-serif;font-weight:400}
+.v-venue{position:absolute;left:0;right:0;top:103.4px;font-size:33px;line-height:1.174}
+.v-title{position:absolute;left:24px;right:24px;top:161.6px;font-size:57px;font-weight:700;line-height:1.174;white-space:nowrap;overflow:hidden}
+.v-date{position:absolute;left:0;right:0;top:208.3px;font-size:52px;line-height:1.174}
+.v-flow{position:absolute;left:40px;right:40px;top:318.3px}
+.v-in{font-size:19px}
+.v-sec-t{font-size:1.5105em;font-weight:700;line-height:1.174;margin-bottom:.54em}
+.v-sec+.v-sec .v-sec-t{margin-top:1.36em}
+.v-sec+.v-sec.nt{margin-top:2.05em}
+.v-it{line-height:1.421;margin-bottom:.3em;white-space:pre-line}
+.v-foot{margin-top:2.25em;font-size:.926em;line-height:1.364;white-space:pre-line}
+.v-notes{margin-top:.8em;font-size:.9em;font-style:italic}
+.v-empty,.e-empty{opacity:.45;font-style:italic}
+.pg-e{font-family:Antic,sans-serif}
+.e-col{position:absolute;top:0;bottom:0}
+.e-h{position:absolute;top:103px;left:-20px;right:-20px;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:19.5px;letter-spacing:.26em;text-transform:uppercase;line-height:1.1;white-space:nowrap}
+.e-body{position:absolute;top:141px;left:0;right:0;font-size:11.4px;line-height:1.38}
+.e-it{white-space:pre-line}
+.e-sep{margin:1.35em 0;letter-spacing:.05em}
+.e-foot{position:absolute;bottom:62.8px;left:-10px;right:-10px;font-size:11.4px;line-height:1.38;white-space:pre-line}
+.e-notes{margin-top:.5em;font-style:italic;font-size:.92em}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet"></div>
+<div id="rh"></div>
+<input type="file" id="bgfile" accept="image/png,image/jpeg,image/webp" hidden>
+<input type="file" id="importfile" accept="application/json,.json" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script>
+'use strict';
+/* ---------- Costanti ---------- */
+const PT_MM=25.4/72;
+const LAYOUTS={
+  verticale:{w:810,h:1440,scale:2,label:'Verticale (come i menù della domenica)'},
+  evento:{w:842,h:595,scale:3,label:'A4 orizzontale con menù bambini'}
+};
+const STATUS={bozza:{l:'Bozza',c:'#7E8277'},inviata:{l:'Inviata',c:'#B07A1E'},confermata:{l:'Confermata',c:'#3F7A34'},rifiutata:{l:'Rifiutata',c:'#9B3A48'}};
+const DEF_CATS=['Antipasti','Primi Piatti','Secondo Piatto','Dessert'];
+const KIDS_CAT='Menù bambini';
+const KIDS_SECS=['Antipasto','Primo','Secondo','Dolce'];
+const SEED={
+  'Antipasti':[
+    'Selezione di focacce artigianali con oli extravergine aromatizzati e\npolveri di erbe spontanee dell’Alta Murgia',
+    'Veli di Capocollo di Martina Franca con salsa agli agrumi',
+    "Carpaccio di manzo con pomodori sott'olio, julienne di sedano e olive taggiasche",
+    'Arista di maiale con rucola dell’orto, petali di grana e pomodorini ciliegino',
+    'Formaggi della Masseria con miele millefiori bio delle Murge e noci caramellate',
+    'Tempura di melanzana ripiena di patate mantecate all’olio evo, speck e cuore\nfilante di mozzarella affumicata, servita su coulis di pomodoro',
+    'Tempura di melanzana ripiena di patate mantecate,\nspeck e cuore filante di mozzarella affumicata',
+    'Focacce della tradizione',
+    'Capocollo di Martina Franca con tarallo sbriciolato',
+    'Carpaccio di manzo con rucola e petali di grana',
+    'Ricotta, nodini e pecorino con miele di trifoglio della Murgia',
+    'Involtini di melanzana pastellata con crema di patate, speck e mozzarella'],
+  'Primi Piatti':[
+    'Fagottino di crespella su vellutata di fondo bruno',
+    'Fagottino di crespella vegetariano su vellutata di bietole',
+    'Orecchiette fresche ai funghi cardoncelli trifolati, pomodorini ciliegino e\ncrema di cece nero di Altamura',
+    'Orecchiette fresche con salsicce a punta di coltello,\nolive nere al forno, crema di burrata e limone',
+    'Paccheri di Gragnano alle tre carni',
+    'Orecchiette con bacon, zucchine e fonduta di formaggio'],
+  'Secondo Piatto':[
+    'Coppa di maiale cotta a bassa temperatura\ncon mele Granny Smith, prugne e anacardi\naccompagnata da patate al forno aromatizzate',
+    'Stinco di maiale con salsa alle mele e\ncontorno di patate al forno aromatizzate',
+    'Grigliata di carni miste con\ncontorno di patate al forno aromatizzate',
+    'Reale di scottona con salsa al vino rosso\ne contorno di patate al forno aromatizzate'],
+  'Dessert':[
+    'Mousse di ricotta, vaniglia e melecotogne con composta di frutta fresca',
+    'Sporcamuss con crema diplomatica e\ncomposta di frutta fresca',
+    'Crostata di ricotta e pere con composta di frutta fresca',
+    'Dessert di frutta fresca'],
+  [KIDS_CAT]:['Focaccia al pomodoro','Prosciutto cotto e mozzarella','Orecchiette con sugo di pomodoro','Cotoletta con patate al forno','Torta di cioccolato e mandorle\ncon composta di frutta fresca']
+};
+const DRINK_PRESETS=['Vini in bottiglia Cantina Crifo, acqua minerale','Liquori e caffè','Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.','Acqua minerale'];
+const SUNDAY={layout:'verticale',heading:'Menù di domenica',headingKids:'Menù bambini',drinks:'Vini in bottiglia Cantina Crifo, acqua minerale\nLiquori e caffè',drinksKids:'Acqua minerale',priceAdult:50,priceKid:25,kidLabel:'Bambini fino a 10 anni'};
+function defaultTemplates(){
+  const t=(id,name,o)=>({...SUNDAY,id,name,builtIn:true,...o,origBg:o.bgImage});
+  return[
+    t('tpl-pecore','Domenica – Pecore e ulivo',{bgImage:'assets/domenica-pecore.jpg',bgColor:'#F4E6C3',ink:'#5A3E2B',limit:1240}),
+    t('tpl-girasole','Domenica – Girasole',{bgImage:'assets/domenica-girasole.jpg',bgColor:'#F5F1E7',ink:'#4A3626',limit:1290}),
+    t('tpl-muretto','Domenica – Muretto a secco',{bgImage:'assets/domenica-muretto.jpg',bgColor:'#D5C2A2',ink:'#2E1E12',limit:1225}),
+    t('tpl-comunione','Comunione',{layout:'evento',heading:'Menù',bgImage:'assets/comunione.jpg',bgColor:'#FFFFFF',ink:'#2B2B2B',drinks:'Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.',priceAdult:'',priceKid:'',kidLabel:'Menù bambini'})
+  ];
+}
+function defaultState(){
+  const dishes=[];Object.entries(SEED).forEach(([c,l])=>l.forEach(n=>dishes.push({id:uid(),name:n,cat:c})));
+  return{v:2,settings:{venue:'Tenuta Coppa',drinkPresets:[...DRINK_PRESETS]},categories:[...DEF_CATS],dishes,templates:defaultTemplates(),menus:[]};
+}
+
+/* ---------- Utilità ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+const pad=n=>String(n).padStart(2,'0');
+const isoD=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>isoD(new Date());
+const parseD=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const fmtLong=s=>s?cap(parseD(s).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})):'';
+const fmtDash=s=>s?s.split('-').reverse().join('-'):'';
+const eurC=n=>'€'+Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const eur=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n);
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const slug=s=>norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'menu';
+const clone=o=>JSON.parse(JSON.stringify(o));
+const oneLine=s=>String(s||'').replace(/\s*\n\s*/g,' ');
+const num=v=>v===''||v===null||v===undefined?'':(parseFloat(String(v).replace(',','.'))||0);
+
+const I={
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>',
+  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>',
+  dish:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2v8a2 2 0 0 0 2 2v10M11 2v8a2 2 0 0 1-2 2M7 6h4"/><path d="M17 22V2c-2 1.5-3 4-3 7s1 4 3 4"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+  dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>',
+  pdf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M12 11v6M9 14l3 3 3-3"/></svg>'
+};
+
+/* ---------- Archivio (IndexedDB) ---------- */
+const idb={
+  _p:null,
+  open(){return this._p||(this._p=new Promise((res,rej)=>{const r=indexedDB.open('menu-app',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
+  async get(k){const db=await this.open();return new Promise((res,rej)=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
+  async set(k,v){const db=await this.open();return new Promise((res,rej)=>{const tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+};
+let state,saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(flush,250)}
+function flush(){clearTimeout(saveT);saveT=null;if(state)idb.set('state',state).catch(()=>toast('Salvataggio non riuscito: memoria del telefono piena?'))}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveT)flush()});
+function normalize(s){
+  const d=defaultState();
+  if(!s||s.v!==2)return d; // dati della versione di prova precedente: si riparte puliti
+  return{v:2,settings:{...d.settings,...(s.settings||{})},
+    categories:Array.isArray(s.categories)&&s.categories.length?s.categories:d.categories,
+    dishes:Array.isArray(s.dishes)?s.dishes:d.dishes,
+    templates:Array.isArray(s.templates)&&s.templates.length?s.templates.map(t=>({...SUNDAY,limit:1240,bgColor:'#FFFFFF',ink:'#333333',...t})):d.templates,
+    menus:Array.isArray(s.menus)?s.menus:[]};
+}
+
+/* ---------- Stato interfaccia ---------- */
+const now=new Date();
+const ui={view:'cal',cal:{y:now.getFullYear(),m:now.getMonth()},selDate:today(),listTab:'next',q:'',dq:'',editId:null,back:'cal',pv:{mode:'tavolo'},tplId:null,sheet:null,pickQ:'',pickAll:false};
+const getMenu=id=>state.menus.find(x=>x.id===id);
+const getTpl=id=>state.templates.find(x=>x.id===id);
+const tplOf=m=>getTpl(m.templateId)||state.templates[0];
+const layoutOf=m=>LAYOUTS[tplOf(m).layout]||LAYOUTS.verticale;
+// Campi che, se non modificati nella proposta, prendono il valore del template
+const INHERIT=['drinks','drinksKids','priceAdult','priceKid','kidLabel','headingKids'];
+const val=(m,f)=>(m[f]===undefined||m[f]===null)?(tplOf(m)[f]??''):m[f];
+const heading=m=>(m.heading||'').trim()||tplOf(m).heading;
+const menuName=m=>heading(m)+(m.client?` – ${m.client}`:'');
+function newMenu(date){
+  const t=state.templates[0];
+  return{id:uid(),created:Date.now(),templateId:t.id,date:date||today(),time:'',heading:'',client:'',phone:'',guests:'',guestsKids:'',room:'',status:'bozza',notes:'',showSections:true,showDate:true,showTotal:false,kids:true,
+    sections:state.categories.map(c=>({name:c,items:[]})),kidsSections:KIDS_SECS.map(c=>({name:c,items:[]}))};
+}
+const allSecs=m=>[...m.sections,...(m.kidsSections||[])];
+const isEmptyMenu=m=>!allSecs(m).some(s=>s.items.length)&&!m.client&&!m.heading&&!m.notes&&!m.phone&&!INHERIT.some(f=>m[f]!==undefined&&m[f]!==null);
+const secList=(m,kids)=>kids?(m.kidsSections||(m.kidsSections=KIDS_SECS.map(c=>({name:c,items:[]})))):m.sections;
+
+/* ---------- Pagine del menù ---------- */
+const nl=s=>esc(s).replace(/\n/g,'<br>');
+function priceLines(m,kidsCol){
+  const pa=num(val(m,'priceAdult')),pk=num(val(m,'priceKid')),lab=val(m,'kidLabel')||'Bambini';
+  const L=[];
+  if(kidsCol===undefined){if(pa!=='')L.push(`Costo del menù Adulti: ${eurC(pa)}`);if(pk!=='')L.push(`${lab}: ${eurC(pk)}`)}
+  else if(kidsCol){if(pk!=='')L.push(`Costo del menù: ${eurC(pk)}`)}
+  else if(pa!=='')L.push(`Costo del menù: ${eurC(pa)}`);
+  return L;
+}
+function pageVerticale(m,t,mode){
+  const secs=m.sections.filter(s=>s.items.length),showT=m.showSections!==false;
+  let flow=secs.map(s=>`<div class="v-sec${showT?'':' nt'}">${showT?`<div class="v-sec-t">${esc(s.name)}</div>`:''}${s.items.map(i=>`<div class="v-it">${nl(i.name)}</div>`).join('')}</div>`).join('');
+  if(!secs.length)flow=`<div class="v-empty">Aggiungi le portate per comporre il menù</div>`;
+  const foot=[String(val(m,'drinks')).trim(),...(mode==='proposta'?priceLines(m):[])].filter(Boolean);
+  if(foot.length)flow+=`<div class="v-foot">${foot.map(nl).join('<br>')}${mode==='proposta'&&m.notes?`<div class="v-notes">${nl(m.notes)}</div>`:''}</div>`;
+  else if(mode==='proposta'&&m.notes)flow+=`<div class="v-foot"><div class="v-notes">${nl(m.notes)}</div></div>`;
+  return`<div class="pg pg-v" style="width:810px;height:1440px;background-color:${t.bgColor};color:${t.ink}">
+    ${t.bgImage?`<div class="pg-bg" style="background-image:url('${t.bgImage}')"></div>`:''}
+    ${state.settings.venue?`<div class="v-venue">${esc(state.settings.venue)}</div>`:''}
+    <div class="v-title">${esc(heading(m))}</div>
+    ${m.showDate!==false&&m.date?`<div class="v-date">${fmtDash(m.date)}</div>`:''}
+    <div class="v-flow" style="height:${(t.limit||1240)-318}px"><div class="v-in">${flow}</div></div></div>`;
+}
+function eventoCol(m,secs,title,drinks,prices,notes,left,width){
+  const full=secs.filter(s=>s.items.length);
+  const body=full.length?full.map(s=>s.items.map(i=>`<div class="e-it">${nl(i.name)}</div>`).join('')).join('<div class="e-sep">~~~~~</div>'):`<div class="e-empty">Aggiungi le portate</div>`;
+  const foot=[String(drinks||'').trim(),...prices].filter(Boolean).map(nl).join('<br>')+(notes?`<div class="e-notes">${nl(notes)}</div>`:'');
+  return`<div class="e-col" style="left:${left}px;width:${width}px"><div class="e-h">${esc(title)}</div><div class="e-body">${body}</div><div class="e-foot">${foot}</div></div>`;
+}
+function pageEvento(m,t,mode){
+  const P=mode==='proposta',kids=m.kids!==false;
+  return`<div class="pg pg-e" style="width:842px;height:595px;background-color:${t.bgColor};color:${t.ink}">
+    ${t.bgImage?`<div class="pg-bg" style="background-image:url('${t.bgImage}')"></div>`:''}
+    ${eventoCol(m,m.sections,heading(m),val(m,'drinks'),P?priceLines(m,false):[],P?m.notes:'',50,362)}
+    ${kids?eventoCol(m,secList(m,true),val(m,'headingKids')||'Menù bambini',val(m,'drinksKids'),P?priceLines(m,true):[],'',551,220):''}</div>`;
+}
+const pageHTML=(m,t,mode)=>t.layout==='evento'?pageEvento(m,t,mode):pageVerticale(m,t,mode);
+function fitPage(pg){
+  if(pg.classList.contains('pg-v')){
+    const ti=pg.querySelector('.v-title');let fs=57;ti.style.fontSize=fs+'px';
+    while(ti.scrollWidth>ti.clientWidth+1&&fs>26){fs--;ti.style.fontSize=fs+'px'}
+    const f=pg.querySelector('.v-flow'),inn=f.firstElementChild;let k=1,n=0;inn.style.fontSize='19px';
+    while(inn.offsetHeight>f.clientHeight&&k>.45&&n++<90){k*=.97;inn.style.fontSize=(19*k)+'px'}
+  }else{
+    const cols=[...pg.querySelectorAll('.e-col')];
+    cols.forEach(c=>{const h=c.querySelector('.e-h');let fs=19.5;h.style.fontSize=fs+'px';while(h.scrollWidth>h.clientWidth+1&&fs>12){fs--;h.style.fontSize=fs+'px'}
+      c._avail=(595-62.8-c.querySelector('.e-foot').offsetHeight-14)-141});
+    let k=1,n=0;const set=()=>cols.forEach(c=>c.querySelector('.e-body').style.fontSize=(11.4*k)+'px');set();
+    while(cols.some(c=>c.querySelector('.e-body').offsetHeight>c._avail)&&k>.45&&n++<90){k*=.97;set()}
+  }
+}
+function mountPreview(hostId,m,tpl,mode){
+  const host=document.getElementById(hostId);if(!host)return;
+  host.innerHTML=`<div class="pv-scale">${pageHTML(m,tpl,mode)}</div>`;
+  const sc=host.firstElementChild,pg=sc.firstElementChild;fitPage(pg);
+  const W=pg.offsetWidth,H=pg.offsetHeight,avail=host.clientWidth-8;
+  const s=Math.min(avail/W,Math.max(380,window.innerHeight*.66)/H,1);
+  sc.style.transform=`scale(${s})`;sc.style.marginLeft=((host.clientWidth-W*s)/2)+'px';host.style.height=(H*s+14)+'px';
+}
+function sampleMenu(t){
+  const pick=c=>state.dishes.filter(d=>d.cat===c).slice(0,c==='Antipasti'?4:2).map(d=>({dishId:d.id,name:d.name}));
+  return{templateId:t.id,heading:'',date:today(),showDate:true,showSections:true,kids:true,sections:state.categories.map(c=>({name:c,items:pick(c)})),
+    kidsSections:KIDS_SECS.map((c,i)=>({name:c,items:state.dishes.filter(d=>d.cat===KIDS_CAT).slice(i,i+1).map(d=>({dishId:d.id,name:d.name}))}))};
+}
+function mountPreviews(){
+  if(ui.view==='preview'){const m=getMenu(ui.editId);if(m)mountPreview('pv',m,tplOf(m),ui.pv.mode)}
+  if(ui.view==='tpl'){const t=getTpl(ui.tplId);if(t)mountPreview('tplpv',sampleMenu(t),t,'proposta')}
+}
+const FONTS=['400 20px Raleway','700 20px Raleway','20px Antic','400 20px "Cormorant Garamond"','italic 500 20px "Cormorant Garamond"'];
+const loadFonts=()=>Promise.all(FONTS.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>document.fonts.ready);
+
+/* ---------- PDF ---------- */
+async function makePDF(m,mode){
+  if(!window.html2canvas||!window.jspdf)throw new Error("librerie non caricate. Apri l'app una volta con internet attivo.");
+  await loadFonts();
+  const t=tplOf(m),L=layoutOf(m),host=$('#rh');host.innerHTML=pageHTML(m,t,mode);
+  const pg=host.firstElementChild;fitPage(pg);
+  if(t.bgImage)await new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=t.bgImage});
+  try{
+    const canvas=await html2canvas(pg,{scale:L.scale,backgroundColor:t.bgColor||'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0});
+    const w=L.w*PT_MM,h=L.h*PT_MM;
+    const pdf=new window.jspdf.jsPDF({orientation:w>h?'l':'p',unit:'mm',format:[w,h]});
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,w,h);
+    return pdf.output('blob');
+  }finally{host.innerHTML=''}
+}
+async function doPDF(){
+  const m=getMenu(ui.editId);if(!m)return;const mode=ui.pv.mode;
+  busy(true,'Creo il PDF');
+  try{
+    const blob=await makePDF(m,mode);
+    const name=`${mode==='tavolo'?'Menu-tavolo':'Proposta'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}.pdf`;
+    ui.sheet={type:'file',blob,name,mime:'application/pdf',title:mode==='tavolo'?'Menù tavolo pronto':'Proposta pronta'};
+  }catch(e){toast('PDF non creato: '+(e.message||e))}
+  finally{busy(false);renderSheet()}
+}
+async function shareFile(){
+  const s=ui.sheet,file=new File([s.blob],s.name,{type:s.mime});
+  try{await navigator.share({files:[file],title:s.name})}catch(e){if(e.name!=='AbortError')downloadFile()}
+}
+function downloadFile(){
+  const s=ui.sheet,u=URL.createObjectURL(s.blob),a=document.createElement('a');
+  a.href=u;a.download=s.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);
+}
+const canShareFiles=()=>{try{return!!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}))}catch(e){return false}};
+
+/* ---------- Componenti ---------- */
+const topbar=inner=>`<header class="top">${inner}</header>`;
+function navbar(){
+  const it=[['cal','Calendario',I.cal],['list','Proposte',I.list],['dishes','Portate',I.dish],['settings','Impostazioni',I.gear]];
+  return`<nav class="nav">${it.map(([v,l,ic])=>`<button class="${ui.view===v?'on':''}" data-a="nav" data-v="${v}">${ic}<span>${l}</span></button>`).join('')}</nav>`;
+}
+const fab=(a,label)=>`<button class="fab" data-a="${a}" aria-label="${label}">${I.plus}</button>`;
+const accentOf=t=>t.ink||'#555';
+function menuCard(m,withDate){
+  const t=tplOf(m),st=STATUS[m.status]||STATUS.bozza;
+  const g=[m.guests?m.guests+' adulti':'',m.guestsKids?m.guestsKids+' bambini':''].filter(Boolean).join(' e ');
+  const sub=[withDate?'':m.time,m.client,g,withDate?'':m.room].filter(Boolean).join(', ')||t.name;
+  let left;
+  if(withDate&&m.date){const d=parseD(m.date);left=`<span class="mc-date" style="--ac:${accentOf(t)}"><b>${d.getDate()}</b><small>${d.toLocaleDateString('it-IT',{month:'short'})} ${String(d.getFullYear()).slice(2)}</small></span>`}
+  else left=`<span class="mc-bar" style="background:${t.bgColor};box-shadow:inset 0 0 0 1px ${accentOf(t)}55"></span>`;
+  return`<button class="mcard" data-a="open" data-id="${m.id}">${left}<span class="mc-body"><span class="mc-t">${esc(heading(m))}</span><span class="mc-s">${esc(sub)}</span></span><span class="pill" style="--c:${st.c}">${st.l}</span></button>`;
+}
+const swatch=t=>`<span class="sw" style="background-color:${t.bgColor};${t.bgImage?`background-image:url('${t.bgImage}');`:''}"></span>`;
+
+/* ---------- Viste ---------- */
+function vCal(){
+  const{y,m}=ui.cal,title=cap(new Date(y,m,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'}));
+  const first=(new Date(y,m,1).getDay()+6)%7,nd=new Date(y,m+1,0).getDate(),td=today(),by={};
+  state.menus.forEach(x=>{if(x.date)(by[x.date]=by[x.date]||[]).push(x)});
+  let cells='';for(let i=0;i<first;i++)cells+='<span></span>';
+  for(let d=1;d<=nd;d++){
+    const ds=`${y}-${pad(m+1)}-${pad(d)}`,L=by[ds]||[];
+    cells+=`<button class="day${ds===td?' today':''}${ds===ui.selDate?' sel':''}" data-a="selDay" data-d="${ds}" aria-label="${d}${L.length?', '+L.length+' proposte':''}"><span class="dn">${d}</span><span class="dots">${L.slice(0,3).map(x=>`<i style="background:${(STATUS[x.status]||STATUS.bozza).c}"></i>`).join('')}${L.length>3?'<em>+</em>':''}</span></button>`;
+  }
+  const sel=(by[ui.selDate]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  return topbar(`<h1>Calendario</h1><button class="tb" data-a="calToday">Oggi</button>`)+
+  `<main class="main"><div class="calh"><h2>${title}</h2><button class="ib" data-a="calMove" data-d="-1" aria-label="Mese precedente">${I.left}</button><button class="ib" data-a="calMove" data-d="1" aria-label="Mese successivo">${I.right}</button></div>
+  <div class="wk">${['L','M','M','G','V','S','D'].map(x=>`<span>${x}</span>`).join('')}</div><div class="grid">${cells}</div>
+  <div class="legend">${Object.values(STATUS).map(s=>`<span><i style="background:${s.c}"></i>${s.l}</span>`).join('')}</div>
+  <h2 class="dh">${fmtLong(ui.selDate)}</h2>
+  ${sel.length?sel.map(x=>menuCard(x,false)).join(''):`<div class="card empty">Nessun menù in questa data.<br><br><button class="btn pri" data-a="new">${I.plus}Crea menù</button></div>`}
+  </main>`+fab('new','Nuovo menù')+navbar();
+}
+function listHTML(){
+  const td=today(),q=norm(ui.q);let L=state.menus.slice();
+  if(ui.listTab==='next')L=L.filter(x=>(x.date||'9999')>=td).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  else if(ui.listTab==='past')L=L.filter(x=>x.date&&x.date<td).sort((a,b)=>b.date.localeCompare(a.date));
+  else L.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(q)L=L.filter(x=>norm([heading(x),x.client,x.phone,x.room].join(' ')).includes(q));
+  if(!L.length)return`<div class="empty">${q?'Nessun menù corrisponde alla ricerca.':ui.listTab==='next'?'Nessun menù in programma. Tocca + per crearne uno.':'Nessun menù.'}</div>`;
+  return L.map(x=>menuCard(x,true)).join('');
+}
+function vList(){
+  const tabs=[['next','Prossimi'],['past','Passati'],['all','Tutti']];
+  return topbar(`<h1>Menù e proposte</h1>`)+`<main class="main"><div class="seg">${tabs.map(([v,l])=>`<button class="${ui.listTab===v?'on':''}" data-a="listTab" data-v="${v}">${l}</button>`).join('')}</div>
+  <input class="inp search" type="search" placeholder="Cerca per cliente o evento" data-in="q" value="${esc(ui.q)}"><div id="mlist">${listHTML()}</div></main>`+fab('new','Nuovo menù')+navbar();
+}
+const allCats=()=>[...state.categories,KIDS_CAT,...new Set(state.dishes.map(d=>d.cat).filter(c=>c!==KIDS_CAT&&!state.categories.includes(c)))];
+function dishListHTML(){
+  const q=norm(ui.dq);let out='';
+  allCats().forEach(c=>{
+    const L=state.dishes.filter(d=>d.cat===c&&(!q||norm(d.name).includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+    if(!L.length&&q)return;
+    out+=`<h3 class="dcat">${esc(c)}</h3>`+(L.length?`<div class="list">${L.map(d=>`<button class="drow" data-a="editDish" data-id="${d.id}"><span>${esc(oneLine(d.name))}</span>${I.pen}</button>`).join('')}</div>`:`<div class="hint">Nessuna portata.</div>`);
+  });
+  return out||`<div class="empty">Nessuna portata trovata.</div>`;
+}
+function vDishes(){
+  return topbar(`<h1>Portate</h1>`)+`<main class="main"><input class="inp search" type="search" placeholder="Cerca portata" data-in="dq" value="${esc(ui.dq)}"><div id="dlist">${dishListHTML()}</div></main>`+fab('editDish','Nuova portata')+navbar();
+}
+function vSettings(){
+  const s=state.settings;
+  return topbar(`<h1>Impostazioni</h1>`)+`<main class="main">
+  <section class="grp"><h2>Nome del locale</h2><input class="inp" data-sf="venue" value="${esc(s.venue)}" placeholder="Compare in cima ai menù della domenica"><p class="hint">Lascia vuoto per non stamparlo.</p></section>
+  <section class="grp"><h2>Template</h2><div class="list">${state.templates.map(t=>`<button class="trow" data-a="editTpl" data-id="${t.id}">${swatch(t)}<span>${esc(t.name)}<small>${esc((LAYOUTS[t.layout]||LAYOUTS.verticale).label)}</small></span>${I.right}</button>`).join('')}</div>
+  <p class="hint">Per un nuovo template (battesimo, compleanno…) apri quello più simile e tocca “Duplica template”.</p></section>
+  <section class="grp"><h2>Bevande preimpostate</h2><div class="list">${s.drinkPresets.map((d,i)=>`<div class="crow"><span>${esc(d)}</span><button class="ib" data-a="drDel" data-i="${i}" aria-label="Elimina">${I.trash}</button></div>`).join('')}</div>
+  <div class="pk-new" style="margin-top:8px"><input class="inp" id="newdrink" placeholder="es. Prosecco di benvenuto"><button class="btn" data-a="drAdd">Aggiungi</button></div></section>
+  <section class="grp"><h2>Portate del menù adulti</h2><div class="list">${state.categories.map((c,i)=>`<div class="crow"><span>${esc(c)}<small>${state.dishes.filter(d=>d.cat===c).length} portate</small></span><button class="ib" data-a="catMove" data-i="${i}" data-d="-1" aria-label="Sposta su">${I.up}</button><button class="ib" data-a="catMove" data-i="${i}" data-d="1" aria-label="Sposta giù">${I.down}</button><button class="ib" data-a="catRen" data-i="${i}" aria-label="Rinomina">${I.pen}</button><button class="ib" data-a="catDel" data-i="${i}" aria-label="Elimina">${I.trash}</button></div>`).join('')}</div>
+  <div class="pk-new" style="margin-top:8px"><input class="inp" id="newcat" placeholder="es. Contorni"><button class="btn" data-a="catAdd">Aggiungi</button></div>
+  <p class="hint">Queste sono le sezioni che compaiono sul menù (Antipasti, Primi Piatti…). Valgono per i nuovi menù.</p></section>
+  <section class="grp"><h2>Backup</h2><div class="card"><p style="margin:0 0 12px;font-size:15px">Portate, template e menù sono salvati solo su questo telefono. Esporta un backup ogni tanto (su Drive, email o WhatsApp) per non perderli e per spostarli su un altro dispositivo.</p>
+  <div class="btns two"><button class="btn" data-a="export">${I.dl}Esporta</button><button class="btn" data-a="import">${I.share}Importa</button></div></div></section>
+  </main>`+navbar();
+}
+function totText(m){
+  const pa=num(val(m,'priceAdult'))||0,pk=num(val(m,'priceKid'))||0,ga=Number(m.guests)||0,gk=Number(m.guestsKids)||0;
+  if(!(pa&&ga)&&!(pk&&gk))return pa||pk?'Inserisci il numero di ospiti per calcolare il totale.':'';
+  const parts=[];if(pa&&ga)parts.push(`${ga} × ${eur(pa)}`);if(pk&&gk)parts.push(`${gk} × ${eur(pk)}`);
+  return`Totale indicativo: ${parts.join(' + ')} = ${eur(pa*ga+pk*gk)}`;
+}
+function secsHTML(m,kids){
+  return secList(m,kids).map((s,si)=>`<div class="sec"><div class="sec-h"><h3>${esc(s.name)}</h3><button class="add" data-a="pick" data-s="${si}" data-k="${kids?1:''}">${I.plus}Aggiungi</button></div>${s.items.map((it,ii)=>`<div class="it"><button class="nm" data-a="itEdit" data-s="${si}" data-i="${ii}" data-k="${kids?1:''}">${esc(oneLine(it.name))}</button><button class="ib" data-a="itMove" data-s="${si}" data-i="${ii}" data-d="-1" data-k="${kids?1:''}" aria-label="Sposta su">${I.up}</button><button class="ib" data-a="itMove" data-s="${si}" data-i="${ii}" data-d="1" data-k="${kids?1:''}" aria-label="Sposta giù">${I.down}</button><button class="ib" data-a="itDel" data-s="${si}" data-i="${ii}" data-k="${kids?1:''}" aria-label="Togli">${I.x}</button></div>`).join('')}</div>`).join('');
+}
+function drinksField(m,f,label){
+  return`<label class="fld"><span>${label}</span><textarea class="inp" data-f="${f}" rows="2" style="min-height:70px">${esc(val(m,f))}</textarea></label>
+  <div class="chips">${state.settings.drinkPresets.map((d,i)=>`<button data-a="drPick" data-f="${f}" data-i="${i}">+ ${esc(d)}</button>`).join('')}</div>`;
+}
+function vEdit(){
+  const m=getMenu(ui.editId);if(!m){ui.view='cal';return vCal()}
+  const t=tplOf(m),st=m.status||'bozza',ev=t.layout==='evento';
+  const fld=(label,f,type='text',extra='',v)=>`<label class="fld"><span>${label}</span><input class="inp" type="${type}" data-f="${f}" value="${esc(v!==undefined?v:m[f])}" ${extra}></label>`;
+  return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>${esc(heading(m))}</h1><button class="ib" data-a="preview" data-mode="tavolo" aria-label="Anteprima">${I.eye}</button>`)+
+  `<main class="main">
+  <section class="grp"><h2>Template</h2><div class="tchips">${state.templates.map(x=>`<button class="tchip${x.id===t.id?' on':''}" data-a="setTpl" data-id="${x.id}">${swatch(x)}<span>${esc(x.name)}</span></button>`).join('')}</div></section>
+  <section class="grp"><h2>Intestazione</h2>
+    ${fld(ev?'Titolo menù adulti':'Titolo','heading','text',`placeholder="${esc(t.heading)}"`)}
+    ${ev?'':`<label class="tog"><input type="checkbox" data-fc="showDate" ${m.showDate!==false?'checked':''}>Stampa la data sotto il titolo</label>`}
+  </section>
+  <section class="grp"><h2>Evento</h2>
+    <div class="row2">${fld('Data','date','date')}${fld('Ora','time','time')}</div>
+    ${fld('Cliente','client','text','placeholder="es. Famiglia Rossi" autocomplete="off"')}
+    <div class="row2">${fld('Adulti','guests','number','inputmode="numeric" min="0"')}${fld('Bambini','guestsKids','number','inputmode="numeric" min="0"')}</div>
+    <div class="row2">${fld('Telefono','phone','tel')}${fld('Sala','room','text')}</div>
+    <div class="stat">${Object.entries(STATUS).map(([k,s])=>`<button class="${st===k?'on':''}" style="--c:${s.c}" data-a="setStatus" data-v="${k}"><i></i>${s.l}</button>`).join('')}</div>
+  </section>
+  <section class="grp"><h2>Portate${ev?' – menù adulti':''}</h2>
+    ${secsHTML(m,false)}
+    ${ev?'':`<label class="tog"><input type="checkbox" data-fc="showSections" ${m.showSections!==false?'checked':''}>Stampa i titoli (Antipasti, Primi Piatti…)</label>`}
+    <p class="hint">Le sezioni vuote non compaiono. Tocca una portata per modificarla solo in questo menù.</p>
+  </section>
+  ${ev?`<section class="grp"><h2>Menù bambini</h2>
+    <label class="tog"><input type="checkbox" data-fc="kids" data-re="1" ${m.kids!==false?'checked':''}>Includi il menù bambini</label>
+    ${m.kids!==false?fld('Titolo menù bambini','headingKids','text','',val(m,'headingKids'))+secsHTML(m,true):''}</section>`:''}
+  <section class="grp"><h2>Bevande</h2>
+    ${drinksField(m,'drinks',ev?'Bevande adulti':'Bevande')}
+    ${ev&&m.kids!==false?drinksField(m,'drinksKids','Bevande bambini'):''}
+  </section>
+  <section class="grp"><h2>Prezzi e note (solo proposta)</h2>
+    <div class="row2">${fld('Adulti (€)','priceAdult','text','inputmode="decimal" placeholder="es. 50"',val(m,'priceAdult'))}${fld('Bambini (€)','priceKid','text','inputmode="decimal" placeholder="es. 25"',val(m,'priceKid'))}</div>
+    ${ev?'':fld('Dicitura bambini','kidLabel','text','placeholder="Bambini fino a 10 anni"',val(m,'kidLabel'))}
+    <p class="hint" id="tot">${totText(m)}</p>
+    <label class="fld"><span>Note per il cliente</span><textarea class="inp" data-f="notes" placeholder="es. Acconto del 30% alla conferma.">${esc(m.notes)}</textarea></label>
+  </section>
+  <div class="btns two" style="margin-bottom:10px"><button class="btn pri" data-a="preview" data-mode="tavolo">${I.pdf}Menù tavolo</button><button class="btn pri" data-a="preview" data-mode="proposta">${I.pdf}Proposta</button></div>
+  <p class="hint" style="margin:-2px 2px 14px">Il menù tavolo non riporta prezzi e note; la proposta sì.</p>
+  <div class="btns two"><button class="btn" data-a="dup">${I.copy}Duplica</button><button class="btn danger" data-a="del">${I.trash}Elimina</button></div>
+  </main>`;
+}
+function vPreview(){
+  const m=getMenu(ui.editId);if(!m){ui.view='cal';return vCal()}
+  return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>Anteprima</h1>`)+
+  `<main class="main"><div class="seg"><button class="${ui.pv.mode==='tavolo'?'on':''}" data-a="pvMode" data-v="tavolo">Menù tavolo</button><button class="${ui.pv.mode==='proposta'?'on':''}" data-a="pvMode" data-v="proposta">Proposta</button></div>
+  <div class="pv" id="pv"></div>
+  <button class="btn pri wide" data-a="pdf">${I.pdf}Crea PDF</button></main>`;
+}
+function vTpl(){
+  const t=getTpl(ui.tplId);if(!t){ui.view='settings';return vSettings()}
+  const ev=t.layout==='evento';
+  const f=(label,k,type='text',extra='')=>`<label class="fld"><span>${label}</span><input class="inp" type="${type}" data-tf="${k}" value="${esc(t[k])}" ${extra}></label>`;
+  return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>${esc(t.name)}</h1>`)+
+  `<main class="main"><div class="pv" id="tplpv"></div>
+  <section class="grp"><h2>Nome e titoli</h2>${f('Nome del template','name')}${f(ev?'Titolo menù adulti':'Titolo predefinito','heading')}${ev?f('Titolo menù bambini','headingKids'):''}</section>
+  <section class="grp"><h2>Valori predefiniti per i nuovi menù</h2>
+    <label class="fld"><span>Bevande${ev?' adulti':''}</span><textarea class="inp" data-tf="drinks" rows="2" style="min-height:70px">${esc(t.drinks)}</textarea></label>
+    ${ev?`<label class="fld"><span>Bevande bambini</span><textarea class="inp" data-tf="drinksKids" rows="2" style="min-height:70px">${esc(t.drinksKids)}</textarea></label>`:''}
+    <div class="row2">${f('Prezzo adulti (€)','priceAdult','text','inputmode="decimal"')}${f('Prezzo bambini (€)','priceKid','text','inputmode="decimal"')}</div>
+    ${ev?'':f('Dicitura bambini','kidLabel')}</section>
+  <section class="grp"><h2>Aspetto</h2><div class="card">
+    <label class="clr"><input type="color" data-tf="ink" value="${t.ink}">Colore del testo</label>
+    <label class="clr"><input type="color" data-tf="bgColor" value="${t.bgColor}">Colore di sfondo</label>
+    ${ev?'':`<div class="rng" style="margin-top:8px"><span>Fine testo</span><input type="range" min="900" max="1420" step="5" value="${t.limit||1240}" data-tl="1"><b id="tl">${Math.round((t.limit||1240)/14.4)}%</b></div><p class="hint">Sposta per non far sovrapporre il testo alle illustrazioni in basso.</p>`}
+  </div></section>
+  <section class="grp"><h2>Sfondo</h2><div class="card">
+    <p style="margin:0 0 12px;font-size:15px">Per cambiare illustrazioni, esporta da Canva la pagina <b>senza testi</b> come PNG, nel formato ${ev?'A4 orizzontale':'810 × 1440'}.</p>
+    <div class="btns ${t.origBg&&t.bgImage!==t.origBg?'two':''}"><button class="btn" data-a="tplBg">${I.img}Carica immagine</button>${t.origBg&&t.bgImage!==t.origBg?`<button class="btn" data-a="tplBgReset">Ripristina</button>`:''}</div></div></section>
+  <div class="btns two"><button class="btn" data-a="dupTpl">${I.copy}Duplica template</button>${state.templates.length>1?`<button class="btn danger" data-a="delTpl">${I.trash}Elimina</button>`:''}</div>
+  </main>`;
+}
+
+/* ---------- Fogli (bottom sheet) ---------- */
+function curSec(){const m=getMenu(ui.editId);return secList(m,ui.sheet.kids)[ui.sheet.s]}
+function pickListHTML(){
+  const s=curSec(),q=norm(ui.pickQ),cat=ui.sheet.kids?KIDS_CAT:s.name;
+  const L=state.dishes.filter(x=>(ui.pickAll||x.cat===cat)&&(!q||norm(x.name).includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+  if(!L.length)return`<p class="empty">${q?'Nessuna portata trovata. Scrivila qui sotto per aggiungerla.':'Nessuna portata in questa categoria. Aggiungila qui sotto.'}</p>`;
+  return L.map(x=>{const on=s.items.some(i=>i.dishId===x.id);return`<button class="pk${on?' on':''}" data-a="pickToggle" data-id="${x.id}"><span>${esc(oneLine(x.name))}${x.cat!==cat?`<small>${esc(x.cat)}</small>`:''}</span><i>${on?I.check:I.plus}</i></button>`}).join('');
+}
+function renderSheet(){
+  const el=$('#sheet'),sh=ui.sheet;
+  if(!sh){el.innerHTML='';return}
+  let h='';
+  const head=title=>`<div class="sh-h"><h3>${esc(title)}</h3><button class="ib" data-a="closeSheet" aria-label="Chiudi">${I.x}</button></div>`;
+  if(sh.type==='picker'){
+    const s=curSec();
+    h=head(sh.kids?`Bambini – ${s.name}`:s.name)+`
+    <input class="inp" type="search" placeholder="Cerca portata" data-in="pickQ" value="${esc(ui.pickQ)}">
+    <label class="tog"><input type="checkbox" data-pk="all" ${ui.pickAll?'checked':''}>Mostra le portate di tutte le categorie</label>
+    <div id="pklist">${pickListHTML()}</div>
+    <div class="pk-new"><input class="inp" id="pknew" placeholder="Nuova portata" enterkeyhint="done"><button class="btn" data-a="pickNew">Aggiungi</button></div>
+    <button class="btn pri wide" data-a="closeSheet">Fatto</button>`;
+  }else if(sh.type==='dish'){
+    const d=sh.id?state.dishes.find(x=>x.id===sh.id):{name:'',cat:state.categories[0]};
+    h=head(sh.id?'Modifica portata':'Nuova portata')+`
+    <label class="fld"><span>Nome</span><textarea class="inp" id="dname" rows="3" style="min-height:90px">${esc(d.name)}</textarea></label>
+    <p class="hint" style="margin:-6px 2px 12px">Vai a capo per spezzare la riga sul menù, come in Canva.</p>
+    <label class="fld"><span>Categoria</span><select class="inp" id="dcat">${allCats().map(c=>`<option ${c===d.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
+    <div class="btns ${sh.id?'two':''}"><button class="btn pri" data-a="saveDish">Salva</button>${sh.id?`<button class="btn danger" data-a="delDish">${I.trash}Elimina</button>`:''}</div>
+    ${sh.id?'<p class="hint">Modifiche ed eliminazioni non toccano i menù già composti.</p>':''}`;
+  }else if(sh.type==='item'){
+    const it=secList(getMenu(ui.editId),sh.kids)[sh.s].items[sh.i];
+    h=head('Portata in questo menù')+`
+    <label class="fld"><span>Testo stampato</span><textarea class="inp" id="iname" rows="3" style="min-height:90px">${esc(it.name)}</textarea></label>
+    <p class="hint" style="margin:-6px 2px 12px">La modifica vale solo per questo menù, l'archivio resta com'è.</p>
+    <button class="btn pri wide" data-a="saveItem">Salva</button>`;
+  }else if(sh.type==='file'){
+    const cs=canShareFiles();
+    h=head(sh.title)+`<p class="hint" style="margin-bottom:14px;word-break:break-all">${esc(sh.name)}</p>
+    <div class="btns">${cs?`<button class="btn pri" data-a="shareFile">${I.share}Condividi (WhatsApp, email, stampa…)</button>`:''}<button class="btn ${cs?'':'pri'}" data-a="downloadFile">${I.dl}Scarica</button></div>`;
+  }
+  el.innerHTML=`<div class="shbg" data-a="closeSheet"></div><div class="sheet" role="dialog" aria-modal="true">${h}</div>`;
+  if(sh.type==='dish'&&!sh.id)setTimeout(()=>$('#dname')?.focus(),250);
+}
+
+/* ---------- Render ---------- */
+function render(keep){
+  const y=window.scrollY;
+  const V={cal:vCal,list:vList,dishes:vDishes,settings:vSettings,edit:vEdit,preview:vPreview,tpl:vTpl};
+  $('#app').innerHTML=(V[ui.view]||vCal)();
+  window.scrollTo(0,keep?y:0);
+  mountPreviews();
+}
+let toastT;
+function toast(msg){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),3400)}
+function busy(on,msg){let b=$('.busy');if(on){if(!b){b=document.createElement('div');b.className='busy';document.body.appendChild(b)}b.innerHTML=`<div><div class="spin"></div>${esc(msg)}</div>`}else b?.remove()}
+function leaveEdit(){
+  if(ui.view!=='edit')return;
+  const m=getMenu(ui.editId);
+  if(m&&isEmptyMenu(m)){state.menus=state.menus.filter(x=>x!==m);save()}
+}
+function openEditor(id){ui.back=['cal','list'].includes(ui.view)?ui.view:ui.back;ui.editId=id;ui.view='edit';render()}
+
+/* ---------- Azioni ---------- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const a=b.dataset.a,d=b.dataset,m=ui.editId?getMenu(ui.editId):null,K=!!d.k;
+  switch(a){
+    case 'nav':leaveEdit();ui.view=d.v;render();break;
+    case 'calMove':{let mm=ui.cal.m+Number(d.d),yy=ui.cal.y;if(mm<0){mm=11;yy--}if(mm>11){mm=0;yy++}ui.cal={y:yy,m:mm};render(true);break}
+    case 'calToday':{const n=new Date();ui.cal={y:n.getFullYear(),m:n.getMonth()};ui.selDate=today();render();break}
+    case 'selDay':ui.selDate=d.d;render(true);break;
+    case 'new':{const nm=newMenu(ui.view==='cal'?ui.selDate:today());state.menus.push(nm);save();openEditor(nm.id);break}
+    case 'open':openEditor(d.id);break;
+    case 'back':
+      if(ui.view==='edit'){leaveEdit();ui.view=ui.back||'cal';if(m&&m.date&&ui.view==='cal'){const dt=parseD(m.date);ui.selDate=m.date;ui.cal={y:dt.getFullYear(),m:dt.getMonth()}}}
+      else if(ui.view==='preview')ui.view='edit';
+      else if(ui.view==='tpl')ui.view='settings';
+      render();break;
+    case 'setTpl':if(m){m.templateId=d.id;save();render(true)}break;
+    case 'setStatus':if(m){m.status=d.v;save();render(true)}break;
+    case 'pick':ui.sheet={type:'picker',s:+d.s,kids:K};ui.pickQ='';ui.pickAll=false;renderSheet();break;
+    case 'pickToggle':{
+      const s=curSec(),x=state.dishes.find(z=>z.id===d.id);if(!x)break;
+      const i=s.items.findIndex(z=>z.dishId===x.id);
+      if(i>=0)s.items.splice(i,1);else s.items.push({dishId:x.id,name:x.name});
+      save();$('#pklist').innerHTML=pickListHTML();render(true);break}
+    case 'pickNew':{
+      const inp=$('#pknew'),name=inp.value.trim();if(!name)break;
+      const s=curSec(),cat=ui.sheet.kids?KIDS_CAT:(state.categories.includes(s.name)?s.name:state.categories[0]);
+      let x=state.dishes.find(z=>norm(z.name)===norm(name)&&z.cat===cat);
+      if(!x){x={id:uid(),name,cat};state.dishes.push(x)}
+      if(!s.items.some(z=>z.dishId===x.id))s.items.push({dishId:x.id,name:x.name});
+      inp.value='';save();$('#pklist').innerHTML=pickListHTML();render(true);toast("Portata aggiunta al menù e all'archivio");break}
+    case 'itMove':{const L=secList(m,K)[+d.s].items,i=+d.i,j=i+Number(d.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];save();render(true);break}
+    case 'itDel':secList(m,K)[+d.s].items.splice(+d.i,1);save();render(true);break;
+    case 'itEdit':ui.sheet={type:'item',s:+d.s,i:+d.i,kids:K};renderSheet();break;
+    case 'saveItem':{const v=$('#iname').value.trim();if(v){secList(m,ui.sheet.kids)[ui.sheet.s].items[ui.sheet.i].name=v;save()}ui.sheet=null;renderSheet();render(true);break}
+    case 'drPick':{const p=state.settings.drinkPresets[+d.i],cur=String(val(m,d.f)).trim();m[d.f]=cur?cur+'\n'+p:p;save();render(true);break}
+    case 'preview':ui.pv={mode:d.mode||'tavolo'};ui.view='preview';render();break;
+    case 'pvMode':ui.pv.mode=d.v;render(true);break;
+    case 'pdf':doPDF();break;
+    case 'shareFile':shareFile();break;
+    case 'downloadFile':downloadFile();break;
+    case 'dup':{const c=clone(m);c.id=uid();c.created=Date.now();c.status='bozza';state.menus.push(c);save();ui.editId=c.id;render();toast('Menù duplicato: cambia data e cliente');break}
+    case 'del':if(confirm('Eliminare questo menù?')){state.menus=state.menus.filter(x=>x!==m);save();ui.view=ui.back||'cal';render();toast('Menù eliminato')}break;
+    case 'listTab':ui.listTab=d.v;render(true);break;
+    case 'editDish':ui.sheet={type:'dish',id:d.id||null};renderSheet();break;
+    case 'saveDish':{
+      const name=$('#dname').value.trim(),cat=$('#dcat').value;if(!name){toast('Scrivi il nome della portata');break}
+      if(ui.sheet.id){const x=state.dishes.find(z=>z.id===ui.sheet.id);x.name=name;x.cat=cat}else state.dishes.push({id:uid(),name,cat});
+      save();ui.sheet=null;renderSheet();render(true);toast('Portata salvata');break}
+    case 'delDish':if(confirm("Eliminare questa portata dall'archivio?")){state.dishes=state.dishes.filter(z=>z.id!==ui.sheet.id);save();ui.sheet=null;renderSheet();render(true)}break;
+    case 'closeSheet':ui.sheet=null;renderSheet();break;
+    case 'editTpl':ui.tplId=d.id;ui.view='tpl';render();break;
+    case 'dupTpl':{const t=clone(getTpl(ui.tplId));t.id='tpl-'+uid();t.name=t.name+' (copia)';t.builtIn=false;state.templates.push(t);save();ui.tplId=t.id;render();toast('Template duplicato: cambia nome e titolo');break}
+    case 'delTpl':{const t=getTpl(ui.tplId),used=state.menus.filter(x=>x.templateId===t.id).length;
+      if(confirm(`Eliminare il template "${t.name}"?${used?`\n${used} menù useranno il primo template della lista.`:''}`)){state.templates=state.templates.filter(x=>x!==t);save();ui.view='settings';render()}break}
+    case 'tplBg':$('#bgfile').click();break;
+    case 'tplBgReset':{const t=getTpl(ui.tplId);t.bgImage=t.origBg;save();render(true);break}
+    case 'catMove':{const L=state.categories,i=+d.i,j=i+Number(d.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];save();render(true);break}
+    case 'catRen':{const old=state.categories[+d.i],v=prompt('Nuovo nome della sezione',old);if(!v||!v.trim()||v.trim()===old)break;
+      if(allCats().includes(v.trim())){toast('Esiste già una sezione con questo nome');break}
+      state.categories[+d.i]=v.trim();state.dishes.forEach(x=>{if(x.cat===old)x.cat=v.trim()});save();render(true);break}
+    case 'catDel':{const c=state.categories[+d.i],n=state.dishes.filter(x=>x.cat===c).length;
+      if(n){alert(`Nella sezione "${c}" ci sono ${n} portate. Spostale in un'altra sezione o eliminale prima.`);break}
+      if(state.categories.length<2)break;
+      if(confirm(`Eliminare la sezione "${c}"?`)){state.categories.splice(+d.i,1);save();render(true)}break}
+    case 'catAdd':{const v=$('#newcat').value.trim();if(!v)break;if(allCats().includes(v)){toast('Sezione già presente');break}state.categories.push(v);save();render(true);break}
+    case 'drAdd':{const v=$('#newdrink').value.trim();if(!v)break;state.settings.drinkPresets.push(v);save();render(true);break}
+    case 'drDel':state.settings.drinkPresets.splice(+d.i,1);save();render(true);break;
+    case 'export':{const blob=new Blob([JSON.stringify(state)],{type:'application/json'});ui.sheet={type:'file',blob,name:`backup-menu_${fmtDash(today())}.json`,mime:'application/json',title:'Backup pronto'};renderSheet();break}
+    case 'import':$('#importfile').click();break;
+  }
+});
+document.addEventListener('input',e=>{
+  const el=e.target,d=el.dataset;
+  if(d.f){
+    const m=getMenu(ui.editId);if(!m)return;let v=el.value;
+    if(d.f==='guests'||d.f==='guestsKids')v=v===''?'':Math.max(0,parseInt(v,10)||0);
+    if(d.f==='priceAdult'||d.f==='priceKid')v=v.trim()===''?'':num(v);
+    m[d.f]=v;save();
+    if(/price|guests/.test(d.f)){const t=$('#tot');if(t)t.textContent=totText(m)}
+    if(d.f==='heading'){const h=$('.top h1');if(h)h.textContent=heading(m)}
+  }else if(d.sf){state.settings[d.sf]=el.value;save()}
+  else if(d.tf){const t=getTpl(ui.tplId);let v=el.value;if(d.tf==='priceAdult'||d.tf==='priceKid')v=v.trim()===''?'':num(v);t[d.tf]=v;save();mountPreviews();if(d.tf==='name'){const h=$('.top h1');if(h)h.textContent=el.value}}
+  else if(d.tl){const t=getTpl(ui.tplId);t.limit=Number(el.value);$('#tl').textContent=Math.round(t.limit/14.4)+'%';save();mountPreviews()}
+  else if(d.in==='q'){ui.q=el.value;$('#mlist').innerHTML=listHTML()}
+  else if(d.in==='dq'){ui.dq=el.value;$('#dlist').innerHTML=dishListHTML()}
+  else if(d.in==='pickQ'){ui.pickQ=el.value;$('#pklist').innerHTML=pickListHTML()}
+});
+document.addEventListener('change',async e=>{
+  const el=e.target,d=el.dataset;
+  if(d.fc){const m=getMenu(ui.editId);if(m){m[d.fc]=el.checked;save();if(d.re)render(true)}}
+  else if(d.pk==='all'){ui.pickAll=el.checked;$('#pklist').innerHTML=pickListHTML()}
+  else if(el.id==='bgfile'&&el.files[0]){
+    try{
+      const r=await readImage(el.files[0]),t=getTpl(ui.tplId),L=LAYOUTS[t.layout]||LAYOUTS.verticale;
+      t.bgImage=r.url;save();render(true);
+      if(Math.abs(r.w/r.h-L.w/L.h)>0.03)toast("L'immagine ha proporzioni diverse dal template: verrà deformata. Esportala da Canva nello stesso formato.");
+    }catch(err){toast(err.message)}
+    el.value='';
+  }else if(el.id==='importfile'&&el.files[0]){
+    try{
+      const obj=JSON.parse(await el.files[0].text());
+      if(!obj||!Array.isArray(obj.menus)||!Array.isArray(obj.dishes))throw new Error('Il file non è un backup di questa app.');
+      if(confirm(`Il backup contiene ${obj.menus.length} menù e ${obj.dishes.length} portate. Sostituire i dati attuali?`)){state=normalize(obj);flush();render();toast('Backup importato')}
+    }catch(err){toast(err.message||'File non valido')}
+    el.value='';
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const map={pknew:'pickNew',newcat:'catAdd',newdrink:'drAdd'};
+  if(map[e.target.id]){e.preventDefault();$(`[data-a="${map[e.target.id]}"]`).click()}
+});
+function readImage(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{const img=new Image();img.onload=()=>{
+      const k=Math.min(1,2600/Math.max(img.width,img.height)),w=Math.round(img.width*k),h=Math.round(img.height*k);
+      const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+      res({url:c.toDataURL('image/jpeg',0.88),w,h})};
+      img.onerror=()=>rej(new Error('Immagine non leggibile. Usa un PNG o JPG.'));img.src=r.result};
+    r.onerror=()=>rej(r.error);r.readAsDataURL(file);
+  });
+}
+let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(mountPreviews,150)});
+
+/* ---------- Avvio ---------- */
+(async()=>{
+  try{const s=await idb.get('state');state=normalize(s);if(!s||s.v!==2)flush()}
+  catch(e){state=normalize(null);toast('Archivio non disponibile: i dati non verranno salvati')}
+  render();
+  loadFonts().then(mountPreviews);
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+  if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>

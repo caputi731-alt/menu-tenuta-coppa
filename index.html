@@ -178,6 +178,14 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .v-empty,.e-empty{opacity:.45;font-style:italic}
 .pg-e{font-family:Antic,sans-serif}
 .pg-c{font-family:'Cormorant Garamond',serif;font-weight:400}
+.c-venue{position:absolute;left:0;right:0;top:11.6px;font-size:25px;font-weight:700;line-height:1.21}
+.c-tag{position:absolute;left:0;right:0;top:35.3px;font-size:18px;line-height:1.21}
+.c-legend{position:absolute;left:16.4px;top:754.8px;font-size:8px;font-weight:700;line-height:1.09;text-align:left;color:#000}
+.alg{font-size:.6em;position:relative;top:-.55em;margin-left:.2em;letter-spacing:.03em;white-space:nowrap}
+.alg-l{font-size:.72em;margin-top:.6em;opacity:.85}
+.algs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.algs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;font-size:13px}
+.algs button.on{background:var(--olive);border-color:var(--olive);color:#fff}
 .c-title{position:absolute;left:30px;right:30px;top:67.9px;font-size:25px;font-weight:700;line-height:1.21;white-space:nowrap;overflow:hidden}
 .c-sub{position:absolute;left:0;right:0;top:106.4px;font-size:28px;font-weight:700;line-height:1.21}
 .c-flow{position:absolute;left:55px;right:55px;top:151px}
@@ -277,14 +285,24 @@ const OSTIA_TYPES={
 };
 const OSTIA_SHAPES={tonda:{l:'Tonda Ø 20 cm',w:210,h:210},rett:{l:'Rettangolare A4',w:297,h:210}};
 const GOLD='#A8956A';
+const CLASSICO={layout:'classico',heading:'Pranzo di festa',subheading:'Menù',tagline:'Masseria storica del 1735',legend:true,bgColor:'#FFFFFF',ink:'#5C654C',accent:'#354469',drinks:'Vini Cantina Crifo e acqua minerale,\nLiquore e caffè',priceAdult:'',priceKid:'',limit:698};
+const EVENTO={layout:'evento',heading:'Menù',bgColor:'#FFFFFF',ink:'#2B2B2B',drinks:'Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.',priceAdult:'',priceKid:'',kidLabel:'Menù bambini'};
+const ALLERGENI=['Cereali con glutine','Crostacei','Uova','Pesce','Arachidi','Soia','Latte/Lattosio','Frutta a guscio','Sedano','Senape','Sesamo','Solfiti (>10mg/kg)','Lupini','Molluschi'];
 function defaultTemplates(){
   const t=(id,name,o)=>({...SUNDAY,id,name,builtIn:true,...o,origBg:o.bgImage});
   return[
     t('tpl-pecore','Domenica – Pecore e ulivo',{bgImage:'assets/domenica-pecore.jpg',bgColor:'#FFFFFF',ink:'#5A3E2B',limit:1240}),
     t('tpl-girasole','Domenica – Girasole',{bgImage:'assets/domenica-girasole.jpg',bgColor:'#FFFFFF',ink:'#4A3626',limit:1290}),
     t('tpl-muretto','Domenica – Muretto a secco',{bgImage:'assets/domenica-muretto.jpg',bgColor:'#FFFFFF',ink:'#2E1E12',limit:1225}),
-    t('tpl-pasqua','Festività – Pasqua',{layout:'classico',heading:'Pasqua 2026',subheading:'Menù',bgImage:'assets/pasqua.jpg',bgColor:'#FFFFFF',ink:'#5C654C',accent:'#354469',drinks:'Vini Cantina Crifo e acqua minerale,\nLiquore e caffè',priceAdult:'',priceKid:'',limit:698}),
-    t('tpl-comunione','Comunione',{layout:'evento',heading:'Menù',bgImage:'assets/comunione.jpg',bgColor:'#FFFFFF',ink:'#2B2B2B',drinks:'Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.',priceAdult:'',priceKid:'',kidLabel:'Menù bambini'})
+    t('tpl-spighe','Domenica – Spighe di grano',{bgImage:'assets/domenica-spighe.jpg',bgColor:'#FFFFFF',ink:'#5A4630',limit:1165}),
+    t('tpl-ulivo',"Domenica – Ramo d'ulivo",{bgImage:'assets/domenica-ulivo.jpg',bgColor:'#FFFFFF',ink:'#454C33',limit:1185}),
+    t('tpl-pasqua','Classico – Rametto verde',{...CLASSICO,bgImage:'assets/classico-rametto.jpg'}),
+    t('tpl-cl-spighe','Classico – Spighe di grano',{...CLASSICO,bgImage:'assets/classico-spighe.jpg',ink:'#5A4630',accent:'#8A6A35'}),
+    t('tpl-cl-ulivo',"Classico – Ramo d'ulivo",{...CLASSICO,bgImage:'assets/classico-ulivo.jpg',ink:'#4B5340',accent:'#5C6B45'}),
+    t('tpl-comunione','Comunione',{...EVENTO,bgImage:'assets/comunione.jpg'}),
+    t('tpl-battesimo','Battesimo – Azzurro',{...EVENTO,bgImage:'assets/evento-battesimo.jpg',ink:'#2F3A45'}),
+    t('tpl-cresima','Cresima – Salvia',{...EVENTO,bgImage:'assets/evento-cresima.jpg',ink:'#343A2C'}),
+    t('tpl-anniversario','Anniversario e compleanno – Oro',{...EVENTO,bgImage:'assets/evento-anniversario.jpg',ink:'#3A3226'})
   ];
 }
 function defaultState(){
@@ -354,8 +372,13 @@ function normalize(s){
   // template di serie: fondo bianco per la stampa e aggiunta dei nuovi (es. Pasqua)
   if(Array.isArray(s.templates)){
     const byId=Object.fromEntries(d.templates.map(t=>[t.id,t]));
-    s.templates.forEach(t=>{const b=byId[t.id];if(b&&t.builtIn){t.bgColor=b.bgColor;if(!t.bgImage||t.bgImage===t.origBg)t.bgImage=b.bgImage;t.origBg=b.origBg}});
+    s.templates.forEach(t=>{const b=byId[t.id];
+      if(t.id==='tpl-pasqua'&&t.name==='Festività – Pasqua'){t.name=b.name;if(t.heading==='Pasqua 2026')t.heading=b.heading}
+      if(b&&t.layout==='classico'&&t.tagline===undefined){t.tagline=b.tagline;t.legend=true}
+      if(b&&t.builtIn){t.bgColor=b.bgColor;if(!t.bgImage||t.bgImage===t.origBg)t.bgImage=b.bgImage;t.origBg=b.origBg}});
     d.templates.forEach(b=>{if(!s.templates.some(t=>t.id===b.id))s.templates.push(b)});
+    const ord=d.templates.map(t=>t.id),pos=t=>{const i=ord.indexOf(t.id);return i<0?999:i};
+    s.templates=s.templates.map((t,i)=>[t,i]).sort((a,b)=>pos(a[0])-pos(b[0])||a[1]-b[1]).map(x=>x[0]); // nuovi template al loro posto, quelli creati da te in fondo
   }
   return{v:3,didattica:s.didattica||{},lastOstia:s.lastOstia||null,settings:{...d.settings,...(s.settings||{})},
     categories:Array.isArray(s.categories)&&s.categories.length?s.categories:d.categories,
@@ -395,13 +418,22 @@ function priceLines(m,kidsCol){
   else if(pa!=='')L.push(`Costo del menù: ${eurC(pa)}`);
   return L;
 }
+// allergeni: i numeri vengono dall'archivio portate, così una correzione vale per tutti i menù
+const algNums=i=>{if(i.alg)return i.alg;const d=i.dishId&&state.dishes.find(x=>x.id===i.dishId);return d&&d.alg||[]};
+const algOf=(m,i)=>{if(!m.allergens)return'';const n=algNums(i);return n.length?`<span class="alg">${n.join(',')}</span>`:''};
+function algLegend(m,secs){
+  if(!m.allergens)return'';
+  const u=[...new Set(secs.flatMap(s=>s.items.flatMap(algNums)))].sort((a,b)=>a-b);
+  return u.length?`<div class="alg-l">Allergeni: ${u.map(n=>`${n} ${ALLERGENI[n-1]}`).join(' · ')}</div>`:'';
+}
 function pageVerticale(m,t,mode){
   const secs=m.sections.filter(s=>s.items.length),showT=m.showSections!==false;
-  let flow=secs.map(s=>`<div class="v-sec${showT?'':' nt'}">${showT?`<div class="v-sec-t">${esc(s.name)}</div>`:''}${s.items.map(i=>`<div class="v-it">${nl(i.name)}</div>`).join('')}</div>`).join('');
+  let flow=secs.map(s=>`<div class="v-sec${showT?'':' nt'}">${showT?`<div class="v-sec-t">${esc(s.name)}</div>`:''}${s.items.map(i=>`<div class="v-it">${nl(i.name)}${algOf(m,i)}</div>`).join('')}</div>`).join('');
   if(!secs.length)flow=`<div class="v-empty">Aggiungi le portate per comporre il menù</div>`;
   const foot=[String(val(m,'drinks')).trim(),...(mode==='proposta'?priceLines(m):[])].filter(Boolean);
-  if(foot.length)flow+=`<div class="v-foot">${foot.map(nl).join('<br>')}${mode==='proposta'&&m.notes?`<div class="v-notes">${nl(m.notes)}</div>`:''}</div>`;
-  else if(mode==='proposta'&&m.notes)flow+=`<div class="v-foot"><div class="v-notes">${nl(m.notes)}</div></div>`;
+  const al=algLegend(m,secs);
+  if(foot.length)flow+=`<div class="v-foot">${foot.map(nl).join('<br>')}${mode==='proposta'&&m.notes?`<div class="v-notes">${nl(m.notes)}</div>`:''}${al}</div>`;
+  else if(mode==='proposta'&&m.notes||al)flow+=`<div class="v-foot">${mode==='proposta'&&m.notes?`<div class="v-notes">${nl(m.notes)}</div>`:''}${al}</div>`;
   return`<div class="pg pg-v" style="width:810px;height:1440px;background-color:${t.bgColor};color:${t.ink}">
     ${t.bgImage?`<div class="pg-bg" style="background-image:url('${t.bgImage}')"></div>`:''}
     ${state.settings.venue?`<div class="v-venue">${esc(state.settings.venue)}</div>`:''}
@@ -411,8 +443,8 @@ function pageVerticale(m,t,mode){
 }
 function eventoCol(m,secs,title,drinks,prices,notes,left,width){
   const full=secs.filter(s=>s.items.length);
-  const body=full.length?full.map(s=>s.items.map(i=>`<div class="e-it">${nl(i.name)}</div>`).join('')).join('<div class="e-sep">~~~~~</div>'):`<div class="e-empty">Aggiungi le portate</div>`;
-  const foot=[String(drinks||'').trim(),...prices].filter(Boolean).map(nl).join('<br>')+(notes?`<div class="e-notes">${nl(notes)}</div>`:'');
+  const body=full.length?full.map(s=>s.items.map(i=>`<div class="e-it">${nl(i.name)}${algOf(m,i)}</div>`).join('')).join('<div class="e-sep">~~~~~</div>'):`<div class="e-empty">Aggiungi le portate</div>`;
+  const foot=[String(drinks||'').trim(),...prices].filter(Boolean).map(nl).join('<br>')+(notes?`<div class="e-notes">${nl(notes)}</div>`:'')+algLegend(m,full);
   return`<div class="e-col" style="left:${left}px;width:${width}px"><div class="e-h">${esc(title)}</div><div class="e-body">${body}</div><div class="e-foot">${foot}</div></div>`;
 }
 function pageEvento(m,t,mode){
@@ -424,16 +456,19 @@ function pageEvento(m,t,mode){
 }
 function pageClassico(m,t,mode){
   const secs=m.sections.filter(s=>s.items.length),showT=m.showSections!==false,ac=t.accent||'#354469';
-  let flow=secs.map(s=>`<div class="c-sec${showT?'':' nt'}">${showT?`<div class="c-sec-t" style="color:${ac}">${esc(s.name)}</div>`:''}${s.items.map(i=>`<div class="c-it">${nl(i.name)}</div>`).join('')}</div>`).join('');
+  let flow=secs.map(s=>`<div class="c-sec${showT?'':' nt'}">${showT?`<div class="c-sec-t" style="color:${ac}">${esc(s.name)}</div>`:''}${s.items.map(i=>`<div class="c-it">${nl(i.name)}${algOf(m,i)}</div>`).join('')}</div>`).join('');
   if(!secs.length)flow=`<div class="v-empty">Aggiungi le portate per comporre il menù</div>`;
   if(mode==='proposta'){const pl=priceLines(m);if(pl.length||m.notes)flow+=`<div class="c-offer">${pl.map(nl).join('<br>')}${m.notes?`<div class="v-notes">${nl(m.notes)}</div>`:''}</div>`}
   const dr=String(val(m,'drinks')).trim();
   return`<div class="pg pg-c" style="width:595px;height:842px;background-color:${t.bgColor};color:${t.ink}">
     ${t.bgImage?`<div class="pg-bg" style="background-image:url('${t.bgImage}')"></div>`:''}
+    ${state.settings.venue?`<div class="c-venue">${esc(state.settings.venue)}</div>`:''}
+    ${t.tagline?`<div class="c-tag">${esc(t.tagline)}</div>`:''}
     <div class="c-title">${esc(heading(m))}</div>
     ${t.subheading?`<div class="c-sub">${esc(t.subheading)}</div>`:''}
     <div class="c-flow" style="height:${(t.limit||698)-151}px"><div class="c-in">${flow}</div></div>
-    ${dr?`<div class="c-drinks">${nl(dr)}</div>`:''}</div>`;
+    ${dr?`<div class="c-drinks">${nl(dr)}</div>`:''}
+    ${t.legend!==false?`<div class="c-legend">INFORMATIVA ALLERGENI (Reg. UE 1169/11)<br>Si informa la clientela che i piatti possono contenere ingredienti considerati allergeni.<br>Per informazioni dettagliate rivolgersi al personale.<br>LEGENDA ALLERGENI:<br>${ALLERGENI.slice(0,7).map((a,i)=>`${i+1}. ${a}`).join(' | ')} |<br>${ALLERGENI.slice(7).map((a,i)=>`${i+8}. ${a}`).join(' | ')}</div>`:''}</div>`;
 }
 const pageHTML=(m,t,mode)=>t.layout==='evento'?pageEvento(m,t,mode):t.layout==='classico'?pageClassico(m,t,mode):pageVerticale(m,t,mode);
 function fitPage(pg){
@@ -537,6 +572,7 @@ function menuCard(m,withDate){
 const swatch=t=>`<span class="sw" style="background-color:${t.bgColor};${t.bgImage?`background-image:url('${t.bgImage}');`:''}"></span>`;
 
 /* ---------- Viste ---------- */
+const backupDue=()=>state.menus.length>=3&&(!state.settings.lastBackup||Date.now()-state.settings.lastBackup>30*864e5);
 function vCal(){
   const{y,m}=ui.cal,title=cap(new Date(y,m,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'}));
   const first=(new Date(y,m,1).getDay()+6)%7,nd=new Date(y,m+1,0).getDate(),td=today(),by={};
@@ -548,7 +584,7 @@ function vCal(){
   }
   const sel=(by[ui.selDate]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   return topbar(`<h1>Calendario</h1><button class="tb" data-a="calToday">Oggi</button>`)+
-  `<main class="main"><div class="calh"><h2>${title}</h2><button class="ib" data-a="calMove" data-d="-1" aria-label="Mese precedente">${I.left}</button><button class="ib" data-a="calMove" data-d="1" aria-label="Mese successivo">${I.right}</button></div>
+  `<main class="main">${backupDue()?`<div class="card" style="margin-bottom:14px;display:flex;gap:10px;align-items:center"><span style="flex:1;font-size:14px">${state.settings.lastBackup?'È passato più di un mese dall\'ultimo backup.':'Non hai ancora fatto un backup.'} I dati sono solo su questo telefono.</span><button class="btn" data-a="export">${I.dl}Backup</button></div>`:''}<div class="calh"><h2>${title}</h2><button class="ib" data-a="calMove" data-d="-1" aria-label="Mese precedente">${I.left}</button><button class="ib" data-a="calMove" data-d="1" aria-label="Mese successivo">${I.right}</button></div>
   <div class="wk">${['L','M','M','G','V','S','D'].map(x=>`<span>${x}</span>`).join('')}</div><div class="grid">${cells}</div>
   <div class="legend">${Object.values(STATUS).map(s=>`<span><i style="background:${s.c}"></i>${s.l}</span>`).join('')}</div>
   <h2 class="dh">${fmtLong(ui.selDate)}</h2>
@@ -575,7 +611,7 @@ function dishListHTML(){
   allCats().forEach(c=>{
     const L=state.dishes.filter(d=>d.cat===c&&(!q||norm(d.name).includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'it'));
     if(!L.length&&q)return;
-    out+=`<h3 class="dcat">${esc(c)}</h3>`+(L.length?`<div class="list">${L.map(d=>`<button class="drow" data-a="editDish" data-id="${d.id}"><span>${esc(oneLine(d.name))}</span>${I.pen}</button>`).join('')}</div>`:`<div class="hint">Nessuna portata.</div>`);
+    out+=`<h3 class="dcat">${esc(c)}</h3>`+(L.length?`<div class="list">${L.map(d=>`<button class="drow" data-a="editDish" data-id="${d.id}"><span>${esc(oneLine(d.name))}${d.alg&&d.alg.length?`<small style="display:block;color:var(--muted);font-size:12px">Allergeni ${d.alg.join(', ')}</small>`:''}</span>${I.pen}</button>`).join('')}</div>`:`<div class="hint">Nessuna portata.</div>`);
   });
   return out||`<div class="empty">Nessuna portata trovata.</div>`;
 }
@@ -632,7 +668,8 @@ function vEdit(){
   <section class="grp"><h2>Portate${ev?' – menù adulti':''}</h2>
     ${secsHTML(m,false)}
     ${ev?'':`<label class="tog"><input type="checkbox" data-fc="showSections" ${m.showSections!==false?'checked':''}>Stampa i titoli (Antipasti, Primi Piatti…)</label>`}
-    <p class="hint">Le sezioni vuote non compaiono. Tocca una portata per modificarla solo in questo menù.</p>
+    <label class="tog"><input type="checkbox" data-fc="allergens" ${m.allergens?'checked':''}>Indica gli allergeni accanto alle portate</label>
+    <p class="hint">Le sezioni vuote non compaiono. Tocca una portata per modificarla solo in questo menù. Gli allergeni si impostano nell'archivio portate (Altro → Archivio portate).</p>
   </section>
   ${ev?`<section class="grp"><h2>Menù bambini</h2>
     <label class="tog"><input type="checkbox" data-fc="kids" data-re="1" ${m.kids!==false?'checked':''}>Includi il menù bambini</label>
@@ -693,6 +730,7 @@ function vTpl(){
 const waPhone=p=>{let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.length===10&&d[0]==='3')d='39'+d;return d};
 async function sendFiles(files,text,phone,wa){
   const tel=waPhone(phone);
+  if(text&&!AND){try{await navigator.clipboard.writeText(text)}catch(e){}}
   if(AND&&AND.shareFiles){
     const arr=await Promise.all(files.map(async f=>({name:f.name,mime:f.mime,data:await b64(f.blob)})));
     AND.shareFiles(JSON.stringify({files:arr,text,whatsapp:!!wa,phone:tel}));return;
@@ -721,7 +759,7 @@ async function waMenu(){
   try{
     const blob=await makePDF(m,mode);
     const name=`${mode==='tavolo'?'Menu':'Proposta-menu'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}.pdf`;
-    ui.sheet={type:'wa',title:mode==='tavolo'?'Invia il menù':'Invia la proposta',files:[{blob,name,mime:'application/pdf'}],text:menuMsg(m,mode),phone:m.phone||''};
+    ui.sheet={type:'wa',title:mode==='tavolo'?'Invia il menù':'Invia la proposta',files:[{blob,name,mime:'application/pdf'}],text:menuMsg(m,mode),phone:m.phone||'',menuId:m.id,mode};
   }catch(e){toast('PDF non creato: '+(e.message||e))}
   finally{busy(false);renderSheet()}
 }
@@ -812,7 +850,8 @@ function vDidattica(){
 function curSec(){const m=getMenu(ui.editId);return secList(m,ui.sheet.kids)[ui.sheet.s]}
 function pickListHTML(){
   const s=curSec(),q=norm(ui.pickQ),cat=ui.sheet.kids?KIDS_CAT:s.name;
-  const L=state.dishes.filter(x=>(ui.pickAll||x.cat===cat)&&(!q||norm(x.name).includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+  const uso={};state.menus.forEach(mm=>allSecs(mm).forEach(ss=>ss.items.forEach(it=>{if(it.dishId)uso[it.dishId]=(uso[it.dishId]||0)+1})));
+  const L=state.dishes.filter(x=>(ui.pickAll||x.cat===cat)&&(!q||norm(x.name).includes(q))).sort((a,b)=>(uso[b.id]||0)-(uso[a.id]||0)||a.name.localeCompare(b.name,'it'));
   if(!L.length)return`<p class="empty">${q?'Nessuna portata trovata. Scrivila qui sotto per aggiungerla.':'Nessuna portata in questa categoria. Aggiungila qui sotto.'}</p>`;
   return L.map(x=>{const on=s.items.some(i=>i.dishId===x.id);return`<button class="pk${on?' on':''}" data-a="pickToggle" data-id="${x.id}"><span>${esc(oneLine(x.name))}${x.cat!==cat?`<small>${esc(x.cat)}</small>`:''}</span><i>${on?I.check:I.plus}</i></button>`}).join('');
 }
@@ -834,6 +873,8 @@ function renderSheet(){
     h=head(sh.id?'Modifica portata':'Nuova portata')+`
     <label class="fld"><span>Nome</span><textarea class="inp" id="dname" rows="3" style="min-height:90px">${esc(d.name)}</textarea></label>
     <p class="hint" style="margin:-6px 2px 12px">Vai a capo per spezzare la riga sul menù, come in Canva.</p>
+    <label class="fld"><span>Allergeni</span></label>
+    <div class="algs">${ALLERGENI.map((a,i)=>`<button class="${(sh.alg||[]).includes(i+1)?'on':''}" data-a="algT" data-n="${i+1}">${i+1}. ${esc(a)}</button>`).join('')}</div>
     <label class="fld"><span>Categoria</span><select class="inp" id="dcat">${allCats().map(c=>`<option ${c===d.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
     <div class="btns ${sh.id?'two':''}"><button class="btn pri" data-a="saveDish">Salva</button>${sh.id?`<button class="btn danger" data-a="delDish">${I.trash}Elimina</button>`:''}</div>
     ${sh.id?'<p class="hint">Modifiche ed eliminazioni non toccano i menù già composti.</p>':''}`;
@@ -847,7 +888,8 @@ function renderSheet(){
     h=head(sh.title)+`<p class="hint" style="margin-bottom:12px;word-break:break-all">${sh.files.map(f=>esc(f.name)).join('<br>')}</p>
     <label class="fld"><span>Numero WhatsApp (facoltativo)</span><input class="inp" type="tel" id="waphone" value="${esc(sh.phone)}" placeholder="Se lo lasci vuoto scegli tu la chat"></label>
     <label class="fld"><span>Messaggio</span><textarea class="inp" id="watext" rows="7" style="min-height:160px">${esc(sh.text)}</textarea></label>
-    <div class="btns"><button class="btn wa" data-a="waSend">${I.wa}Apri WhatsApp</button><button class="btn" data-a="waOther">${I.share}Invia con un'altra app</button></div>`;
+    <div class="btns"><button class="btn wa" data-a="waSend">${I.wa}Apri WhatsApp</button><button class="btn" data-a="waOther">${I.share}Invia con un'altra app</button></div>
+    <p class="hint" style="margin-top:10px">Il messaggio viene copiato anche negli appunti: se WhatsApp non lo mostra sotto al file, tieni premuto nel campo di testo e scegli Incolla.</p>`;
   }else if(sh.type==='file'){
     const cs=canShareFiles();
     h=head(sh.title)+`<p class="hint" style="margin-bottom:14px;word-break:break-all">${esc(sh.name)}</p>
@@ -920,15 +962,19 @@ document.addEventListener('click',e=>{
     case 'dup':{const c=clone(m);c.id=uid();c.created=Date.now();c.status='bozza';state.menus.push(c);save();ui.editId=c.id;render();toast('Menù duplicato: cambia data e cliente');break}
     case 'del':if(confirm('Eliminare questo menù?')){state.menus=state.menus.filter(x=>x!==m);save();ui.view=ui.back||'cal';render();toast('Menù eliminato')}break;
     case 'listTab':ui.listTab=d.v;render(true);break;
-    case 'editDish':ui.sheet={type:'dish',id:d.id||null};renderSheet();break;
+    case 'editDish':{const x=d.id&&state.dishes.find(z=>z.id===d.id);ui.sheet={type:'dish',id:d.id||null,alg:[...(x&&x.alg||[])]};renderSheet();break}
+    case 'algT':{const n=+d.n,A=ui.sheet.alg,i=A.indexOf(n);i<0?A.push(n):A.splice(i,1);A.sort((a,b)=>a-b);b.classList.toggle('on',i<0);break}
     case 'saveDish':{
       const name=$('#dname').value.trim(),cat=$('#dcat').value;if(!name){toast('Scrivi il nome della portata');break}
-      if(ui.sheet.id){const x=state.dishes.find(z=>z.id===ui.sheet.id);x.name=name;x.cat=cat}else state.dishes.push({id:uid(),name,cat});
+      const alg=[...(ui.sheet.alg||[])];
+      if(ui.sheet.id){const x=state.dishes.find(z=>z.id===ui.sheet.id);x.name=name;x.cat=cat;x.alg=alg}else state.dishes.push({id:uid(),name,cat,alg});
       save();ui.sheet=null;renderSheet();render(true);toast('Portata salvata');break}
     case 'delDish':if(confirm("Eliminare questa portata dall'archivio?")){state.dishes=state.dishes.filter(z=>z.id!==ui.sheet.id);save();ui.sheet=null;renderSheet();render(true)}break;
     case 'closeSheet':ui.sheet=null;renderSheet();break;
     case 'waMenu':waMenu();break;
-    case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;sendFiles(sh.files,sh.text,sh.phone,a==='waSend');break}
+    case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;sendFiles(sh.files,sh.text,sh.phone,a==='waSend');
+      if(sh.menuId){const mm=getMenu(sh.menuId);if(mm){if(mm.status==='bozza'&&sh.mode==='proposta'){mm.status='inviata';toast('Proposta segnata come inviata')}if(!mm.phone&&sh.phone)mm.phone=sh.phone;save()}}
+      break}
     case 'ostType':{const o=ost(),p=OSTIA_TYPES[d.v];o.type=d.v;o.top=p.top;o.main=p.main;render(true);break}
     case 'ostShape':ost().shape=d.v;render(true);break;
     case 'ostWA':(async()=>{busy(true,'Preparo il file');try{const f=await ostiaFile('png'),o=ost();
@@ -958,7 +1004,7 @@ document.addEventListener('click',e=>{
     case 'catAdd':{const v=$('#newcat').value.trim();if(!v)break;if(allCats().includes(v)){toast('Sezione già presente');break}state.categories.push(v);save();render(true);break}
     case 'drAdd':{const v=$('#newdrink').value.trim();if(!v)break;state.settings.drinkPresets.push(v);save();render(true);break}
     case 'drDel':state.settings.drinkPresets.splice(+d.i,1);save();render(true);break;
-    case 'export':{const blob=new Blob([JSON.stringify(state)],{type:'application/json'});ui.sheet={type:'file',blob,name:`backup-menu_${fmtDash(today())}.json`,mime:'application/json',title:'Backup pronto'};renderSheet();break}
+    case 'export':{state.settings.lastBackup=Date.now();save();const blob=new Blob([JSON.stringify(state)],{type:'application/json'});ui.sheet={type:'file',blob,name:`backup-menu_${fmtDash(today())}.json`,mime:'application/json',title:'Backup pronto'};renderSheet();break}
     case 'import':$('#importfile').click();break;
   }
 });

@@ -137,6 +137,12 @@ public class MainActivity extends AppCompatActivity {
          * Con whatsapp=true apre direttamente WhatsApp (o WhatsApp Business);
          * se non è installato, mostra il normale menu di condivisione.
          */
+        private void avvisaAppunti() {
+            runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                    "Messaggio copiato: se non compare, tieni premuto e scegli Incolla",
+                    Toast.LENGTH_LONG).show());
+        }
+
         @JavascriptInterface
         public void shareFiles(String json) {
             try {
@@ -161,16 +167,33 @@ public class MainActivity extends AppCompatActivity {
                     tipo = (tipo == null || tipo.equals(m)) ? m : "*/*";
                 }
 
+                // Il testo va anche negli appunti: WhatsApp a volte scarta la didascalia
+                // dei documenti, così basta tenere premuto e scegliere Incolla.
+                if (!testo.isEmpty()) {
+                    final String t = testo;
+                    runOnUiThread(() -> {
+                        android.content.ClipboardManager cm =
+                                (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        if (cm != null) cm.setPrimaryClip(android.content.ClipData.newPlainText("Messaggio", t));
+                    });
+                }
+
+                // Con SEND_MULTIPLE WhatsApp mantiene il testo come didascalia anche per i PDF;
+                // con SEND di un solo documento spesso lo ignora.
                 Intent i;
-                if (uris.size() > 1) {
+                if (!uris.isEmpty()) {
                     i = new Intent(Intent.ACTION_SEND_MULTIPLE);
                     i.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+                    if (!testo.isEmpty()) {
+                        java.util.ArrayList<CharSequence> testi = new java.util.ArrayList<>();
+                        testi.add(testo);
+                        i.putCharSequenceArrayListExtra(Intent.EXTRA_TEXT, testi);
+                    }
                 } else {
                     i = new Intent(Intent.ACTION_SEND);
-                    if (uris.size() == 1) i.putExtra(Intent.EXTRA_STREAM, uris.get(0));
                 }
                 i.setType(tipo != null ? tipo : "text/plain");
-                if (!testo.isEmpty()) i.putExtra(Intent.EXTRA_TEXT, testo);
+                if (!testo.isEmpty() && uris.isEmpty()) i.putExtra(Intent.EXTRA_TEXT, testo);
                 i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
                 if (wa) {
@@ -181,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
                             Intent w = new Intent(i).setPackage(pkg);
                             w.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(w);
+                            if (!testo.isEmpty()) avvisaAppunti();
                             return;
                         } catch (android.content.ActivityNotFoundException ignored) { }
                     }
@@ -188,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent scelta = Intent.createChooser(i, "Invia");
                 scelta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(scelta);
+                if (!testo.isEmpty()) avvisaAppunti();
             } catch (Exception e) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this,
                         "Non è stato possibile inviare i file", Toast.LENGTH_LONG).show());

@@ -1,0 +1,44 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'it.tenutacoppa.menu'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "it.tenutacoppa.menu"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    signingConfigs {
+        release {
+            // usata solo se la chiave è configurata nei Secrets del repository
+            def ks = System.getenv('MENU_KEYSTORE')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('MENU_STORE_PASSWORD')
+                keyAlias System.getenv('MENU_KEY_ALIAS')
+                keyPassword System.getenv('MENU_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig System.getenv('MENU_KEYSTORE') ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core:1.13.1'
+}

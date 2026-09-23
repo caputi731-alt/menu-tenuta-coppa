@@ -12,9 +12,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png">
 <title>Menù Tenuta Coppa</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Antic&family=Cormorant+Garamond:ital,wght@0,400;1,500&family=Figtree:wght@400;500;600;700&family=Raleway:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/fonts.css">
 <style>
 :root{--paper:#FAFAF6;--ink:#22281F;--muted:#6B7064;--line:#DEDFD5;--olive:#4E5B31;--olive-2:#3E4926;--olive-soft:#E9ECDF;--wine:#7B2D3B;--r:14px;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -195,8 +193,8 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 <input type="file" id="bgfile" accept="image/png,image/jpeg,image/webp" hidden>
 <input type="file" id="importfile" accept="application/json,.json" hidden>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="vendor/html2canvas.min.js" defer></script>
+<script src="vendor/jspdf.umd.min.js" defer></script>
 <script>
 'use strict';
 /* ---------- Costanti ---------- */
@@ -416,7 +414,7 @@ const loadFonts=()=>Promise.all(FONTS.map(f=>document.fonts.load(f).catch(()=>{}
 
 /* ---------- PDF ---------- */
 async function makePDF(m,mode){
-  if(!window.html2canvas||!window.jspdf)throw new Error("librerie non caricate. Apri l'app una volta con internet attivo.");
+  if(!window.html2canvas||!window.jspdf)throw new Error('librerie non caricate. Riapri l\'app.');
   await loadFonts();
   const t=tplOf(m),L=layoutOf(m),host=$('#rh');host.innerHTML=pageHTML(m,t,mode);
   const pg=host.firstElementChild;fitPage(pg);
@@ -439,15 +437,21 @@ async function doPDF(){
   }catch(e){toast('PDF non creato: '+(e.message||e))}
   finally{busy(false);renderSheet()}
 }
+const AND=window.Android&&window.Android.saveFile?window.Android:null;
+const b64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(b)});
 async function shareFile(){
-  const s=ui.sheet,file=new File([s.blob],s.name,{type:s.mime});
+  const s=ui.sheet;
+  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,true)}catch(e){toast('Condivisione non riuscita')}return}
+  const file=new File([s.blob],s.name,{type:s.mime});
   try{await navigator.share({files:[file],title:s.name})}catch(e){if(e.name!=='AbortError')downloadFile()}
 }
-function downloadFile(){
-  const s=ui.sheet,u=URL.createObjectURL(s.blob),a=document.createElement('a');
+async function downloadFile(){
+  const s=ui.sheet;
+  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,false)}catch(e){toast('Salvataggio non riuscito')}return}
+  const u=URL.createObjectURL(s.blob),a=document.createElement('a');
   a.href=u;a.download=s.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);
 }
-const canShareFiles=()=>{try{return!!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}))}catch(e){return false}};
+const canShareFiles=()=>{if(AND)return true;try{return!!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}))}catch(e){return false}};
 
 /* ---------- Componenti ---------- */
 const topbar=inner=>`<header class="top">${inner}</header>`;

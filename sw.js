@@ -1,10 +1,7 @@
 // Cambia il numero di versione a ogni aggiornamento dell'app
-const CACHE = 'menu-app-v2';
-const LOCAL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './assets/domenica-pecore.jpg', './assets/domenica-girasole.jpg', './assets/domenica-muretto.jpg', './assets/comunione.jpg'];
-const CDN = [
-  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
-];
+const CACHE = 'menu-app-v3';
+const LOCAL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './vendor/fonts.css', './vendor/html2canvas.min.js', './vendor/jspdf.umd.min.js', './assets/domenica-pecore.jpg', './assets/domenica-girasole.jpg', './assets/domenica-muretto.jpg', './assets/comunione.jpg'];
+const CDN = [];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)
     .then(c => c.addAll(LOCAL).then(() => c.addAll(CDN).catch(() => {})))

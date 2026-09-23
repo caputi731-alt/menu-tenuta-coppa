@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   build:
@@ -50,7 +51,17 @@ jobs:
           MENU_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           MENU_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           MENU_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: gradle assembleRelease --no-daemon
+        run: set -o pipefail; gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      - name: Se la compilazione fallisce, apri una issue con l'errore
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          { echo 'Build ${{ github.run_number }} non riuscita.'; echo; echo '```'
+            tail -c 50000 "$RUNNER_TEMP/build.log" || echo 'log non disponibile'
+            echo '```'; } > "$RUNNER_TEMP/errore.md"
+          gh issue create --title "Build ${{ github.run_number }} fallita" --body-file "$RUNNER_TEMP/errore.md"
 
       - name: Mostra con quale chiave è firmato l'APK
         run: |

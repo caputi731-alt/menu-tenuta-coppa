@@ -18,9 +18,12 @@ android {
             def ks = System.getenv('MENU_KEYSTORE')
             if (ks) {
                 storeFile file(ks)
-                storePassword System.getenv('MENU_STORE_PASSWORD')
-                keyAlias System.getenv('MENU_KEY_ALIAS')
-                keyPassword System.getenv('MENU_KEY_PASSWORD')
+                // valori di ripiego: la chiave è stata creata con alias "menu"
+                // e con la stessa password per archivio e chiave
+                def sp = System.getenv('MENU_STORE_PASSWORD')
+                storePassword sp
+                keyAlias System.getenv('MENU_KEY_ALIAS') ?: 'menu'
+                keyPassword System.getenv('MENU_KEY_PASSWORD') ?: sp
             }
         }
     }

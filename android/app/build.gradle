@@ -42,4 +42,12 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.core:core:1.13.1'
     implementation 'androidx.webkit:webkit:1.11.0'
+
+    // Le librerie AndroidX portano versioni diverse di Kotlin: senza questo
+    // allineamento la compilazione si ferma per classi duplicate.
+    constraints {
+        implementation('org.jetbrains.kotlin:kotlin-stdlib:1.9.24')
+        implementation('org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24')
+        implementation('org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24')
+    }
 }

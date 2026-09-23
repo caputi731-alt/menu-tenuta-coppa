@@ -285,8 +285,8 @@ const OSTIA_TYPES={
 };
 const OSTIA_SHAPES={tonda:{l:'Tonda Ø 20 cm',w:210,h:210},rett:{l:'Rettangolare A4',w:297,h:210}};
 const GOLD='#A8956A';
-const CLASSICO={layout:'classico',heading:'Pranzo di festa',subheading:'Menù',tagline:'Masseria storica del 1735',legend:true,bgColor:'#FFFFFF',ink:'#5C654C',accent:'#354469',drinks:'Vini Cantina Crifo e acqua minerale,\nLiquore e caffè',priceAdult:'',priceKid:'',limit:698};
-const EVENTO={layout:'evento',heading:'Menù',bgColor:'#FFFFFF',ink:'#2B2B2B',drinks:'Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.',priceAdult:'',priceKid:'',kidLabel:'Menù bambini'};
+const CLASSICO={layout:'classico',heading:'Pranzo di festa',subheading:'Menù',tagline:'Masseria storica del 1735',legend:true,bgColor:'#FFFFFF',ink:'#5C654C',accent:'#354469',drinks:'Vini Cantina Crifo e acqua minerale,\nLiquore e caffè',priceAdult:50,priceKid:25,limit:698};
+const EVENTO={layout:'evento',heading:'Menù',bgColor:'#FFFFFF',ink:'#2B2B2B',drinks:'Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.',priceAdult:50,priceKid:25,kidLabel:'Menù bambini'};
 const ALLERGENI=['Cereali con glutine','Crostacei','Uova','Pesce','Arachidi','Soia','Latte/Lattosio','Frutta a guscio','Sedano','Senape','Sesamo','Solfiti (>10mg/kg)','Lupini','Molluschi'];
 function defaultTemplates(){
   const t=(id,name,o)=>({...SUNDAY,id,name,builtIn:true,...o,origBg:o.bgImage});
@@ -375,6 +375,7 @@ function normalize(s){
     s.templates.forEach(t=>{const b=byId[t.id];
       if(t.id==='tpl-pasqua'&&t.name==='Festività – Pasqua'){t.name=b.name;if(t.heading==='Pasqua 2026')t.heading=b.heading}
       if(b&&t.layout==='classico'&&t.tagline===undefined){t.tagline=b.tagline;t.legend=true}
+      if(b&&t.builtIn&&(t.priceAdult===''||t.priceAdult===undefined)){t.priceAdult=b.priceAdult;if(t.priceKid===''||t.priceKid===undefined)t.priceKid=b.priceKid}
       if(b&&t.builtIn){t.bgColor=b.bgColor;if(!t.bgImage||t.bgImage===t.origBg)t.bgImage=b.bgImage;t.origBg=b.origBg}});
     d.templates.forEach(b=>{if(!s.templates.some(t=>t.id===b.id))s.templates.push(b)});
     const ord=d.templates.map(t=>t.id),pos=t=>{const i=ord.indexOf(t.id);return i<0?999:i};
@@ -698,6 +699,9 @@ function vPreview(){
   const m=getMenu(ui.editId);if(!m){ui.view='cal';return vCal()}
   return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>Anteprima</h1>`)+
   `<main class="main"><div class="seg"><button class="${ui.pv.mode==='tavolo'?'on':''}" data-a="pvMode" data-v="tavolo">Menù tavolo</button><button class="${ui.pv.mode==='proposta'?'on':''}" data-a="pvMode" data-v="proposta">Proposta</button></div>
+  ${ui.pv.mode==='proposta'?`<div class="row2" style="margin-bottom:4px">
+    <label class="fld"><span>Prezzo adulti (€)</span><input class="inp" data-f="priceAdult" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceAdult'))}" placeholder="obbligatorio"></label>
+    <label class="fld"><span>Prezzo bambini (€)</span><input class="inp" data-f="priceKid" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceKid'))}" placeholder="facoltativo"></label></div>`:''}
   <div class="pv" id="pv"></div>
   <div class="btns">
     <button class="btn wa wide" data-a="waMenu">${I.wa}Invia su WhatsApp</button>
@@ -762,6 +766,14 @@ function menuMsg(m,mode){
 async function waFile(m,mode,fmt){
   const base=`${mode==='tavolo'?'Menu':'Proposta-menu'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}`;
   return fmt==='pdf'?{blob:await makePDF(m,mode),name:base+'.pdf',mime:'application/pdf'}:{blob:await makeImage(m,mode),name:base+'.jpg',mime:'image/jpeg'};
+}
+// la proposta deve sempre riportare il prezzo
+function prezzoOk(){
+  const m=getMenu(ui.editId);
+  if(!m||ui.pv.mode!=='proposta'||num(val(m,'priceAdult'))!=='')return true;
+  toast('Inserisci il prezzo adulti: la proposta deve sempre riportarlo');
+  const f=$('[data-f=priceAdult]');if(f){f.focus();f.scrollIntoView({block:'center'})}
+  return false;
 }
 async function waMenu(fmt){
   const m=getMenu(ui.editId);if(!m)return;const mode=ui.pv.mode;fmt=fmt||state.settings.waFmt||'img';
@@ -968,7 +980,7 @@ document.addEventListener('click',e=>{
     case 'drPick':{const p=state.settings.drinkPresets[+d.i],cur=String(val(m,d.f)).trim();m[d.f]=cur?cur+'\n'+p:p;save();render(true);break}
     case 'preview':ui.pv={mode:d.mode||'tavolo'};ui.view='preview';render();break;
     case 'pvMode':ui.pv.mode=d.v;render(true);break;
-    case 'pdf':doPDF();break;
+    case 'pdf':if(prezzoOk())doPDF();break;
     case 'shareFile':shareFile();break;
     case 'downloadFile':downloadFile();break;
     case 'dup':{const c=clone(m);c.id=uid();c.created=Date.now();c.status='bozza';state.menus.push(c);save();ui.editId=c.id;render();toast('Menù duplicato: cambia data e cliente');break}
@@ -983,7 +995,7 @@ document.addEventListener('click',e=>{
       save();ui.sheet=null;renderSheet();render(true);toast('Portata salvata');break}
     case 'delDish':if(confirm("Eliminare questa portata dall'archivio?")){state.dishes=state.dishes.filter(z=>z.id!==ui.sheet.id);save();ui.sheet=null;renderSheet();render(true)}break;
     case 'closeSheet':ui.sheet=null;renderSheet();break;
-    case 'waMenu':waMenu();break;
+    case 'waMenu':if(prezzoOk())waMenu();break;
     case 'waFmt':if(ui.sheet.fmt!==d.v){state.settings.waFmt=d.v;save();waMenu(d.v)}break;
     case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;sendFiles(sh.files,sh.text,sh.phone,a==='waSend');
       if(sh.menuId){const mm=getMenu(sh.menuId);if(mm){if(mm.status==='bozza'&&sh.mode==='proposta'){mm.status='inviata';toast('Proposta segnata come inviata')}if(!mm.phone&&sh.phone)mm.phone=sh.phone;save()}}
@@ -1030,6 +1042,7 @@ document.addEventListener('input',e=>{
     m[d.f]=v;save();
     if(/price|guests/.test(d.f)){const t=$('#tot');if(t)t.textContent=totText(m)}
     if(d.f==='heading'){const h=$('.top h1');if(h)h.textContent=heading(m)}
+    if(d.pv){clearTimeout(ui.pvT);ui.pvT=setTimeout(mountPreviews,350)} // aggiorno l'anteprima mentre scrivi il prezzo
   }else if(d.sf){state.settings[d.sf]=el.value;save()}
   else if(d.tf){const t=getTpl(ui.tplId);let v=el.value;if(d.tf==='priceAdult'||d.tf==='priceKid')v=v.trim()===''?'':num(v);t[d.tf]=v;save();mountPreviews();if(d.tf==='name'){const h=$('.top h1');if(h)h.textContent=el.value}}
   else if(d.tl){const t=getTpl(ui.tplId);t.limit=Number(el.value);$('#tl').textContent=Math.round(t.limit/14.4)+'%';save();mountPreviews()}

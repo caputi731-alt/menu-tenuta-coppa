@@ -772,36 +772,38 @@ document.addEventListener('change',async e=>{
   const el=e.target,d=el.dataset;
   if(d.fc){const m=getMenu(ui.editId);if(m){m[d.fc]=el.checked;save();if(d.re)render(true)}}
   else if(d.pk==='all'){ui.pickAll=el.checked;$('#pklist').innerHTML=pickListHTML()}
-  else if(el.id==='bgfile'&&el.files[0]){
-    try{
-      const r=await readImage(el.files[0]),t=getTpl(ui.tplId),L=LAYOUTS[t.layout]||LAYOUTS.verticale;
-      t.bgImage=r.url;save();render(true);
-      if(Math.abs(r.w/r.h-L.w/L.h)>0.03)toast("L'immagine ha proporzioni diverse dal template: verrà deformata. Esportala da Canva nello stesso formato.");
-    }catch(err){toast(err.message)}
-    el.value='';
-  }else if(el.id==='importfile'&&el.files[0]){
-    try{
-      const obj=JSON.parse(await el.files[0].text());
-      if(!obj||!Array.isArray(obj.menus)||!Array.isArray(obj.dishes))throw new Error('Il file non è un backup di questa app.');
-      if(confirm(`Il backup contiene ${obj.menus.length} menù e ${obj.dishes.length} portate. Sostituire i dati attuali?`)){state=normalize(obj);flush();render();toast('Backup importato')}
-    }catch(err){toast(err.message||'File non valido')}
-    el.value='';
-  }
+  else if(el.id==='bgfile'&&el.files[0]){await setBg(el.files[0]);el.value=''}
+  else if(el.id==='importfile'&&el.files[0]){await applyBackup(await el.files[0].text());el.value=''}
 });
+async function setBg(src){
+  try{
+    const r=await readImage(src),t=getTpl(ui.tplId),L=LAYOUTS[t.layout]||LAYOUTS.verticale;
+    t.bgImage=r.url;save();render(true);
+    if(Math.abs(r.w/r.h-L.w/L.h)>0.03)toast("L'immagine ha proporzioni diverse dal template: verrà deformata. Esportala da Canva nello stesso formato.");
+  }catch(err){toast(err.message)}
+}
+async function applyBackup(text){
+  try{
+    const obj=JSON.parse(text);
+    if(!obj||!Array.isArray(obj.menus)||!Array.isArray(obj.dishes))throw new Error('Il file non è un backup di questa app.');
+    if(confirm(`Il backup contiene ${obj.menus.length} menù e ${obj.dishes.length} portate. Sostituire i dati attuali?`)){state=normalize(obj);flush();render();toast('Backup importato')}
+  }catch(err){toast(err.message||'File non valido')}
+}
+
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
   const map={pknew:'pickNew',newcat:'catAdd',newdrink:'drAdd'};
   if(map[e.target.id]){e.preventDefault();$(`[data-a="${map[e.target.id]}"]`).click()}
 });
-function readImage(file){
+function readImage(src){ // accetta un File oppure un data URI (dall'app Android)
   return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>{const img=new Image();img.onload=()=>{
+    const done=url=>{const img=new Image();img.onload=()=>{
       const k=Math.min(1,2600/Math.max(img.width,img.height)),w=Math.round(img.width*k),h=Math.round(img.height*k);
       const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
       res({url:c.toDataURL('image/jpeg',0.88),w,h})};
-      img.onerror=()=>rej(new Error('Immagine non leggibile. Usa un PNG o JPG.'));img.src=r.result};
-    r.onerror=()=>rej(r.error);r.readAsDataURL(file);
+      img.onerror=()=>rej(new Error('Immagine non leggibile. Usa un PNG o JPG.'));img.src=url};
+    if(typeof src==='string')return done(src);
+    const r=new FileReader();r.onload=()=>done(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(src);
   });
 }
 let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(mountPreviews,150)});
@@ -813,7 +815,7 @@ let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(m
   render();
   loadFonts().then(mountPreviews);
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-  if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if(!AND&&'serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
 </body>

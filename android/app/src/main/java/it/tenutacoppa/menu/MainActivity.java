@@ -16,11 +16,15 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
+import androidx.webkit.WebViewAssetLoader;
 
 import java.io.File;
 import java.io.FileOutputStream;
 
 public class MainActivity extends AppCompatActivity {
+
+    /** Dominio fittizio: non esiste in rete, serve solo a dare un'origine sicura all'app. */
+    private static final String DOMINIO = "appassets.androidplatform.net";
 
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
@@ -43,16 +47,30 @@ public class MainActivity extends AppCompatActivity {
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);          // serve a IndexedDB, dove l'app salva i dati
+        s.setDatabaseEnabled(true);
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
 
+        // I file dell'app vengono serviti su un indirizzo https interno invece che come
+        // file://: solo così il browser di Android concede IndexedDB, dove l'app salva i dati.
+        final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
+                .setDomain(DOMINIO)
+                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .build();
+
         web.setWebViewClient(new WebViewClient() {
+            @Override
+            public android.webkit.WebResourceResponse shouldInterceptRequest(
+                    WebView v, android.webkit.WebResourceRequest r) {
+                return loader.shouldInterceptRequest(r.getUrl());
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, android.webkit.WebResourceRequest r) {
                 Uri u = r.getUrl();
                 // i link esterni si aprono nel browser, l'app resta dov'è
-                if ("file".equals(u.getScheme())) return false;
+                if (DOMINIO.equals(u.getHost())) return false;
                 startActivity(new Intent(Intent.ACTION_VIEW, u));
                 return true;
             }
@@ -74,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         web.addJavascriptInterface(new Ponte(), "Android");
-        web.loadUrl("file:///android_asset/index.html");
+        web.loadUrl("https://" + DOMINIO + "/assets/index.html");
     }
 
     @Override

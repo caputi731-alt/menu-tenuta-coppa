@@ -1,6 +1,6 @@
 // Cambia il numero di versione a ogni aggiornamento dell'app
-const CACHE = 'menu-app-v3';
-const LOCAL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './vendor/fonts.css', './vendor/html2canvas.min.js', './vendor/jspdf.umd.min.js', './assets/domenica-pecore.jpg', './assets/domenica-girasole.jpg', './assets/domenica-muretto.jpg', './assets/comunione.jpg'];
+const CACHE = 'menu-app-v4';
+const LOCAL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './vendor/fonts.css', './vendor/html2canvas.min.js', './vendor/jspdf.umd.min.js', './assets/domenica-pecore.jpg', './assets/domenica-girasole.jpg', './assets/domenica-muretto.jpg', './assets/comunione.jpg', './assets/pasqua.jpg', './assets/didattica/brochure.pdf', './assets/didattica/scheda.docx', './assets/didattica/br-1.jpg', './assets/didattica/br-2.jpg', './assets/didattica/sc-1.jpg'];
 const CDN = [];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)

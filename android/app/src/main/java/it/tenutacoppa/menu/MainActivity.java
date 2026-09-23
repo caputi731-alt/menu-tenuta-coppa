@@ -130,5 +130,68 @@ public class MainActivity extends AppCompatActivity {
                         "Non è stato possibile preparare il file", Toast.LENGTH_LONG).show());
             }
         }
+
+        /**
+         * Invia uno o più file insieme a un messaggio.
+         * json = {files:[{name,mime,data(base64)}], text, whatsapp:bool, phone:"39..."}
+         * Con whatsapp=true apre direttamente WhatsApp (o WhatsApp Business);
+         * se non è installato, mostra il normale menu di condivisione.
+         */
+        @JavascriptInterface
+        public void shareFiles(String json) {
+            try {
+                org.json.JSONObject o = new org.json.JSONObject(json);
+                org.json.JSONArray arr = o.optJSONArray("files");
+                String testo = o.optString("text", "");
+                boolean wa = o.optBoolean("whatsapp", false);
+                String tel = o.optString("phone", "").replaceAll("[^0-9]", "");
+
+                File cartella = new File(getCacheDir(), "condivisi");
+                if (!cartella.exists() && !cartella.mkdirs()) throw new Exception("cartella non creata");
+                java.util.ArrayList<Uri> uris = new java.util.ArrayList<>();
+                String tipo = null;
+                for (int k = 0; arr != null && k < arr.length(); k++) {
+                    org.json.JSONObject f = arr.getJSONObject(k);
+                    File out = new File(cartella, f.getString("name").replaceAll("[^A-Za-z0-9._-]", "_"));
+                    try (FileOutputStream os = new FileOutputStream(out)) {
+                        os.write(Base64.decode(f.getString("data"), Base64.DEFAULT));
+                    }
+                    uris.add(FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".files", out));
+                    String m = f.optString("mime", "*/*");
+                    tipo = (tipo == null || tipo.equals(m)) ? m : "*/*";
+                }
+
+                Intent i;
+                if (uris.size() > 1) {
+                    i = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                    i.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+                } else {
+                    i = new Intent(Intent.ACTION_SEND);
+                    if (uris.size() == 1) i.putExtra(Intent.EXTRA_STREAM, uris.get(0));
+                }
+                i.setType(tipo != null ? tipo : "text/plain");
+                if (!testo.isEmpty()) i.putExtra(Intent.EXTRA_TEXT, testo);
+                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                if (wa) {
+                    // con il numero del cliente WhatsApp apre direttamente la sua chat
+                    if (tel.length() >= 8) i.putExtra("jid", tel + "@s.whatsapp.net");
+                    for (String pkg : new String[]{"com.whatsapp", "com.whatsapp.w4b"}) {
+                        try {
+                            Intent w = new Intent(i).setPackage(pkg);
+                            w.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(w);
+                            return;
+                        } catch (android.content.ActivityNotFoundException ignored) { }
+                    }
+                }
+                Intent scelta = Intent.createChooser(i, "Invia");
+                scelta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(scelta);
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                        "Non è stato possibile inviare i file", Toast.LENGTH_LONG).show());
+            }
+        }
     }
 }

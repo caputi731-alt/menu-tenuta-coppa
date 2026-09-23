@@ -177,6 +177,25 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .v-notes{margin-top:.8em;font-size:.9em;font-style:italic}
 .v-empty,.e-empty{opacity:.45;font-style:italic}
 .pg-e{font-family:Antic,sans-serif}
+.pg-c{font-family:'Cormorant Garamond',serif;font-weight:400}
+.c-title{position:absolute;left:30px;right:30px;top:67.9px;font-size:25px;font-weight:700;line-height:1.21;white-space:nowrap;overflow:hidden}
+.c-sub{position:absolute;left:0;right:0;top:106.4px;font-size:28px;font-weight:700;line-height:1.21}
+.c-flow{position:absolute;left:55px;right:55px;top:151px}
+.c-in{font-size:17px}
+.c-sec-t{font-size:1.1765em;font-weight:700;line-height:1.21}
+.c-sec+.c-sec{margin-top:1.53em}
+.c-sec+.c-sec.nt{margin-top:1.1em}
+.c-it{line-height:1.21;margin-bottom:.376em;white-space:pre-line}
+.c-offer{margin-top:1.3em;line-height:1.3}
+.c-drinks{position:absolute;left:16.4px;top:706px;font-size:18px;line-height:.917;text-align:left;white-space:pre-line}
+/* Ostie e fattoria didattica */
+.ost-cv{width:100%;height:auto;display:block;border-radius:12px;background:#fff;border:1px solid var(--line);margin-bottom:14px}
+.fcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.fcard h3{margin:0 0 2px;font-size:16px}
+.fcard small{color:var(--muted);font-size:13px}
+.thumbs{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px}
+.thumbs img{height:150px;border-radius:6px;border:1px solid var(--line);flex:none}
+.btn.wa{background:#1F7A4D;border-color:#1F7A4D;color:#fff}
 .e-col{position:absolute;top:0;bottom:0}
 .e-h{position:absolute;top:103px;left:-20px;right:-20px;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:19.5px;letter-spacing:.26em;text-transform:uppercase;line-height:1.1;white-space:nowrap}
 .e-body{position:absolute;top:141px;left:0;right:0;font-size:11.4px;line-height:1.38}
@@ -192,6 +211,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 <div id="rh"></div>
 <input type="file" id="bgfile" accept="image/png,image/jpeg,image/webp" hidden>
 <input type="file" id="importfile" accept="application/json,.json" hidden>
+<input type="file" id="didfile" accept=".pdf,.doc,.docx,application/pdf" hidden>
 
 <script src="vendor/html2canvas.min.js" defer></script>
 <script src="vendor/jspdf.umd.min.js" defer></script>
@@ -201,7 +221,8 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 const PT_MM=25.4/72;
 const LAYOUTS={
   verticale:{w:810,h:1440,scale:2,label:'Verticale (come i menù della domenica)'},
-  evento:{w:842,h:595,scale:3,label:'A4 orizzontale con menù bambini'}
+  evento:{w:842,h:595,scale:3,label:'A4 orizzontale con menù bambini'},
+  classico:{w:595,h:842,scale:3,label:'A4 verticale (come il menù di Pasqua)'}
 };
 const STATUS={bozza:{l:'Bozza',c:'#7E8277'},inviata:{l:'Inviata',c:'#B07A1E'},confermata:{l:'Confermata',c:'#3F7A34'},rifiutata:{l:'Rifiutata',c:'#9B3A48'}};
 const DEF_CATS=['Antipasti','Primi Piatti','Secondo Piatto','Dessert'];
@@ -242,18 +263,33 @@ const SEED={
 };
 const DRINK_PRESETS=['Vini in bottiglia Cantina Crifo, acqua minerale','Liquori e caffè','Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.','Acqua minerale'];
 const SUNDAY={layout:'verticale',heading:'Menù di domenica',headingKids:'Menù bambini',drinks:'Vini in bottiglia Cantina Crifo, acqua minerale\nLiquori e caffè',drinksKids:'Acqua minerale',priceAdult:50,priceKid:25,kidLabel:'Bambini fino a 10 anni'};
+const DID_MSG="Buongiorno,\nle invio la presentazione della fattoria didattica di Tenuta Coppa per l'anno scolastico 2026/2027 e la scheda di partecipazione.\nPer prenotare basta compilare la scheda e rispedirla qui su WhatsApp oppure a info@tenutacoppa.it.\nResto a disposizione per qualsiasi informazione.\nUn cordiale saluto,\nTenuta Coppa – 347 154 9100";
+const DID_FILES=[
+  {k:'brochure',l:'Presentazione fattoria didattica',sub:'PDF · laboratori, giornata e costi',file:'assets/didattica/brochure.pdf',name:'Masseria-Didattica-Tenuta-Coppa-2026-2027.pdf',mime:'application/pdf',thumbs:['assets/didattica/br-1.jpg','assets/didattica/br-2.jpg']},
+  {k:'scheda',l:'Scheda di partecipazione',sub:'Word · da compilare e rispedire',file:'assets/didattica/scheda.docx',name:'Scheda-partecipazione-Tenuta-Coppa-2026-2027.docx',mime:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',thumbs:['assets/didattica/sc-1.jpg']}
+];
+const OSTIA_TYPES={
+  compleanno:{l:'Compleanno',top:'Buon',main:'Compleanno'},
+  battesimo:{l:'Battesimo',top:'Il mio',main:'Battesimo'},
+  comunione:{l:'Comunione',top:'La mia',main:'Prima Comunione'},
+  cresima:{l:'Cresima',top:'La mia',main:'Cresima'},
+  anniversario:{l:'Anniversario',top:'Buon',main:'Anniversario'}
+};
+const OSTIA_SHAPES={tonda:{l:'Tonda Ø 20 cm',w:210,h:210},rett:{l:'Rettangolare A4',w:297,h:210}};
+const GOLD='#A8956A';
 function defaultTemplates(){
   const t=(id,name,o)=>({...SUNDAY,id,name,builtIn:true,...o,origBg:o.bgImage});
   return[
-    t('tpl-pecore','Domenica – Pecore e ulivo',{bgImage:'assets/domenica-pecore.jpg',bgColor:'#F4E6C3',ink:'#5A3E2B',limit:1240}),
-    t('tpl-girasole','Domenica – Girasole',{bgImage:'assets/domenica-girasole.jpg',bgColor:'#F5F1E7',ink:'#4A3626',limit:1290}),
-    t('tpl-muretto','Domenica – Muretto a secco',{bgImage:'assets/domenica-muretto.jpg',bgColor:'#D5C2A2',ink:'#2E1E12',limit:1225}),
+    t('tpl-pecore','Domenica – Pecore e ulivo',{bgImage:'assets/domenica-pecore.jpg',bgColor:'#FFFFFF',ink:'#5A3E2B',limit:1240}),
+    t('tpl-girasole','Domenica – Girasole',{bgImage:'assets/domenica-girasole.jpg',bgColor:'#FFFFFF',ink:'#4A3626',limit:1290}),
+    t('tpl-muretto','Domenica – Muretto a secco',{bgImage:'assets/domenica-muretto.jpg',bgColor:'#FFFFFF',ink:'#2E1E12',limit:1225}),
+    t('tpl-pasqua','Festività – Pasqua',{layout:'classico',heading:'Pasqua 2026',subheading:'Menù',bgImage:'assets/pasqua.jpg',bgColor:'#FFFFFF',ink:'#5C654C',accent:'#354469',drinks:'Vini Cantina Crifo e acqua minerale,\nLiquore e caffè',priceAdult:'',priceKid:'',limit:698}),
     t('tpl-comunione','Comunione',{layout:'evento',heading:'Menù',bgImage:'assets/comunione.jpg',bgColor:'#FFFFFF',ink:'#2B2B2B',drinks:'Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.',priceAdult:'',priceKid:'',kidLabel:'Menù bambini'})
   ];
 }
 function defaultState(){
   const dishes=[];Object.entries(SEED).forEach(([c,l])=>l.forEach(n=>dishes.push({id:uid(),name:n,cat:c})));
-  return{v:2,settings:{venue:'Tenuta Coppa',drinkPresets:[...DRINK_PRESETS]},categories:[...DEF_CATS],dishes,templates:defaultTemplates(),menus:[]};
+  return{v:3,settings:{venue:'Tenuta Coppa',drinkPresets:[...DRINK_PRESETS],didMsg:DID_MSG},categories:[...DEF_CATS],dishes,templates:defaultTemplates(),menus:[],didattica:{}};
 }
 
 /* ---------- Utilità ---------- */
@@ -276,6 +312,9 @@ const oneLine=s=>String(s||'').replace(/\s*\n\s*/g,' ');
 const num=v=>v===''||v===null||v===undefined?'':(parseFloat(String(v).replace(',','.'))||0);
 
 const I={
+  ost:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="2.2 2.2"/><path d="M8.5 13.5c1.5-3 2.6-4.5 3.5-4.5 1.3 0-.8 5 .6 5 1 0 1.8-1.5 2.9-3"/></svg>',
+  farm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 14c-3.5 0-6-2.5-6-6 3.5 0 6 2.5 6 6zM12 12c0-3.5 2.5-6 6-6 0 3.5-2.5 6-6 6z"/><path d="M5 21h14"/></svg>',
+  wa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19z"/><path d="M9.2 8.6c.3 2.6 2.4 4.9 5.2 5.6l1-1.2 1.8.8-.4 1.7c-4.2.1-8-3.7-7.9-7.9l1.7-.4.8 1.8z" stroke-width="1.3"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>',
   list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>',
   dish:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2v8a2 2 0 0 0 2 2v10M11 2v8a2 2 0 0 1-2 2M7 6h4"/><path d="M17 22V2c-2 1.5-3 4-3 7s1 4 3 4"/></svg>',
@@ -311,8 +350,14 @@ function flush(){clearTimeout(saveT);saveT=null;if(state)idb.set('state',state).
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveT)flush()});
 function normalize(s){
   const d=defaultState();
-  if(!s||s.v!==2)return d; // dati della versione di prova precedente: si riparte puliti
-  return{v:2,settings:{...d.settings,...(s.settings||{})},
+  if(!s||(s.v!==2&&s.v!==3))return d; // dati della versione di prova precedente: si riparte puliti
+  // template di serie: fondo bianco per la stampa e aggiunta dei nuovi (es. Pasqua)
+  if(Array.isArray(s.templates)){
+    const byId=Object.fromEntries(d.templates.map(t=>[t.id,t]));
+    s.templates.forEach(t=>{const b=byId[t.id];if(b&&t.builtIn){t.bgColor=b.bgColor;if(!t.bgImage||t.bgImage===t.origBg)t.bgImage=b.bgImage;t.origBg=b.origBg}});
+    d.templates.forEach(b=>{if(!s.templates.some(t=>t.id===b.id))s.templates.push(b)});
+  }
+  return{v:3,didattica:s.didattica||{},lastOstia:s.lastOstia||null,settings:{...d.settings,...(s.settings||{})},
     categories:Array.isArray(s.categories)&&s.categories.length?s.categories:d.categories,
     dishes:Array.isArray(s.dishes)?s.dishes:d.dishes,
     templates:Array.isArray(s.templates)&&s.templates.length?s.templates.map(t=>({...SUNDAY,limit:1240,bgColor:'#FFFFFF',ink:'#333333',...t})):d.templates,
@@ -321,7 +366,7 @@ function normalize(s){
 
 /* ---------- Stato interfaccia ---------- */
 const now=new Date();
-const ui={view:'cal',cal:{y:now.getFullYear(),m:now.getMonth()},selDate:today(),listTab:'next',q:'',dq:'',editId:null,back:'cal',pv:{mode:'tavolo'},tplId:null,sheet:null,pickQ:'',pickAll:false};
+const ui={view:'cal',cal:{y:now.getFullYear(),m:now.getMonth()},selDate:today(),listTab:'next',q:'',dq:'',editId:null,back:'cal',pv:{mode:'tavolo'},tplId:null,sheet:null,pickQ:'',pickAll:false,ost:null,didPhone:''};
 const getMenu=id=>state.menus.find(x=>x.id===id);
 const getTpl=id=>state.templates.find(x=>x.id===id);
 const tplOf=m=>getTpl(m.templateId)||state.templates[0];
@@ -377,9 +422,27 @@ function pageEvento(m,t,mode){
     ${eventoCol(m,m.sections,heading(m),val(m,'drinks'),P?priceLines(m,false):[],P?m.notes:'',50,362)}
     ${kids?eventoCol(m,secList(m,true),val(m,'headingKids')||'Menù bambini',val(m,'drinksKids'),P?priceLines(m,true):[],'',551,220):''}</div>`;
 }
-const pageHTML=(m,t,mode)=>t.layout==='evento'?pageEvento(m,t,mode):pageVerticale(m,t,mode);
+function pageClassico(m,t,mode){
+  const secs=m.sections.filter(s=>s.items.length),showT=m.showSections!==false,ac=t.accent||'#354469';
+  let flow=secs.map(s=>`<div class="c-sec${showT?'':' nt'}">${showT?`<div class="c-sec-t" style="color:${ac}">${esc(s.name)}</div>`:''}${s.items.map(i=>`<div class="c-it">${nl(i.name)}</div>`).join('')}</div>`).join('');
+  if(!secs.length)flow=`<div class="v-empty">Aggiungi le portate per comporre il menù</div>`;
+  if(mode==='proposta'){const pl=priceLines(m);if(pl.length||m.notes)flow+=`<div class="c-offer">${pl.map(nl).join('<br>')}${m.notes?`<div class="v-notes">${nl(m.notes)}</div>`:''}</div>`}
+  const dr=String(val(m,'drinks')).trim();
+  return`<div class="pg pg-c" style="width:595px;height:842px;background-color:${t.bgColor};color:${t.ink}">
+    ${t.bgImage?`<div class="pg-bg" style="background-image:url('${t.bgImage}')"></div>`:''}
+    <div class="c-title">${esc(heading(m))}</div>
+    ${t.subheading?`<div class="c-sub">${esc(t.subheading)}</div>`:''}
+    <div class="c-flow" style="height:${(t.limit||698)-151}px"><div class="c-in">${flow}</div></div>
+    ${dr?`<div class="c-drinks">${nl(dr)}</div>`:''}</div>`;
+}
+const pageHTML=(m,t,mode)=>t.layout==='evento'?pageEvento(m,t,mode):t.layout==='classico'?pageClassico(m,t,mode):pageVerticale(m,t,mode);
 function fitPage(pg){
-  if(pg.classList.contains('pg-v')){
+  if(pg.classList.contains('pg-c')){
+    const ti=pg.querySelector('.c-title');let fs=25;ti.style.fontSize=fs+'px';
+    while(ti.scrollWidth>ti.clientWidth+1&&fs>14){fs--;ti.style.fontSize=fs+'px'}
+    const f=pg.querySelector('.c-flow'),inn=f.firstElementChild;let k=1,n=0;inn.style.fontSize='17px';
+    while(inn.offsetHeight>f.clientHeight&&k>.45&&n++<90){k*=.97;inn.style.fontSize=(17*k)+'px'}
+  }else if(pg.classList.contains('pg-v')){
     const ti=pg.querySelector('.v-title');let fs=57;ti.style.fontSize=fs+'px';
     while(ti.scrollWidth>ti.clientWidth+1&&fs>26){fs--;ti.style.fontSize=fs+'px'}
     const f=pg.querySelector('.v-flow'),inn=f.firstElementChild;let k=1,n=0;inn.style.fontSize='19px';
@@ -409,7 +472,7 @@ function mountPreviews(){
   if(ui.view==='preview'){const m=getMenu(ui.editId);if(m)mountPreview('pv',m,tplOf(m),ui.pv.mode)}
   if(ui.view==='tpl'){const t=getTpl(ui.tplId);if(t)mountPreview('tplpv',sampleMenu(t),t,'proposta')}
 }
-const FONTS=['400 20px Raleway','700 20px Raleway','20px Antic','400 20px "Cormorant Garamond"','italic 500 20px "Cormorant Garamond"'];
+const FONTS=['400 20px Raleway','700 20px Raleway','20px Antic','400 20px "Cormorant Garamond"','700 20px "Cormorant Garamond"','italic 500 20px "Cormorant Garamond"','20px "Great Vibes"'];
 const loadFonts=()=>Promise.all(FONTS.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>document.fonts.ready);
 
 /* ---------- PDF ---------- */
@@ -456,8 +519,9 @@ const canShareFiles=()=>{if(AND)return true;try{return!!(navigator.canShare&&nav
 /* ---------- Componenti ---------- */
 const topbar=inner=>`<header class="top">${inner}</header>`;
 function navbar(){
-  const it=[['cal','Calendario',I.cal],['list','Proposte',I.list],['dishes','Portate',I.dish],['settings','Impostazioni',I.gear]];
-  return`<nav class="nav">${it.map(([v,l,ic])=>`<button class="${ui.view===v?'on':''}" data-a="nav" data-v="${v}">${ic}<span>${l}</span></button>`).join('')}</nav>`;
+  const it=[['cal','Calendario',I.cal],['list','Menù',I.list],['ostie','Ostie',I.ost],['didattica','Didattica',I.farm],['settings','Altro',I.gear]];
+  const cur=ui.view==='dishes'?'settings':ui.view;
+  return`<nav class="nav">${it.map(([v,l,ic])=>`<button class="${cur===v?'on':''}" data-a="nav" data-v="${v}">${ic}<span>${l}</span></button>`).join('')}</nav>`;
 }
 const fab=(a,label)=>`<button class="fab" data-a="${a}" aria-label="${label}">${I.plus}</button>`;
 const accentOf=t=>t.ink||'#555';
@@ -516,11 +580,12 @@ function dishListHTML(){
   return out||`<div class="empty">Nessuna portata trovata.</div>`;
 }
 function vDishes(){
-  return topbar(`<h1>Portate</h1>`)+`<main class="main"><input class="inp search" type="search" placeholder="Cerca portata" data-in="dq" value="${esc(ui.dq)}"><div id="dlist">${dishListHTML()}</div></main>`+fab('editDish','Nuova portata')+navbar();
+  return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>Archivio portate</h1>`)+`<main class="main"><input class="inp search" type="search" placeholder="Cerca portata" data-in="dq" value="${esc(ui.dq)}"><div id="dlist">${dishListHTML()}</div></main>`+fab('editDish','Nuova portata')+navbar();
 }
 function vSettings(){
   const s=state.settings;
   return topbar(`<h1>Impostazioni</h1>`)+`<main class="main">
+  <section class="grp"><div class="list"><button class="trow" data-a="nav" data-v="dishes"><span class="sw" style="display:grid;place-items:center;color:var(--olive)">${I.dish}</span><span>Archivio portate<small>${state.dishes.length} portate in ${allCats().length} categorie</small></span>${I.right}</button></div></section>
   <section class="grp"><h2>Nome del locale</h2><input class="inp" data-sf="venue" value="${esc(s.venue)}" placeholder="Compare in cima ai menù della domenica"><p class="hint">Lascia vuoto per non stamparlo.</p></section>
   <section class="grp"><h2>Template</h2><div class="list">${state.templates.map(t=>`<button class="trow" data-a="editTpl" data-id="${t.id}">${swatch(t)}<span>${esc(t.name)}<small>${esc((LAYOUTS[t.layout]||LAYOUTS.verticale).label)}</small></span>${I.right}</button>`).join('')}</div>
   <p class="hint">Per un nuovo template (battesimo, compleanno…) apri quello più simile e tocca “Duplica template”.</p></section>
@@ -548,14 +613,14 @@ function drinksField(m,f,label){
 }
 function vEdit(){
   const m=getMenu(ui.editId);if(!m){ui.view='cal';return vCal()}
-  const t=tplOf(m),st=m.status||'bozza',ev=t.layout==='evento';
+  const t=tplOf(m),st=m.status||'bozza',ev=t.layout==='evento',cl=t.layout==='classico';
   const fld=(label,f,type='text',extra='',v)=>`<label class="fld"><span>${label}</span><input class="inp" type="${type}" data-f="${f}" value="${esc(v!==undefined?v:m[f])}" ${extra}></label>`;
   return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>${esc(heading(m))}</h1><button class="ib" data-a="preview" data-mode="tavolo" aria-label="Anteprima">${I.eye}</button>`)+
   `<main class="main">
   <section class="grp"><h2>Template</h2><div class="tchips">${state.templates.map(x=>`<button class="tchip${x.id===t.id?' on':''}" data-a="setTpl" data-id="${x.id}">${swatch(x)}<span>${esc(x.name)}</span></button>`).join('')}</div></section>
   <section class="grp"><h2>Intestazione</h2>
     ${fld(ev?'Titolo menù adulti':'Titolo','heading','text',`placeholder="${esc(t.heading)}"`)}
-    ${ev?'':`<label class="tog"><input type="checkbox" data-fc="showDate" ${m.showDate!==false?'checked':''}>Stampa la data sotto il titolo</label>`}
+    ${ev||cl?'':`<label class="tog"><input type="checkbox" data-fc="showDate" ${m.showDate!==false?'checked':''}>Stampa la data sotto il titolo</label>`}
   </section>
   <section class="grp"><h2>Evento</h2>
     <div class="row2">${fld('Data','date','date')}${fld('Ora','time','time')}</div>
@@ -592,15 +657,19 @@ function vPreview(){
   return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>Anteprima</h1>`)+
   `<main class="main"><div class="seg"><button class="${ui.pv.mode==='tavolo'?'on':''}" data-a="pvMode" data-v="tavolo">Menù tavolo</button><button class="${ui.pv.mode==='proposta'?'on':''}" data-a="pvMode" data-v="proposta">Proposta</button></div>
   <div class="pv" id="pv"></div>
-  <button class="btn pri wide" data-a="pdf">${I.pdf}Crea PDF</button></main>`;
+  <div class="btns">
+    <button class="btn wa wide" data-a="waMenu">${I.wa}Invia su WhatsApp</button>
+    <button class="btn wide" data-a="pdf">${I.pdf}Crea PDF (stampa, email…)</button>
+  </div>
+  <p class="hint" style="text-align:center;margin-top:10px">${ui.pv.mode==='proposta'?'Il messaggio per il cliente è già pronto: puoi modificarlo prima dell\'invio.':'Per la stampa usa “Crea PDF”.'}</p></main>`;
 }
 function vTpl(){
   const t=getTpl(ui.tplId);if(!t){ui.view='settings';return vSettings()}
-  const ev=t.layout==='evento';
+  const ev=t.layout==='evento',cl=t.layout==='classico';
   const f=(label,k,type='text',extra='')=>`<label class="fld"><span>${label}</span><input class="inp" type="${type}" data-tf="${k}" value="${esc(t[k])}" ${extra}></label>`;
   return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>${esc(t.name)}</h1>`)+
   `<main class="main"><div class="pv" id="tplpv"></div>
-  <section class="grp"><h2>Nome e titoli</h2>${f('Nome del template','name')}${f(ev?'Titolo menù adulti':'Titolo predefinito','heading')}${ev?f('Titolo menù bambini','headingKids'):''}</section>
+  <section class="grp"><h2>Nome e titoli</h2>${f('Nome del template','name')}${f(ev?'Titolo menù adulti':'Titolo predefinito','heading')}${ev?f('Titolo menù bambini','headingKids'):''}${cl?f('Sottotitolo','subheading'):''}</section>
   <section class="grp"><h2>Valori predefiniti per i nuovi menù</h2>
     <label class="fld"><span>Bevande${ev?' adulti':''}</span><textarea class="inp" data-tf="drinks" rows="2" style="min-height:70px">${esc(t.drinks)}</textarea></label>
     ${ev?`<label class="fld"><span>Bevande bambini</span><textarea class="inp" data-tf="drinksKids" rows="2" style="min-height:70px">${esc(t.drinksKids)}</textarea></label>`:''}
@@ -608,14 +677,135 @@ function vTpl(){
     ${ev?'':f('Dicitura bambini','kidLabel')}</section>
   <section class="grp"><h2>Aspetto</h2><div class="card">
     <label class="clr"><input type="color" data-tf="ink" value="${t.ink}">Colore del testo</label>
+    ${cl?`<label class="clr"><input type="color" data-tf="accent" value="${t.accent||'#354469'}">Colore dei titoli</label>`:''}
     <label class="clr"><input type="color" data-tf="bgColor" value="${t.bgColor}">Colore di sfondo</label>
-    ${ev?'':`<div class="rng" style="margin-top:8px"><span>Fine testo</span><input type="range" min="900" max="1420" step="5" value="${t.limit||1240}" data-tl="1"><b id="tl">${Math.round((t.limit||1240)/14.4)}%</b></div><p class="hint">Sposta per non far sovrapporre il testo alle illustrazioni in basso.</p>`}
+    <p class="hint">Per la stampa su fogli bianchi lascia lo sfondo bianco.</p>
+    ${ev||cl?'':`<div class="rng" style="margin-top:8px"><span>Fine testo</span><input type="range" min="900" max="1420" step="5" value="${t.limit||1240}" data-tl="1"><b id="tl">${Math.round((t.limit||1240)/14.4)}%</b></div><p class="hint">Sposta per non far sovrapporre il testo alle illustrazioni in basso.</p>`}
   </div></section>
   <section class="grp"><h2>Sfondo</h2><div class="card">
-    <p style="margin:0 0 12px;font-size:15px">Per cambiare illustrazioni, esporta da Canva la pagina <b>senza testi</b> come PNG, nel formato ${ev?'A4 orizzontale':'810 × 1440'}.</p>
+    <p style="margin:0 0 12px;font-size:15px">Per cambiare illustrazioni, esporta da Canva la pagina <b>senza testi</b> come PNG, nel formato ${ev?'A4 orizzontale':cl?'A4 verticale':'810 × 1440'}.</p>
     <div class="btns ${t.origBg&&t.bgImage!==t.origBg?'two':''}"><button class="btn" data-a="tplBg">${I.img}Carica immagine</button>${t.origBg&&t.bgImage!==t.origBg?`<button class="btn" data-a="tplBgReset">Ripristina</button>`:''}</div></div></section>
   <div class="btns two"><button class="btn" data-a="dupTpl">${I.copy}Duplica template</button>${state.templates.length>1?`<button class="btn danger" data-a="delTpl">${I.trash}Elimina</button>`:''}</div>
   </main>`;
+}
+
+/* ---------- Invio su WhatsApp ---------- */
+const waPhone=p=>{let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.length===10&&d[0]==='3')d='39'+d;return d};
+async function sendFiles(files,text,phone,wa){
+  const tel=waPhone(phone);
+  if(AND&&AND.shareFiles){
+    const arr=await Promise.all(files.map(async f=>({name:f.name,mime:f.mime,data:await b64(f.blob)})));
+    AND.shareFiles(JSON.stringify({files:arr,text,whatsapp:!!wa,phone:tel}));return;
+  }
+  if(AND&&files.length===1){AND.saveFile(await b64(files[0].blob),files[0].name,files[0].mime,true);return} // APK precedenti
+  const F=files.map(f=>new File([f.blob],f.name,{type:f.mime}));
+  try{if(navigator.canShare&&navigator.canShare({files:F})){await navigator.share({files:F,text});return}}
+  catch(e){if(e.name==='AbortError')return}
+  // browser senza condivisione di file: scarico i file e apro la chat con il testo
+  files.forEach(f=>{const u=URL.createObjectURL(f.blob),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000)});
+  if(wa)window.open(`https://wa.me/${tel}?text=${encodeURIComponent(text)}`,'_blank');
+}
+function menuMsg(m,mode){
+  const v=state.settings.venue||'Tenuta Coppa',quando=m.date?` per ${fmtLong(m.date).replace(/^./,c=>c.toLowerCase())}`:'';
+  const g=[m.guests?m.guests+' adulti':'',m.guestsKids?m.guestsKids+' bambini':''].filter(Boolean).join(' e ');
+  const ciao=`Buongiorno${m.client?' '+m.client:''},`;
+  if(mode==='tavolo')return`${ciao}\nle invio il menù${quando}.\nUn cordiale saluto,\n${v}`;
+  const pa=num(val(m,'priceAdult')),pk=num(val(m,'priceKid'));
+  let r=`${ciao}\ncome d'accordo le invio la proposta di menù${quando}${g?` (${g})`:''}.`;
+  if(pa!=='')r+=`\nIl costo è di ${eurC(pa)} a persona${pk!==''&&Number(m.guestsKids)>0?` e ${eurC(pk)} per i bambini`:''}.`;
+  return r+`\nResto a disposizione per qualsiasi modifica.\nUn cordiale saluto,\n${v}`;
+}
+async function waMenu(){
+  const m=getMenu(ui.editId);if(!m)return;const mode=ui.pv.mode;
+  busy(true,'Preparo il PDF');
+  try{
+    const blob=await makePDF(m,mode);
+    const name=`${mode==='tavolo'?'Menu':'Proposta-menu'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}.pdf`;
+    ui.sheet={type:'wa',title:mode==='tavolo'?'Invia il menù':'Invia la proposta',files:[{blob,name,mime:'application/pdf'}],text:menuMsg(m,mode),phone:m.phone||''};
+  }catch(e){toast('PDF non creato: '+(e.message||e))}
+  finally{busy(false);renderSheet()}
+}
+
+/* ---------- Ostie ---------- */
+function newOstia(type){const p=OSTIA_TYPES[type||'compleanno'];return{type:type||'compleanno',shape:'tonda',top:p.top,main:p.main,name:'',extra:'',cut:true}}
+const ost=()=>ui.ost||(ui.ost=state.lastOstia?{...state.lastOstia}:newOstia());
+function drawOstia(cv,o,W){
+  const S=OSTIA_SHAPES[o.shape]||OSTIA_SHAPES.tonda,H=Math.round(W*S.h/S.w),px=W/S.w;
+  cv.width=W;cv.height=H;const x=cv.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  if(o.cut){ // linea di taglio tratteggiata, come nei file per la pasticceria
+    x.save();x.strokeStyle='#C7C7C7';x.lineWidth=Math.max(1,.3*px);x.setLineDash([2.2*px,1.6*px]);x.beginPath();
+    if(o.shape==='tonda')x.arc(W/2,H/2,100*px,0,Math.PI*2);
+    else{const m=5*px,r=4*px,w=W-2*m,h=H-2*m;x.moveTo(m+r,m);x.arcTo(m+w,m,m+w,m+h,r);x.arcTo(m+w,m+h,m,m+h,r);x.arcTo(m,m+h,m,m,r);x.arcTo(m,m,m+w,m,r);x.closePath()}
+    x.stroke();x.restore();
+  }
+  const L=[[o.top,.6],[o.main,1],[o.name,1],[o.extra,.45]].map(([t,k])=>[String(t||'').trim(),k]).filter(l=>l[0]);
+  if(!L.length)return;
+  const tonda=o.shape==='tonda',bw=(tonda?138:235)*px,bh=(tonda?112:140)*px,cap=(tonda?34:40)*px,LH=1.02;
+  x.font='100px "Great Vibes"';const wu=L.map(([t])=>x.measureText(t).width/100);
+  const k=Math.min(cap,bh/L.reduce((a,[,s])=>a+s*LH,0),...L.map(([,s],i)=>bw/(s*wu[i])));
+  let y=H/2-L.reduce((a,[,s])=>a+k*s*LH,0)/2;
+  x.fillStyle=GOLD;x.textAlign='center';x.textBaseline='alphabetic';
+  L.forEach(([t,s])=>{const fs=k*s;x.font=`${fs}px "Great Vibes"`;x.fillText(t,W/2,y+fs*LH*.8);y+=fs*LH});
+}
+async function paintOstia(){
+  const cv=$('#ostcv');if(!cv)return;
+  await document.fonts.load('40px "Great Vibes"').catch(()=>{});
+  drawOstia(cv,ost(),ost().shape==='tonda'?900:1200);
+}
+const ostName=(o,ext)=>`Ostia-${o.type}${o.name?'-'+slug(o.name):''}.${ext}`;
+async function ostiaFile(fmt){
+  const o=ost(),S=OSTIA_SHAPES[o.shape];
+  await document.fonts.load('40px "Great Vibes"').catch(()=>{});
+  const cv=document.createElement('canvas');drawOstia(cv,o,Math.round(S.w/25.4*300)); // 300 dpi, misura reale
+  state.lastOstia={...o};save();
+  if(fmt==='png'){const blob=await new Promise(r=>cv.toBlob(r,'image/png'));return{blob,name:ostName(o,'png'),mime:'image/png'}}
+  const pdf=new window.jspdf.jsPDF({orientation:S.w>S.h?'l':'p',unit:'mm',format:[S.w,S.h]});
+  pdf.addImage(cv.toDataURL('image/png'),'PNG',0,0,S.w,S.h);
+  return{blob:pdf.output('blob'),name:ostName(o,'pdf'),mime:'application/pdf'};
+}
+function vOstie(){
+  const o=ost(),f=(label,k,ph)=>`<label class="fld"><span>${label}</span><input class="inp" data-of="${k}" value="${esc(o[k])}" placeholder="${esc(ph)}" autocomplete="off"></label>`;
+  return topbar(`<h1>Ostie</h1>`)+`<main class="main">
+  <section class="grp"><h2>Occasione</h2><div class="stat">${Object.entries(OSTIA_TYPES).map(([k,t])=>`<button class="${o.type===k?'on':''}" style="--c:${GOLD}" data-a="ostType" data-v="${k}"><i></i>${t.l}</button>`).join('')}</div></section>
+  <section class="grp"><h2>Forma</h2><div class="seg">${Object.entries(OSTIA_SHAPES).map(([k,t])=>`<button class="${o.shape===k?'on':''}" data-a="ostShape" data-v="${k}">${t.l}</button>`).join('')}</div>
+  <canvas id="ostcv" class="ost-cv" aria-label="Anteprima dell'ostia"></canvas></section>
+  <section class="grp"><h2>Testo</h2>
+    <div class="row2">${f('Riga piccola in alto','top','es. Buon')}${f('Riga principale','main','es. Compleanno')}</div>
+    ${f(o.type==='anniversario'?'Nomi':'Nome','name',o.type==='anniversario'?'es. Maria e Giuseppe':'es. Rosalba')}
+    ${f('Riga piccola in basso (facoltativa)','extra',o.type==='compleanno'?'es. 50 anni':o.type==='anniversario'?'es. 25 anni insieme':'es. 10 maggio 2026')}
+    <label class="tog"><input type="checkbox" data-oc="cut" ${o.cut?'checked':''}>Mostra la linea di taglio tratteggiata</label>
+  </section>
+  <div class="btns"><button class="btn wa wide" data-a="ostWA">${I.wa}Invia su WhatsApp</button>
+  <div class="btns two"><button class="btn" data-a="ostFile" data-v="png">${I.img}Immagine PNG</button><button class="btn" data-a="ostFile" data-v="pdf">${I.pdf}PDF</button></div></div>
+  <p class="hint" style="margin-top:10px">Il file è a 300 dpi nella misura reale, su fondo bianco: è il formato che chiedono le pasticcerie per la stampa alimentare.</p>
+  </main>`+navbar();
+}
+
+/* ---------- Fattoria didattica ---------- */
+const didInfo=k=>{const d=DID_FILES.find(f=>f.k===k),o=(state.didattica||{})[k];return o?{...d,name:o.name,mime:o.mime,custom:o.data}:d};
+async function didBlob(k){
+  const f=didInfo(k);
+  const r=await fetch(f.custom||f.file);if(!r.ok)throw new Error('file non trovato');
+  return{blob:await r.blob(),name:f.name,mime:f.mime};
+}
+function vDidattica(){
+  return topbar(`<h1>Fattoria didattica</h1>`)+`<main class="main">
+  <section class="grp"><h2>Invio rapido alle scuole</h2><div class="card">
+    <label class="fld"><span>Numero WhatsApp (facoltativo)</span><input class="inp" type="tel" data-in="didPhone" value="${esc(ui.didPhone)}" placeholder="Se lo lasci vuoto scegli tu la chat"></label>
+    <label class="fld"><span>Messaggio</span><textarea class="inp" data-sf="didMsg" rows="7" style="min-height:170px">${esc(state.settings.didMsg||DID_MSG)}</textarea></label>
+    <button class="btn wa wide" data-a="didWA">${I.wa}Invia presentazione e scheda su WhatsApp</button>
+    <p class="hint">Partono entrambi i file con il messaggio. Il testo modificato resta salvato per le prossime volte.</p>
+  </div></section>
+  <section class="grp"><h2>I file</h2>
+  ${DID_FILES.map(d=>{const f=didInfo(d.k);return`<div class="fcard">
+    ${f.custom?'':`<div class="thumbs">${d.thumbs.map(t=>`<img src="${t}" alt="Anteprima ${esc(d.l)}">`).join('')}</div>`}
+    <h3>${esc(d.l)}</h3><small>${esc(f.custom?f.name:d.sub)}</small>
+    <div class="btns two" style="margin-top:10px"><button class="btn" data-a="didShare" data-k="${d.k}">${I.share}Condividi</button><button class="btn" data-a="didReplace" data-k="${d.k}">${I.copy}Sostituisci</button></div>
+    ${f.custom?`<button class="btn wide" style="margin-top:8px" data-a="didReset" data-k="${d.k}">Torna al file originale</button>`:''}
+  </div>`}).join('')}
+  <p class="hint">Per il prossimo anno scolastico usa “Sostituisci” e carica i file aggiornati.</p></section>
+  </main>`+navbar();
 }
 
 /* ---------- Fogli (bottom sheet) ---------- */
@@ -653,6 +843,11 @@ function renderSheet(){
     <label class="fld"><span>Testo stampato</span><textarea class="inp" id="iname" rows="3" style="min-height:90px">${esc(it.name)}</textarea></label>
     <p class="hint" style="margin:-6px 2px 12px">La modifica vale solo per questo menù, l'archivio resta com'è.</p>
     <button class="btn pri wide" data-a="saveItem">Salva</button>`;
+  }else if(sh.type==='wa'){
+    h=head(sh.title)+`<p class="hint" style="margin-bottom:12px;word-break:break-all">${sh.files.map(f=>esc(f.name)).join('<br>')}</p>
+    <label class="fld"><span>Numero WhatsApp (facoltativo)</span><input class="inp" type="tel" id="waphone" value="${esc(sh.phone)}" placeholder="Se lo lasci vuoto scegli tu la chat"></label>
+    <label class="fld"><span>Messaggio</span><textarea class="inp" id="watext" rows="7" style="min-height:160px">${esc(sh.text)}</textarea></label>
+    <div class="btns"><button class="btn wa" data-a="waSend">${I.wa}Apri WhatsApp</button><button class="btn" data-a="waOther">${I.share}Invia con un'altra app</button></div>`;
   }else if(sh.type==='file'){
     const cs=canShareFiles();
     h=head(sh.title)+`<p class="hint" style="margin-bottom:14px;word-break:break-all">${esc(sh.name)}</p>
@@ -665,10 +860,11 @@ function renderSheet(){
 /* ---------- Render ---------- */
 function render(keep){
   const y=window.scrollY;
-  const V={cal:vCal,list:vList,dishes:vDishes,settings:vSettings,edit:vEdit,preview:vPreview,tpl:vTpl};
+  const V={cal:vCal,list:vList,dishes:vDishes,settings:vSettings,edit:vEdit,preview:vPreview,tpl:vTpl,ostie:vOstie,didattica:vDidattica};
   $('#app').innerHTML=(V[ui.view]||vCal)();
   window.scrollTo(0,keep?y:0);
   mountPreviews();
+  if(ui.view==='ostie')paintOstia();
 }
 let toastT;
 function toast(msg){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),3400)}
@@ -694,7 +890,7 @@ document.addEventListener('click',e=>{
     case 'back':
       if(ui.view==='edit'){leaveEdit();ui.view=ui.back||'cal';if(m&&m.date&&ui.view==='cal'){const dt=parseD(m.date);ui.selDate=m.date;ui.cal={y:dt.getFullYear(),m:dt.getMonth()}}}
       else if(ui.view==='preview')ui.view='edit';
-      else if(ui.view==='tpl')ui.view='settings';
+      else if(ui.view==='tpl'||ui.view==='dishes')ui.view='settings';
       render();break;
     case 'setTpl':if(m){m.templateId=d.id;save();render(true)}break;
     case 'setStatus':if(m){m.status=d.v;save();render(true)}break;
@@ -731,6 +927,20 @@ document.addEventListener('click',e=>{
       save();ui.sheet=null;renderSheet();render(true);toast('Portata salvata');break}
     case 'delDish':if(confirm("Eliminare questa portata dall'archivio?")){state.dishes=state.dishes.filter(z=>z.id!==ui.sheet.id);save();ui.sheet=null;renderSheet();render(true)}break;
     case 'closeSheet':ui.sheet=null;renderSheet();break;
+    case 'waMenu':waMenu();break;
+    case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;sendFiles(sh.files,sh.text,sh.phone,a==='waSend');break}
+    case 'ostType':{const o=ost(),p=OSTIA_TYPES[d.v];o.type=d.v;o.top=p.top;o.main=p.main;render(true);break}
+    case 'ostShape':ost().shape=d.v;render(true);break;
+    case 'ostWA':(async()=>{busy(true,'Preparo il file');try{const f=await ostiaFile('png'),o=ost();
+      ui.sheet={type:'wa',title:"Invia l'ostia",files:[f],phone:'',text:`Buongiorno,\nvi invio il file per l'ostia ${OSTIA_SHAPES[o.shape].l.toLowerCase()}${o.name?` (${o.name})`:''}.\nGrazie mille,\n${state.settings.venue||'Tenuta Coppa'}`}}
+      catch(err){toast('File non creato')}finally{busy(false);renderSheet()}})();break;
+    case 'ostFile':(async()=>{busy(true,'Preparo il file');try{const f=await ostiaFile(d.v);ui.sheet={type:'file',blob:f.blob,name:f.name,mime:f.mime,title:'Ostia pronta'}}
+      catch(err){toast('File non creato')}finally{busy(false);renderSheet()}})();break;
+    case 'didWA':(async()=>{busy(true,'Preparo i file');try{const fs=await Promise.all(DID_FILES.map(x=>didBlob(x.k)));busy(false);await sendFiles(fs,state.settings.didMsg||DID_MSG,ui.didPhone,true)}
+      catch(err){toast('File non disponibili')}finally{busy(false)}})();break;
+    case 'didShare':(async()=>{try{await sendFiles([await didBlob(d.k)],'','',false)}catch(err){toast('File non disponibile')}})();break;
+    case 'didReplace':ui.didSlot=d.k;$('#didfile').click();break;
+    case 'didReset':delete state.didattica[d.k];save();render(true);toast('Ripristinato il file originale');break;
     case 'editTpl':ui.tplId=d.id;ui.view='tpl';render();break;
     case 'dupTpl':{const t=clone(getTpl(ui.tplId));t.id='tpl-'+uid();t.name=t.name+' (copia)';t.builtIn=false;state.templates.push(t);save();ui.tplId=t.id;render();toast('Template duplicato: cambia nome e titolo');break}
     case 'delTpl':{const t=getTpl(ui.tplId),used=state.menus.filter(x=>x.templateId===t.id).length;
@@ -765,6 +975,8 @@ document.addEventListener('input',e=>{
   else if(d.tf){const t=getTpl(ui.tplId);let v=el.value;if(d.tf==='priceAdult'||d.tf==='priceKid')v=v.trim()===''?'':num(v);t[d.tf]=v;save();mountPreviews();if(d.tf==='name'){const h=$('.top h1');if(h)h.textContent=el.value}}
   else if(d.tl){const t=getTpl(ui.tplId);t.limit=Number(el.value);$('#tl').textContent=Math.round(t.limit/14.4)+'%';save();mountPreviews()}
   else if(d.in==='q'){ui.q=el.value;$('#mlist').innerHTML=listHTML()}
+  else if(d.in==='didPhone'){ui.didPhone=el.value}
+  else if(d.of){ost()[d.of]=el.value;paintOstia()}
   else if(d.in==='dq'){ui.dq=el.value;$('#dlist').innerHTML=dishListHTML()}
   else if(d.in==='pickQ'){ui.pickQ=el.value;$('#pklist').innerHTML=pickListHTML()}
 });
@@ -772,6 +984,13 @@ document.addEventListener('change',async e=>{
   const el=e.target,d=el.dataset;
   if(d.fc){const m=getMenu(ui.editId);if(m){m[d.fc]=el.checked;save();if(d.re)render(true)}}
   else if(d.pk==='all'){ui.pickAll=el.checked;$('#pklist').innerHTML=pickListHTML()}
+  else if(d.oc){ost()[d.oc]=el.checked;paintOstia()}
+  else if(el.id==='didfile'&&el.files[0]){
+    const file=el.files[0],slot=ui.didSlot;
+    const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(file)});
+    state.didattica=state.didattica||{};state.didattica[slot]={name:file.name,mime:file.type||'application/octet-stream',data};
+    save();render(true);toast('File aggiornato');el.value='';
+  }
   else if(el.id==='bgfile'&&el.files[0]){await setBg(el.files[0]);el.value=''}
   else if(el.id==='importfile'&&el.files[0]){await applyBackup(await el.files[0].text());el.value=''}
 });

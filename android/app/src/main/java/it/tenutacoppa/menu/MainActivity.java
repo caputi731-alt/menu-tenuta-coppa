@@ -181,7 +181,13 @@ public class MainActivity extends AppCompatActivity {
                 // Con SEND_MULTIPLE WhatsApp mantiene il testo come didascalia anche per i PDF;
                 // con SEND di un solo documento spesso lo ignora.
                 Intent i;
-                if (!uris.isEmpty()) {
+                boolean unaImmagine = uris.size() == 1 && tipo != null && tipo.startsWith("image/");
+                if (unaImmagine) {
+                    // una sola immagine: invio semplice, WhatsApp usa sempre il testo come didascalia
+                    i = new Intent(Intent.ACTION_SEND);
+                    i.putExtra(Intent.EXTRA_STREAM, uris.get(0));
+                    if (!testo.isEmpty()) i.putExtra(Intent.EXTRA_TEXT, testo);
+                } else if (!uris.isEmpty()) {
                     i = new Intent(Intent.ACTION_SEND_MULTIPLE);
                     i.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
                     if (!testo.isEmpty()) {

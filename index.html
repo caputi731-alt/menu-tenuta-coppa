@@ -511,7 +511,11 @@ const FONTS=['400 20px Raleway','700 20px Raleway','20px Antic','400 20px "Cormo
 const loadFonts=()=>Promise.all(FONTS.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>document.fonts.ready);
 
 /* ---------- PDF ---------- */
-async function makePDF(m,mode){
+async function makeImage(m,mode){
+  const canvas=await makePDF(m,mode,true);
+  return await new Promise(r=>canvas.toBlob(r,'image/jpeg',0.9));
+}
+async function makePDF(m,mode,asCanvas){
   if(!window.html2canvas||!window.jspdf)throw new Error('librerie non caricate. Riapri l\'app.');
   await loadFonts();
   const t=tplOf(m),L=layoutOf(m),host=$('#rh');host.innerHTML=pageHTML(m,t,mode);
@@ -519,6 +523,7 @@ async function makePDF(m,mode){
   if(t.bgImage)await new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=t.bgImage});
   try{
     const canvas=await html2canvas(pg,{scale:L.scale,backgroundColor:t.bgColor||'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0});
+    if(asCanvas)return canvas;
     const w=L.w*PT_MM,h=L.h*PT_MM;
     const pdf=new window.jspdf.jsPDF({orientation:w>h?'l':'p',unit:'mm',format:[w,h]});
     pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,w,h);
@@ -753,14 +758,20 @@ function menuMsg(m,mode){
   if(pa!=='')r+=`\nIl costo è di ${eurC(pa)} a persona${pk!==''&&Number(m.guestsKids)>0?` e ${eurC(pk)} per i bambini`:''}.`;
   return r+`\nResto a disposizione per qualsiasi modifica.\nUn cordiale saluto,\n${v}`;
 }
-async function waMenu(){
-  const m=getMenu(ui.editId);if(!m)return;const mode=ui.pv.mode;
-  busy(true,'Preparo il PDF');
+// WhatsApp mostra sempre la didascalia sotto le immagini; con i PDF spesso la scarta
+async function waFile(m,mode,fmt){
+  const base=`${mode==='tavolo'?'Menu':'Proposta-menu'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}`;
+  return fmt==='pdf'?{blob:await makePDF(m,mode),name:base+'.pdf',mime:'application/pdf'}:{blob:await makeImage(m,mode),name:base+'.jpg',mime:'image/jpeg'};
+}
+async function waMenu(fmt){
+  const m=getMenu(ui.editId);if(!m)return;const mode=ui.pv.mode;fmt=fmt||state.settings.waFmt||'img';
+  const old=ui.sheet&&ui.sheet.type==='wa'?ui.sheet:null; // se si cambia formato, tengo testo e numero già scritti
+  busy(true,fmt==='pdf'?'Preparo il PDF':"Preparo l'immagine");
   try{
-    const blob=await makePDF(m,mode);
-    const name=`${mode==='tavolo'?'Menu':'Proposta-menu'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}.pdf`;
-    ui.sheet={type:'wa',title:mode==='tavolo'?'Invia il menù':'Invia la proposta',files:[{blob,name,mime:'application/pdf'}],text:menuMsg(m,mode),phone:m.phone||'',menuId:m.id,mode};
-  }catch(e){toast('PDF non creato: '+(e.message||e))}
+    const f=await waFile(m,mode,fmt);
+    ui.sheet={type:'wa',title:mode==='tavolo'?'Invia il menù':'Invia la proposta',files:[f],fmt,
+      text:old?$('#watext').value:menuMsg(m,mode),phone:old?$('#waphone').value:(m.phone||''),menuId:m.id,mode};
+  }catch(e){toast('File non creato: '+(e.message||e))}
   finally{busy(false);renderSheet()}
 }
 
@@ -885,7 +896,8 @@ function renderSheet(){
     <p class="hint" style="margin:-6px 2px 12px">La modifica vale solo per questo menù, l'archivio resta com'è.</p>
     <button class="btn pri wide" data-a="saveItem">Salva</button>`;
   }else if(sh.type==='wa'){
-    h=head(sh.title)+`<p class="hint" style="margin-bottom:12px;word-break:break-all">${sh.files.map(f=>esc(f.name)).join('<br>')}</p>
+    h=head(sh.title)+(sh.menuId?`<div class="seg" style="margin-bottom:8px"><button class="${sh.fmt!=='pdf'?'on':''}" data-a="waFmt" data-v="img">Immagine</button><button class="${sh.fmt==='pdf'?'on':''}" data-a="waFmt" data-v="pdf">PDF</button></div>
+    <p class="hint" style="margin:0 2px 12px">${sh.fmt==='pdf'?'Il PDF è adatto se il cliente deve stamparlo. WhatsApp potrebbe non mostrare il messaggio sotto al file: in quel caso incollalo tu.':'L\'immagine si vede subito in chat e il messaggio compare sempre come didascalia.'}</p>`:'')+`<p class="hint" style="margin-bottom:12px;word-break:break-all">${sh.files.map(f=>esc(f.name)).join('<br>')}</p>
     <label class="fld"><span>Numero WhatsApp (facoltativo)</span><input class="inp" type="tel" id="waphone" value="${esc(sh.phone)}" placeholder="Se lo lasci vuoto scegli tu la chat"></label>
     <label class="fld"><span>Messaggio</span><textarea class="inp" id="watext" rows="7" style="min-height:160px">${esc(sh.text)}</textarea></label>
     <div class="btns"><button class="btn wa" data-a="waSend">${I.wa}Apri WhatsApp</button><button class="btn" data-a="waOther">${I.share}Invia con un'altra app</button></div>
@@ -972,6 +984,7 @@ document.addEventListener('click',e=>{
     case 'delDish':if(confirm("Eliminare questa portata dall'archivio?")){state.dishes=state.dishes.filter(z=>z.id!==ui.sheet.id);save();ui.sheet=null;renderSheet();render(true)}break;
     case 'closeSheet':ui.sheet=null;renderSheet();break;
     case 'waMenu':waMenu();break;
+    case 'waFmt':if(ui.sheet.fmt!==d.v){state.settings.waFmt=d.v;save();waMenu(d.v)}break;
     case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;sendFiles(sh.files,sh.text,sh.phone,a==='waSend');
       if(sh.menuId){const mm=getMenu(sh.menuId);if(mm){if(mm.status==='bozza'&&sh.mode==='proposta'){mm.status='inviata';toast('Proposta segnata come inviata')}if(!mm.phone&&sh.phone)mm.phone=sh.phone;save()}}
       break}

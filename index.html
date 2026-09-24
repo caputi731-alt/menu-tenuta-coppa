@@ -306,7 +306,7 @@ function defaultTemplates(){
   ];
 }
 function defaultState(){
-  const dishes=[];Object.entries(SEED).forEach(([c,l])=>l.forEach(n=>dishes.push({id:uid(),name:n,cat:c})));
+  const dishes=[];Object.entries(SEED).forEach(([c,l])=>l.forEach(n=>dishes.push({id:uid(),name:n,cat:c,en:EN_DISHES[enKey(n)]||''})));
   return{v:3,settings:{venue:'Tenuta Coppa',drinkPresets:[...DRINK_PRESETS],didMsg:DID_MSG},categories:[...DEF_CATS],dishes,templates:defaultTemplates(),menus:[],didattica:{}};
 }
 
@@ -321,7 +321,7 @@ const parseD=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const fmtLong=s=>s?cap(parseD(s).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})):'';
 const fmtDash=s=>s?s.split('-').reverse().join('-'):'';
-const eurC=n=>'€'+Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const eurC=n=>LANG==='en'?'€'+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','):'€'+Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
 const eur=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n);
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const slug=s=>norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'menu';
@@ -381,9 +381,9 @@ function normalize(s){
     const ord=d.templates.map(t=>t.id),pos=t=>{const i=ord.indexOf(t.id);return i<0?999:i};
     s.templates=s.templates.map((t,i)=>[t,i]).sort((a,b)=>pos(a[0])-pos(b[0])||a[1]-b[1]).map(x=>x[0]); // nuovi template al loro posto, quelli creati da te in fondo
   }
-  return{v:3,didattica:s.didattica||{},lastOstia:s.lastOstia||null,settings:{...d.settings,...(s.settings||{})},
+  return{v:3,didattica:s.didattica||{},lastOstia:s.lastOstia||null,lastSp:s.lastSp||null,settings:{...d.settings,...(s.settings||{})},
     categories:Array.isArray(s.categories)&&s.categories.length?s.categories:d.categories,
-    dishes:Array.isArray(s.dishes)?s.dishes:d.dishes,
+    dishes:(Array.isArray(s.dishes)?s.dishes:d.dishes).map(x=>x.en===undefined&&EN_DISHES[enKey(x.name)]?{...x,en:EN_DISHES[enKey(x.name)]}:x),
     templates:Array.isArray(s.templates)&&s.templates.length?s.templates.map(t=>({...SUNDAY,limit:1240,bgColor:'#FFFFFF',ink:'#333333',...t})):d.templates,
     menus:Array.isArray(s.menus)?s.menus:[]};
 }
@@ -393,7 +393,7 @@ const now=new Date();
 const ui={view:'cal',cal:{y:now.getFullYear(),m:now.getMonth()},selDate:today(),listTab:'next',q:'',dq:'',editId:null,back:'cal',pv:{mode:'tavolo'},tplId:null,sheet:null,pickQ:'',pickAll:false,ost:null,didPhone:''};
 const getMenu=id=>state.menus.find(x=>x.id===id);
 const getTpl=id=>state.templates.find(x=>x.id===id);
-const tplOf=m=>getTpl(m.templateId)||state.templates[0];
+const tplOf=m=>(TPL_OV&&TPL_OV.id===m.templateId)?TPL_OV:(getTpl(m.templateId)||state.templates[0]);
 const layoutOf=m=>LAYOUTS[tplOf(m).layout]||LAYOUTS.verticale;
 // Campi che, se non modificati nella proposta, prendono il valore del template
 const INHERIT=['drinks','drinksKids','priceAdult','priceKid','kidLabel','headingKids'];
@@ -414,9 +414,10 @@ const nl=s=>esc(s).replace(/\n/g,'<br>');
 function priceLines(m,kidsCol){
   const pa=num(val(m,'priceAdult')),pk=num(val(m,'priceKid')),lab=val(m,'kidLabel')||'Bambini';
   const L=[];
-  if(kidsCol===undefined){if(pa!=='')L.push(`Costo del menù Adulti: ${eurC(pa)}`);if(pk!=='')L.push(`${lab}: ${eurC(pk)}`)}
-  else if(kidsCol){if(pk!=='')L.push(`Costo del menù: ${eurC(pk)}`)}
-  else if(pa!=='')L.push(`Costo del menù: ${eurC(pa)}`);
+  const en=LANG==='en',A=en?'Menu price per adult':'Costo del menù Adulti',P=en?'Price per person':'Costo del menù';
+  if(kidsCol===undefined){if(pa!=='')L.push(`${A}: ${eurC(pa)}`);if(pk!=='')L.push(`${lab}: ${eurC(pk)}`)}
+  else if(kidsCol){if(pk!=='')L.push(`${P}: ${eurC(pk)}`)}
+  else if(pa!=='')L.push(`${P}: ${eurC(pa)}`);
   return L;
 }
 // allergeni: i numeri vengono dall'archivio portate, così una correzione vale per tutti i menù
@@ -425,7 +426,8 @@ const algOf=(m,i)=>{if(!m.allergens)return'';const n=algNums(i);return n.length?
 function algLegend(m,secs){
   if(!m.allergens)return'';
   const u=[...new Set(secs.flatMap(s=>s.items.flatMap(algNums)))].sort((a,b)=>a-b);
-  return u.length?`<div class="alg-l">Allergeni: ${u.map(n=>`${n} ${ALLERGENI[n-1]}`).join(' · ')}</div>`:'';
+  const N=LANG==='en'?ALLERGENS_EN:ALLERGENI;
+  return u.length?`<div class="alg-l">${LANG==='en'?'Allergens':'Allergeni'}: ${u.map(n=>`${n} ${N[n-1]}`).join(' · ')}</div>`:'';
 }
 function pageVerticale(m,t,mode){
   const secs=m.sections.filter(s=>s.items.length),showT=m.showSections!==false;
@@ -455,6 +457,10 @@ function pageEvento(m,t,mode){
     ${eventoCol(m,m.sections,heading(m),val(m,'drinks'),P?priceLines(m,false):[],P?m.notes:'',50,362)}
     ${kids?eventoCol(m,secList(m,true),val(m,'headingKids')||'Menù bambini',val(m,'drinksKids'),P?priceLines(m,true):[],'',551,220):''}</div>`;
 }
+function legendHTML(){
+  const en=LANG==='en',N=en?ALLERGENS_EN:ALLERGENI,r=(a,b)=>N.slice(a,b).map((x,k)=>`${a+k+1}. ${x}`).join(' | ');
+  return`<div class="c-legend">${en?'ALLERGEN INFORMATION (EU Reg. 1169/11)<br>Please note that our dishes may contain ingredients considered allergens.<br>For detailed information please ask our staff.<br>ALLERGEN KEY:':'INFORMATIVA ALLERGENI (Reg. UE 1169/11)<br>Si informa la clientela che i piatti possono contenere ingredienti considerati allergeni.<br>Per informazioni dettagliate rivolgersi al personale.<br>LEGENDA ALLERGENI:'}<br>${r(0,7)} |<br>${r(7,14)}</div>`;
+}
 function pageClassico(m,t,mode){
   const secs=m.sections.filter(s=>s.items.length),showT=m.showSections!==false,ac=t.accent||'#354469';
   let flow=secs.map(s=>`<div class="c-sec${showT?'':' nt'}">${showT?`<div class="c-sec-t" style="color:${ac}">${esc(s.name)}</div>`:''}${s.items.map(i=>`<div class="c-it">${nl(i.name)}${algOf(m,i)}</div>`).join('')}</div>`).join('');
@@ -469,9 +475,14 @@ function pageClassico(m,t,mode){
     ${t.subheading?`<div class="c-sub">${esc(t.subheading)}</div>`:''}
     <div class="c-flow" style="height:${(t.limit||698)-151}px"><div class="c-in">${flow}</div></div>
     ${dr?`<div class="c-drinks">${nl(dr)}</div>`:''}
-    ${t.legend!==false?`<div class="c-legend">INFORMATIVA ALLERGENI (Reg. UE 1169/11)<br>Si informa la clientela che i piatti possono contenere ingredienti considerati allergeni.<br>Per informazioni dettagliate rivolgersi al personale.<br>LEGENDA ALLERGENI:<br>${ALLERGENI.slice(0,7).map((a,i)=>`${i+1}. ${a}`).join(' | ')} |<br>${ALLERGENI.slice(7).map((a,i)=>`${i+8}. ${a}`).join(' | ')}</div>`:''}</div>`;
+    ${t.legend!==false?legendHTML():''}</div>`;
 }
-const pageHTML=(m,t,mode)=>t.layout==='evento'?pageEvento(m,t,mode):t.layout==='classico'?pageClassico(m,t,mode):pageVerticale(m,t,mode);
+function pageHTML(m,t,mode,lang){
+  if(lang!=='en')return pageHTMLit(m,t,mode);
+  const[m2,t2]=localize(m,t);LANG='en';TPL_OV=t2;
+  try{return pageHTMLit(m2,t2,mode)}finally{LANG='it';TPL_OV=null}
+}
+const pageHTMLit=(m,t,mode)=>t.layout==='evento'?pageEvento(m,t,mode):t.layout==='classico'?pageClassico(m,t,mode):pageVerticale(m,t,mode);
 function fitPage(pg){
   if(pg.classList.contains('pg-c')){
     const ti=pg.querySelector('.c-title');let fs=25;ti.style.fontSize=fs+'px';
@@ -491,9 +502,9 @@ function fitPage(pg){
     while(cols.some(c=>c.querySelector('.e-body').offsetHeight>c._avail)&&k>.45&&n++<90){k*=.97;set()}
   }
 }
-function mountPreview(hostId,m,tpl,mode){
+function mountPreview(hostId,m,tpl,mode,lang){
   const host=document.getElementById(hostId);if(!host)return;
-  host.innerHTML=`<div class="pv-scale">${pageHTML(m,tpl,mode)}</div>`;
+  host.innerHTML=`<div class="pv-scale">${pageHTML(m,tpl,mode,lang)}</div>`;
   const sc=host.firstElementChild,pg=sc.firstElementChild;fitPage(pg);
   const W=pg.offsetWidth,H=pg.offsetHeight,avail=host.clientWidth-8;
   const s=Math.min(avail/W,Math.max(380,window.innerHeight*.66)/H,1);
@@ -505,7 +516,7 @@ function sampleMenu(t){
     kidsSections:KIDS_SECS.map((c,i)=>({name:c,items:state.dishes.filter(d=>d.cat===KIDS_CAT).slice(i,i+1).map(d=>({dishId:d.id,name:d.name}))}))};
 }
 function mountPreviews(){
-  if(ui.view==='preview'){const m=getMenu(ui.editId);if(m)mountPreview('pv',m,tplOf(m),ui.pv.mode)}
+  if(ui.view==='preview'){const m=getMenu(ui.editId);if(m)mountPreview('pv',m,tplOf(m),ui.pv.mode,ui.pv.lang)}
   if(ui.view==='tpl'){const t=getTpl(ui.tplId);if(t)mountPreview('tplpv',sampleMenu(t),t,'proposta')}
 }
 const FONTS=['400 20px Raleway','700 20px Raleway','20px Antic','400 20px "Cormorant Garamond"','700 20px "Cormorant Garamond"','italic 500 20px "Cormorant Garamond"','20px "Great Vibes"'];
@@ -519,7 +530,7 @@ async function makeImage(m,mode){
 async function makePDF(m,mode,asCanvas){
   if(!window.html2canvas||!window.jspdf)throw new Error('librerie non caricate. Riapri l\'app.');
   await loadFonts();
-  const t=tplOf(m),L=layoutOf(m),host=$('#rh');host.innerHTML=pageHTML(m,t,mode);
+  const t=tplOf(m),L=layoutOf(m),host=$('#rh');host.innerHTML=pageHTML(m,t,mode,ui.view==='preview'?ui.pv.lang:'it');
   const pg=host.firstElementChild;fitPage(pg);
   if(t.bgImage)await new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=t.bgImage});
   try{
@@ -536,7 +547,7 @@ async function doPDF(){
   busy(true,'Creo il PDF');
   try{
     const blob=await makePDF(m,mode);
-    const name=`${mode==='tavolo'?'Menu-tavolo':'Proposta'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}.pdf`;
+    const name=`${mode==='tavolo'?'Menu-tavolo':'Proposta'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}${ui.pv.lang==='en'?'_EN':''}.pdf`;
     ui.sheet={type:'file',blob,name,mime:'application/pdf',title:mode==='tavolo'?'Menù tavolo pronto':'Proposta pronta'};
   }catch(e){toast('PDF non creato: '+(e.message||e))}
   finally{busy(false);renderSheet()}
@@ -560,7 +571,7 @@ const canShareFiles=()=>{if(AND)return true;try{return!!(navigator.canShare&&nav
 /* ---------- Componenti ---------- */
 const topbar=inner=>`<header class="top">${inner}</header>`;
 function navbar(){
-  const it=[['cal','Calendario',I.cal],['list','Menù',I.list],['ostie','Ostie',I.ost],['didattica','Didattica',I.farm],['settings','Altro',I.gear]];
+  const it=[['cal','Calendario',I.cal],['list','Menù',I.list],['ostie','Stampe',I.ost],['didattica','Didattica',I.farm],['settings','Altro',I.gear]];
   const cur=ui.view==='dishes'?'settings':ui.view;
   return`<nav class="nav">${it.map(([v,l,ic])=>`<button class="${cur===v?'on':''}" data-a="nav" data-v="${v}">${ic}<span>${l}</span></button>`).join('')}</nav>`;
 }
@@ -617,7 +628,7 @@ function dishListHTML(){
   allCats().forEach(c=>{
     const L=state.dishes.filter(d=>d.cat===c&&(!q||norm(d.name).includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'it'));
     if(!L.length&&q)return;
-    out+=`<h3 class="dcat">${esc(c)}</h3>`+(L.length?`<div class="list">${L.map(d=>`<button class="drow" data-a="editDish" data-id="${d.id}"><span>${esc(oneLine(d.name))}${d.alg&&d.alg.length?`<small style="display:block;color:var(--muted);font-size:12px">Allergeni ${d.alg.join(', ')}</small>`:''}</span>${I.pen}</button>`).join('')}</div>`:`<div class="hint">Nessuna portata.</div>`);
+    out+=`<h3 class="dcat">${esc(c)}</h3>`+(L.length?`<div class="list">${L.map(d=>`<button class="drow" data-a="editDish" data-id="${d.id}"><span>${esc(oneLine(d.name))}${d.en?`<small style="display:block;color:var(--muted);font-size:12px;font-style:italic">${esc(oneLine(d.en))}</small>`:''}${d.alg&&d.alg.length?`<small style="display:block;color:var(--muted);font-size:12px">Allergeni ${d.alg.join(', ')}</small>`:''}</span>${I.pen}</button>`).join('')}</div>`:`<div class="hint">Nessuna portata.</div>`);
   });
   return out||`<div class="empty">Nessuna portata trovata.</div>`;
 }
@@ -633,7 +644,7 @@ function vSettings(){
   <p class="hint">Per un nuovo template (battesimo, compleanno…) apri quello più simile e tocca “Duplica template”.</p></section>
   <section class="grp"><h2>Bevande preimpostate</h2><div class="list">${s.drinkPresets.map((d,i)=>`<div class="crow"><span>${esc(d)}</span><button class="ib" data-a="drDel" data-i="${i}" aria-label="Elimina">${I.trash}</button></div>`).join('')}</div>
   <div class="pk-new" style="margin-top:8px"><input class="inp" id="newdrink" placeholder="es. Prosecco di benvenuto"><button class="btn" data-a="drAdd">Aggiungi</button></div></section>
-  <section class="grp"><h2>Portate del menù adulti</h2><div class="list">${state.categories.map((c,i)=>`<div class="crow"><span>${esc(c)}<small>${state.dishes.filter(d=>d.cat===c).length} portate</small></span><button class="ib" data-a="catMove" data-i="${i}" data-d="-1" aria-label="Sposta su">${I.up}</button><button class="ib" data-a="catMove" data-i="${i}" data-d="1" aria-label="Sposta giù">${I.down}</button><button class="ib" data-a="catRen" data-i="${i}" aria-label="Rinomina">${I.pen}</button><button class="ib" data-a="catDel" data-i="${i}" aria-label="Elimina">${I.trash}</button></div>`).join('')}</div>
+  <section class="grp"><h2>Portate del menù adulti</h2><div class="list">${state.categories.map((c,i)=>`<div class="crow"><span>${esc(c)}<small>${state.dishes.filter(d=>d.cat===c).length} portate · <i>${esc(catEn(c))}</i></small></span><button class="ib" data-a="catEn" data-i="${i}" aria-label="Nome in inglese" style="font-size:12px;font-weight:700;color:var(--olive)">EN</button><button class="ib" data-a="catMove" data-i="${i}" data-d="-1" aria-label="Sposta su">${I.up}</button><button class="ib" data-a="catMove" data-i="${i}" data-d="1" aria-label="Sposta giù">${I.down}</button><button class="ib" data-a="catRen" data-i="${i}" aria-label="Rinomina">${I.pen}</button><button class="ib" data-a="catDel" data-i="${i}" aria-label="Elimina">${I.trash}</button></div>`).join('')}</div>
   <div class="pk-new" style="margin-top:8px"><input class="inp" id="newcat" placeholder="es. Contorni"><button class="btn" data-a="catAdd">Aggiungi</button></div>
   <p class="hint">Queste sono le sezioni che compaiono sul menù (Antipasti, Primi Piatti…). Valgono per i nuovi menù.</p></section>
   <section class="grp"><h2>Backup</h2><div class="card"><p style="margin:0 0 12px;font-size:15px">Portate, template e menù sono salvati solo su questo telefono. Esporta un backup ogni tanto (su Drive, email o WhatsApp) per non perderli e per spostarli su un altro dispositivo.</p>
@@ -652,6 +663,18 @@ function secsHTML(m,kids){
 function drinksField(m,f,label){
   return`<label class="fld"><span>${label}</span><textarea class="inp" data-f="${f}" rows="2" style="min-height:70px">${esc(val(m,f))}</textarea></label>
   <div class="chips">${state.settings.drinkPresets.map((d,i)=>`<button data-a="drPick" data-f="${f}" data-i="${i}">+ ${esc(d)}</button>`).join('')}</div>`;
+}
+function enSection(m,t){
+  const ev=t.layout==='evento',mis=missingEn(m).length;
+  const rows=(kids)=>secList(m,kids).map((sec,si)=>sec.items.length?`<p class="hint" style="margin:10px 2px 4px"><b>${esc(catEn(sec.name))}</b></p>`+sec.items.map((it,ii)=>`<label class="fld" style="margin-bottom:8px"><span>${esc(oneLine(it.name))}</span><textarea class="inp" data-en="${kids?1:0}:${si}:${ii}" rows="2" style="min-height:64px" placeholder="Traduzione in inglese">${esc(oneLine(itemEn(it)))}</textarea></label>`).join(''):'').join('');
+  return`<details class="grp card" ${ui.enOpen?'open':''} data-det="en"><summary style="font-weight:600;cursor:pointer">In inglese${mis?` <span class="pill" style="--c:#B07A1E;margin-left:6px">${mis} da tradurre</span>`:''}</summary>
+    <p class="hint" style="margin:8px 2px 12px">Serve per la versione English dell'anteprima. Le traduzioni delle portate vengono salvate nell'archivio e riusate nei prossimi menù.</p>
+    <label class="fld"><span>Titolo</span><input class="inp" data-f="headingEn" value="${esc(m.headingEn||'')}" placeholder="${esc(enOf(t,'heading')||'')}"></label>
+    ${rows(false)}${ev&&m.kids!==false?`<p class="hint" style="margin:14px 2px 0"><b>${esc(m.headingKidsEn||enOf(t,'headingKids')||'Kids menu')}</b></p>`+rows(true):''}
+    <label class="fld" style="margin-top:12px"><span>Bevande</span><textarea class="inp" data-f="drinksEn" rows="2" placeholder="${esc(enOf(t,'drinks')||'')}">${esc(m.drinksEn||'')}</textarea></label>
+    ${ev?`<label class="fld"><span>Bevande bambini</span><input class="inp" data-f="drinksKidsEn" value="${esc(m.drinksKidsEn||'')}" placeholder="${esc(enOf(t,'drinksKids')||'')}"></label>`:`<label class="fld"><span>Dicitura bambini</span><input class="inp" data-f="kidLabelEn" value="${esc(m.kidLabelEn||'')}" placeholder="${esc(enOf(t,'kidLabel')||'')}"></label>`}
+    <label class="fld"><span>Note per la proposta</span><textarea class="inp" data-f="notesEn" rows="2">${esc(m.notesEn||'')}</textarea></label>
+  </details>`;
 }
 function vEdit(){
   const m=getMenu(ui.editId);if(!m){ui.view='cal';return vCal()}
@@ -690,6 +713,7 @@ function vEdit(){
     <p class="hint" id="tot">${totText(m)}</p>
     <label class="fld"><span>Note per il cliente</span><textarea class="inp" data-f="notes" placeholder="es. Acconto del 30% alla conferma.">${esc(m.notes)}</textarea></label>
   </section>
+  ${enSection(m,t)}
   <div class="btns two" style="margin-bottom:10px"><button class="btn pri" data-a="preview" data-mode="tavolo">${I.pdf}Menù tavolo</button><button class="btn pri" data-a="preview" data-mode="proposta">${I.pdf}Proposta</button></div>
   <p class="hint" style="margin:-2px 2px 14px">Il menù tavolo non riporta prezzi e note; la proposta sì.</p>
   <div class="btns two"><button class="btn" data-a="dup">${I.copy}Duplica</button><button class="btn danger" data-a="del">${I.trash}Elimina</button></div>
@@ -698,7 +722,9 @@ function vEdit(){
 function vPreview(){
   const m=getMenu(ui.editId);if(!m){ui.view='cal';return vCal()}
   return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>Anteprima</h1>`)+
-  `<main class="main"><div class="seg"><button class="${ui.pv.mode==='tavolo'?'on':''}" data-a="pvMode" data-v="tavolo">Menù tavolo</button><button class="${ui.pv.mode==='proposta'?'on':''}" data-a="pvMode" data-v="proposta">Proposta</button></div>
+  `<main class="main"><div class="seg" style="margin-bottom:8px"><button class="${ui.pv.lang!=='en'?'on':''}" data-a="pvLang" data-v="it">Italiano</button><button class="${ui.pv.lang==='en'?'on':''}" data-a="pvLang" data-v="en">English</button></div>
+  ${ui.pv.lang==='en'&&missingEn(m).length?`<div class="card" style="margin-bottom:12px;font-size:14px">${missingEn(m).length===1?'Una portata non ha':missingEn(m).length+' portate non hanno'} ancora la traduzione e ${missingEn(m).length===1?'resta':'restano'} in italiano. <button class="btn" style="margin-top:8px;width:100%" data-a="back">${I.pen}Completa nella sezione “In inglese” del menù</button></div>`:''}
+  <div class="seg"><button class="${ui.pv.mode==='tavolo'?'on':''}" data-a="pvMode" data-v="tavolo">Menù tavolo</button><button class="${ui.pv.mode==='proposta'?'on':''}" data-a="pvMode" data-v="proposta">Proposta</button></div>
   ${ui.pv.mode==='proposta'?`<div class="row2" style="margin-bottom:4px">
     <label class="fld"><span>Prezzo adulti (€)</span><input class="inp" data-f="priceAdult" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceAdult'))}" placeholder="obbligatorio"></label>
     <label class="fld"><span>Prezzo bambini (€)</span><input class="inp" data-f="priceKid" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceKid'))}" placeholder="facoltativo"></label></div>`:''}
@@ -764,7 +790,7 @@ function menuMsg(m,mode){
 }
 // WhatsApp mostra sempre la didascalia sotto le immagini; con i PDF spesso la scarta
 async function waFile(m,mode,fmt){
-  const base=`${mode==='tavolo'?'Menu':'Proposta-menu'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}`;
+  const base=`${mode==='tavolo'?'Menu':'Proposta-menu'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}${ui.pv.lang==='en'?'_EN':''}`;
   return fmt==='pdf'?{blob:await makePDF(m,mode),name:base+'.pdf',mime:'application/pdf'}:{blob:await makeImage(m,mode),name:base+'.jpg',mime:'image/jpeg'};
 }
 // la proposta deve sempre riportare il prezzo
@@ -782,7 +808,7 @@ async function waMenu(fmt){
   try{
     const f=await waFile(m,mode,fmt);
     ui.sheet={type:'wa',title:mode==='tavolo'?'Invia il menù':'Invia la proposta',files:[f],fmt,
-      text:old?$('#watext').value:menuMsg(m,mode),phone:old?$('#waphone').value:(m.phone||''),menuId:m.id,mode};
+      text:old?$('#watext').value:(ui.pv.lang==='en'?menuMsgEn(m,mode):menuMsg(m,mode)),phone:old?$('#waphone').value:(m.phone||''),menuId:m.id,mode};
   }catch(e){toast('File non creato: '+(e.message||e))}
   finally{busy(false);renderSheet()}
 }
@@ -827,7 +853,9 @@ async function ostiaFile(fmt){
 }
 function vOstie(){
   const o=ost(),f=(label,k,ph)=>`<label class="fld"><span>${label}</span><input class="inp" data-of="${k}" value="${esc(o[k])}" placeholder="${esc(ph)}" autocomplete="off"></label>`;
-  return topbar(`<h1>Ostie</h1>`)+`<main class="main">
+  const tab=`<div class="seg"><button class="${ui.stampa!=='sp'?'on':''}" data-a="stampaTab" data-v="ostie">Ostie</button><button class="${ui.stampa==='sp'?'on':''}" data-a="stampaTab" data-v="sp">Segnaposto</button></div>`;
+  if(ui.stampa==='sp')return topbar(`<h1>Stampe</h1>`)+`<main class="main">${tab}${vSegnaposto()}</main>`+navbar();
+  return topbar(`<h1>Stampe</h1>`)+`<main class="main">${tab}
   <section class="grp"><h2>Occasione</h2><div class="stat">${Object.entries(OSTIA_TYPES).map(([k,t])=>`<button class="${o.type===k?'on':''}" style="--c:${GOLD}" data-a="ostType" data-v="${k}"><i></i>${t.l}</button>`).join('')}</div></section>
   <section class="grp"><h2>Forma</h2><div class="seg">${Object.entries(OSTIA_SHAPES).map(([k,t])=>`<button class="${o.shape===k?'on':''}" data-a="ostShape" data-v="${k}">${t.l}</button>`).join('')}</div>
   <canvas id="ostcv" class="ost-cv" aria-label="Anteprima dell'ostia"></canvas></section>
@@ -869,6 +897,143 @@ function vDidattica(){
   </main>`+navbar();
 }
 
+/* ---------- Versione in inglese ---------- */
+const EN_CATS={'Antipasti':'Starters','Primi Piatti':'First courses','Secondo Piatto':'Main course','Dessert':'Dessert','Contorni':'Side dishes','Intermezzo':'Intermezzo','Antipasto':'Starter','Primo':'First course','Secondo':'Main course','Dolce':'Dessert','Menù bambini':'Kids menu'};
+const ALLERGENS_EN=['Cereals containing gluten','Crustaceans','Eggs','Fish','Peanuts','Soybeans','Milk/Lactose','Tree nuts','Celery','Mustard','Sesame','Sulphites (>10mg/kg)','Lupin','Molluscs'];
+// testi inglesi predefiniti per tipo di impaginazione (valgono anche per i template già installati)
+const LAYOUT_EN={
+  verticale:{heading:'Sunday Menu',headingKids:'Kids menu',drinks:'Cantina Crifo bottled wines, mineral water\nLiqueurs and coffee',drinksKids:'Mineral water',kidLabel:'Children up to 10 years'},
+  classico:{heading:'Festive Lunch',subheading:'Menu',tagline:'Historic farmhouse since 1735',drinks:'Cantina Crifo wines and mineral water,\nLiqueur and coffee',kidLabel:'Children up to 10 years'},
+  evento:{heading:'Menu',headingKids:'Kids menu',drinks:'Cantina Crifo Nero di Troia wine, mineral water, liqueurs and coffee.',drinksKids:'Mineral water',kidLabel:'Kids menu'}
+};
+// traduzioni delle portate di serie: si applicano da sole all'archivio
+const EN_DISHES={
+ "Selezione di focacce artigianali con oli extravergine aromatizzati e polveri di erbe spontanee dell’Alta Murgia":"Selection of artisan focaccia with flavoured extra virgin olive oils and wild herb powders from the Alta Murgia",
+ "Veli di Capocollo di Martina Franca con salsa agli agrumi":"Thin slices of Martina Franca capocollo with citrus sauce",
+ "Carpaccio di manzo con pomodori sott'olio, julienne di sedano e olive taggiasche":"Beef carpaccio with sun-dried tomatoes in oil, julienned celery and Taggiasca olives",
+ "Arista di maiale con rucola dell’orto, petali di grana e pomodorini ciliegino":"Roast pork loin with garden rocket, Grana shavings and cherry tomatoes",
+ "Formaggi della Masseria con miele millefiori bio delle Murge e noci caramellate":"Masseria cheeses with organic Murge wildflower honey and caramelised walnuts",
+ "Tempura di melanzana ripiena di patate mantecate all’olio evo, speck e cuore filante di mozzarella affumicata, servita su coulis di pomodoro":"Aubergine tempura filled with creamed potatoes in extra virgin olive oil, speck and a melting heart of smoked mozzarella, served on tomato coulis",
+ "Tempura di melanzana ripiena di patate mantecate, speck e cuore filante di mozzarella affumicata":"Aubergine tempura filled with creamed potatoes, speck and a melting heart of smoked mozzarella",
+ "Focacce della tradizione":"Traditional focaccia",
+ "Capocollo di Martina Franca con tarallo sbriciolato":"Martina Franca capocollo with crumbled tarallo",
+ "Carpaccio di manzo con rucola e petali di grana":"Beef carpaccio with rocket and Grana shavings",
+ "Ricotta, nodini e pecorino con miele di trifoglio della Murgia":"Ricotta, nodini and pecorino with Murgia clover honey",
+ "Involtini di melanzana pastellata con crema di patate, speck e mozzarella":"Battered aubergine rolls with potato cream, speck and mozzarella",
+ "Fagottino di crespella su vellutata di fondo bruno":"Crêpe parcel on a rich brown stock velouté",
+ "Fagottino di crespella vegetariano su vellutata di bietole":"Vegetarian crêpe parcel on chard velouté",
+ "Orecchiette fresche ai funghi cardoncelli trifolati, pomodorini ciliegino e crema di cece nero di Altamura":"Fresh orecchiette with sautéed cardoncello mushrooms, cherry tomatoes and Altamura black chickpea cream",
+ "Orecchiette fresche con salsicce a punta di coltello, olive nere al forno, crema di burrata e limone":"Fresh orecchiette with hand-cut sausage, baked black olives, burrata cream and lemon",
+ "Paccheri di Gragnano alle tre carni":"Gragnano paccheri with three-meat ragù",
+ "Orecchiette con bacon, zucchine e fonduta di formaggio":"Orecchiette with bacon, courgettes and cheese fondue",
+ "Coppa di maiale cotta a bassa temperatura con mele Granny Smith, prugne e anacardi accompagnata da patate al forno aromatizzate":"Slow-cooked pork neck with Granny Smith apples, prunes and cashews served with herb roast potatoes",
+ "Stinco di maiale con salsa alle mele e contorno di patate al forno aromatizzate":"Pork shank with apple sauce and herb roast potatoes",
+ "Grigliata di carni miste con contorno di patate al forno aromatizzate":"Mixed grilled meats with herb roast potatoes",
+ "Reale di scottona con salsa al vino rosso e contorno di patate al forno aromatizzate":"Heifer chuck with red wine sauce and herb roast potatoes",
+ "Mousse di ricotta, vaniglia e melecotogne con composta di frutta fresca":"Ricotta, vanilla and quince mousse with fresh fruit compote",
+ "Sporcamuss con crema diplomatica e composta di frutta fresca":"Sporcamuss puff pastry with diplomat cream and fresh fruit compote",
+ "Crostata di ricotta e pere con composta di frutta fresca":"Ricotta and pear tart with fresh fruit compote",
+ "Dessert di frutta fresca":"Fresh fruit dessert",
+ "Focaccia al pomodoro":"Tomato focaccia",
+ "Prosciutto cotto e mozzarella":"Cooked ham and mozzarella",
+ "Orecchiette con sugo di pomodoro":"Orecchiette with tomato sauce",
+ "Cotoletta con patate al forno":"Breaded cutlet with roast potatoes",
+ "Torta di cioccolato e mandorle con composta di frutta fresca":"Chocolate and almond cake with fresh fruit compote"
+};
+const enKey=s=>oneLine(s).replace(/\s+/g,' ').trim();
+const catEn=n=>(state.settings.catEn||{})[n]||EN_CATS[n]||n;
+const dishOf=i=>i.dishId&&state.dishes.find(x=>x.id===i.dishId);
+const itemEn=i=>{if(i.en)return i.en;const d=dishOf(i);return d&&d.en&&oneLine(d.name)===oneLine(i.name)?d.en:''};
+let LANG='it',TPL_OV=null;
+const enOf=(t,f)=>{const v=t[f+'En'];return v!==undefined&&v!==''?v:(LAYOUT_EN[t.layout]||LAYOUT_EN.verticale)[f]};
+function localize(m,t){
+  const t2={...t};
+  for(const f of ['heading','subheading','tagline','headingKids','drinks','drinksKids','kidLabel']){const v=enOf(t,f);if(v!==undefined)t2[f]=v}
+  const tr=S=>S&&S.map(s=>({...s,name:catEn(s.name),items:s.items.map(i=>({...i,name:itemEn(i)||i.name}))}));
+  const m2={...m,sections:tr(m.sections),kidsSections:tr(m.kidsSections),heading:m.headingEn||'',notes:m.notesEn||m.notes};
+  // campi scritti a mano nel menù: versione inglese se c'è, altrimenti quella inglese del template
+  for(const f of ['drinks','drinksKids','headingKids','kidLabel']){
+    if(m[f+'En'])m2[f]=m[f+'En'];else if(m[f]===undefined||m[f]===null)delete m2[f];
+  }
+  return[m2,t2];
+}
+// portate ancora senza traduzione, per avvisare prima di stampare
+const missingEn=m=>allSecs(m).flatMap(s=>s.items).filter(i=>!itemEn(i));
+function menuMsgEn(m,mode){
+  const v=state.settings.venue||'Tenuta Coppa';
+  const quando=m.date?` for ${parseD(m.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`:'';
+  const g=[m.guests?m.guests+' adults':'',m.guestsKids?m.guestsKids+' children':''].filter(Boolean).join(' and ');
+  const ciao=`Dear ${m.client||'Sir or Madam'},`;
+  if(mode==='tavolo')return`${ciao}\nplease find attached our menu${quando}.\nKind regards,\n${v}`;
+  const pa=num(val(m,'priceAdult')),pk=num(val(m,'priceKid')),eurC=n=>'€'+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  let r=`${ciao}\nas agreed, please find attached our menu proposal${quando}${g?` (${g})`:''}.`;
+  if(pa!=='')r+=`\nThe price is ${eurC(pa)} per person${pk!==''&&Number(m.guestsKids)>0?` and ${eurC(pk)} per child`:''}.`;
+  return r+`\nWe remain at your disposal for any changes.\nKind regards,\n${v}`;
+}
+/* ---------- Segnaposto da piegare ---------- */
+// foglio A4 con 6 cartoncini 105 × 99 mm: si ritagliano e si piegano a metà (a tenda)
+const SP_STYLES={
+  oro:{l:'Oro',c:'#A8956A'},azzurro:{l:'Azzurro',c:'#6F95B8'},salvia:{l:'Salvia',c:'#7F9270'},
+  ulivo:{l:"Ulivo",c:'#6E7B58',img:'assets/segnaposto/ulivo.png'},spighe:{l:'Spighe',c:'#A88A5C',img:'assets/segnaposto/spighe.png'}
+};
+const sp=()=>ui.sp||(ui.sp=state.lastSp?{...state.lastSp}:{style:'oro',mode:'nome',text:'',both:true});
+const spImgs={};
+const spImg=src=>spImgs[src]||(spImgs[src]=new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src}));
+async function drawSp(cv,o,W){
+  const H=Math.round(W*297/210),px=W/210;cv.width=W;cv.height=H;
+  const x=cv.getContext('2d'),S=SP_STYLES[o.style]||SP_STYLES.oro,img=S.img?await spImg(S.img):null;
+  await document.fonts.load('40px "Great Vibes"').catch(()=>{});await document.fonts.load('italic 500 20px "Cormorant Garamond"').catch(()=>{});
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  // linee di taglio tra i cartoncini (tratteggio grigio chiaro)
+  x.save();x.strokeStyle='#CFCFCF';x.lineWidth=Math.max(1,.2*px);x.setLineDash([1.6*px,1.6*px]);x.beginPath();
+  x.moveTo(105*px,0);x.lineTo(105*px,H);[99,198].forEach(y=>{x.moveTo(0,y*px);x.lineTo(W,y*px)});x.stroke();x.restore();
+  for(let r=0;r<3;r++)for(let c=0;c<2;c++){
+    const ox=c*105*px,oy=r*99*px;
+    // linea di piega: solo due tacche ai lati, così non si vede sul cartoncino piegato
+    x.save();x.strokeStyle='#BDBDBD';x.lineWidth=Math.max(1,.2*px);x.beginPath();
+    x.moveTo(ox+2*px,oy+49.5*px);x.lineTo(ox+6*px,oy+49.5*px);x.moveTo(ox+99*px,oy+49.5*px);x.lineTo(ox+103*px,oy+49.5*px);x.stroke();x.restore();
+    panel(x,ox,oy+49.5*px,px,o,S,img);                 // fronte: metà inferiore, dritta
+    if(o.both){x.save();x.translate(ox+105*px,oy+49.5*px);x.rotate(Math.PI);panel(x,0,0,px,o,S,img);x.restore()} // retro, capovolto
+  }
+}
+function panel(x,ox,oy,px,o,S,img){
+  const cx=ox+52.5*px;
+  if(img){const h=(o.style==='spighe'?15:9)*px,w=h*img.width/img.height;x.drawImage(img,cx-w/2,oy+(o.style==='spighe'?5:8)*px,w,h)}
+  else{ // filetto sottile con rombo
+    x.save();x.strokeStyle=S.c;x.fillStyle=S.c;x.lineWidth=.3*px;const y=oy+12*px;
+    x.beginPath();x.moveTo(cx-20*px,y);x.lineTo(cx-3.2*px,y);x.moveTo(cx+3.2*px,y);x.lineTo(cx+20*px,y);x.stroke();
+    x.beginPath();x.moveTo(cx,y-1.8*px);x.lineTo(cx+1.8*px,y);x.lineTo(cx,y+1.8*px);x.lineTo(cx-1.8*px,y);x.closePath();x.fill();x.restore();
+  }
+  x.save();x.strokeStyle=S.c;x.globalAlpha=.75;x.lineWidth=.25*px;x.textAlign='center';x.fillStyle=S.c;
+  const ly=oy+34*px;
+  if(o.mode==='tavolo'){
+    x.globalAlpha=1;x.font=`${10*px}px "Great Vibes"`;x.textAlign='right';x.fillText('Tavolo',cx+2*px,ly-.5*px);
+    x.globalAlpha=.75;x.beginPath();x.moveTo(cx+5*px,ly);x.lineTo(cx+26*px,ly);x.stroke();
+  }else{x.beginPath();x.moveTo(cx-32*px,ly);x.lineTo(cx+32*px,ly);x.stroke()}
+  const t=String(o.text||'').trim();
+  if(t){x.globalAlpha=1;x.textAlign='center';x.font=`italic 500 ${3.4*px}px "Cormorant Garamond"`;x.fillStyle='#6B6B64';x.fillText(t,cx,oy+43*px,90*px)}
+  x.restore();
+}
+async function paintSp(){const cv=$('#spcv');if(cv)await drawSp(cv,sp(),900)}
+async function spPDF(){
+  const o=sp(),cv=document.createElement('canvas');await drawSp(cv,o,2480); // 300 dpi
+  state.lastSp={...o};save();
+  const pdf=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  pdf.addImage(cv.toDataURL('image/png'),'PNG',0,0,210,297);
+  return{blob:pdf.output('blob'),name:`Segnaposto-${o.mode}-${o.style}.pdf`,mime:'application/pdf'};
+}
+function vSegnaposto(){
+  const o=sp();
+  return`<section class="grp"><h2>Stile</h2><div class="stat">${Object.entries(SP_STYLES).map(([k,s])=>`<button class="${o.style===k?'on':''}" style="--c:${s.c}" data-a="spStyle" data-v="${k}"><i></i>${s.l}</button>`).join('')}</div></section>
+  <section class="grp"><h2>Da scrivere a mano</h2><div class="seg"><button class="${o.mode==='nome'?'on':''}" data-a="spMode" data-v="nome">Nome dell'ospite</button><button class="${o.mode==='tavolo'?'on':''}" data-a="spMode" data-v="tavolo">Numero del tavolo</button></div>
+  <canvas id="spcv" class="ost-cv" aria-label="Anteprima del foglio dei segnaposto"></canvas></section>
+  <section class="grp"><h2>Rifiniture</h2>
+    <label class="fld"><span>Riga sotto (facoltativa)</span><input class="inp" data-sp="text" value="${esc(o.text)}" placeholder="es. Comunione di Giulia · 10 maggio 2026" autocomplete="off"></label>
+    <label class="tog"><input type="checkbox" data-spc="both" ${o.both?'checked':''}>Stampa su entrambi i lati del cartoncino</label>
+  </section>
+  <button class="btn pri wide" data-a="spPDF">${I.pdf}Crea il foglio da stampare</button>
+  <p class="hint" style="margin-top:10px">Un foglio A4 = 6 segnaposto. Stampa su cartoncino bianco (almeno 160 g) al 100%, ritaglia lungo il tratteggio e piega a metà seguendo le tacche ai lati.</p>`;
+}
 /* ---------- Fogli (bottom sheet) ---------- */
 function curSec(){const m=getMenu(ui.editId);return secList(m,ui.sheet.kids)[ui.sheet.s]}
 function pickListHTML(){
@@ -895,6 +1060,7 @@ function renderSheet(){
     const d=sh.id?state.dishes.find(x=>x.id===sh.id):{name:'',cat:state.categories[0]};
     h=head(sh.id?'Modifica portata':'Nuova portata')+`
     <label class="fld"><span>Nome</span><textarea class="inp" id="dname" rows="3" style="min-height:90px">${esc(d.name)}</textarea></label>
+    <label class="fld"><span>Nome in inglese</span><textarea class="inp" id="den" rows="2" style="min-height:70px" placeholder="Per i menù in inglese">${esc(d.en||'')}</textarea></label>
     <p class="hint" style="margin:-6px 2px 12px">Vai a capo per spezzare la riga sul menù, come in Canva.</p>
     <label class="fld"><span>Allergeni</span></label>
     <div class="algs">${ALLERGENI.map((a,i)=>`<button class="${(sh.alg||[]).includes(i+1)?'on':''}" data-a="algT" data-n="${i+1}">${i+1}. ${esc(a)}</button>`).join('')}</div>
@@ -930,7 +1096,7 @@ function render(keep){
   $('#app').innerHTML=(V[ui.view]||vCal)();
   window.scrollTo(0,keep?y:0);
   mountPreviews();
-  if(ui.view==='ostie')paintOstia();
+  if(ui.view==='ostie')ui.stampa==='sp'?paintSp():paintOstia();
 }
 let toastT;
 function toast(msg){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),3400)}
@@ -943,6 +1109,7 @@ function leaveEdit(){
 function openEditor(id){ui.back=['cal','list'].includes(ui.view)?ui.view:ui.back;ui.editId=id;ui.view='edit';render()}
 
 /* ---------- Azioni ---------- */
+document.addEventListener('toggle',e=>{if(e.target.dataset&&e.target.dataset.det==='en')ui.enOpen=e.target.open},true);
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]');if(!b)return;
   const a=b.dataset.a,d=b.dataset,m=ui.editId?getMenu(ui.editId):null,K=!!d.k;
@@ -978,8 +1145,9 @@ document.addEventListener('click',e=>{
     case 'itEdit':ui.sheet={type:'item',s:+d.s,i:+d.i,kids:K};renderSheet();break;
     case 'saveItem':{const v=$('#iname').value.trim();if(v){secList(m,ui.sheet.kids)[ui.sheet.s].items[ui.sheet.i].name=v;save()}ui.sheet=null;renderSheet();render(true);break}
     case 'drPick':{const p=state.settings.drinkPresets[+d.i],cur=String(val(m,d.f)).trim();m[d.f]=cur?cur+'\n'+p:p;save();render(true);break}
-    case 'preview':ui.pv={mode:d.mode||'tavolo'};ui.view='preview';render();break;
+    case 'preview':ui.pv={mode:d.mode||'tavolo',lang:(ui.pv&&ui.pv.lang)||'it'};ui.view='preview';render();break;
     case 'pvMode':ui.pv.mode=d.v;render(true);break;
+    case 'pvLang':ui.pv.lang=d.v;render(true);break;
     case 'pdf':if(prezzoOk())doPDF();break;
     case 'shareFile':shareFile();break;
     case 'downloadFile':downloadFile();break;
@@ -991,10 +1159,16 @@ document.addEventListener('click',e=>{
     case 'saveDish':{
       const name=$('#dname').value.trim(),cat=$('#dcat').value;if(!name){toast('Scrivi il nome della portata');break}
       const alg=[...(ui.sheet.alg||[])];
-      if(ui.sheet.id){const x=state.dishes.find(z=>z.id===ui.sheet.id);x.name=name;x.cat=cat;x.alg=alg}else state.dishes.push({id:uid(),name,cat,alg});
+      const en=($('#den')?.value||'').trim();
+      if(ui.sheet.id){const x=state.dishes.find(z=>z.id===ui.sheet.id);x.name=name;x.cat=cat;x.alg=alg;x.en=en}else state.dishes.push({id:uid(),name,cat,alg,en});
       save();ui.sheet=null;renderSheet();render(true);toast('Portata salvata');break}
     case 'delDish':if(confirm("Eliminare questa portata dall'archivio?")){state.dishes=state.dishes.filter(z=>z.id!==ui.sheet.id);save();ui.sheet=null;renderSheet();render(true)}break;
     case 'closeSheet':ui.sheet=null;renderSheet();break;
+    case 'stampaTab':ui.stampa=d.v;render();break;
+    case 'spStyle':sp().style=d.v;render(true);break;
+    case 'spMode':sp().mode=d.v;render(true);break;
+    case 'spPDF':(async()=>{busy(true,'Preparo il foglio');try{const f=await spPDF();ui.sheet={type:'file',blob:f.blob,name:f.name,mime:f.mime,title:'Segnaposto pronti'}}
+      catch(err){toast('Foglio non creato')}finally{busy(false);renderSheet()}})();break;
     case 'waMenu':if(prezzoOk())waMenu();break;
     case 'waFmt':if(ui.sheet.fmt!==d.v){state.settings.waFmt=d.v;save();waMenu(d.v)}break;
     case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;sendFiles(sh.files,sh.text,sh.phone,a==='waSend');
@@ -1019,6 +1193,7 @@ document.addEventListener('click',e=>{
     case 'tplBg':$('#bgfile').click();break;
     case 'tplBgReset':{const t=getTpl(ui.tplId);t.bgImage=t.origBg;save();render(true);break}
     case 'catMove':{const L=state.categories,i=+d.i,j=i+Number(d.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];save();render(true);break}
+    case 'catEn':{const c=state.categories[+d.i],v=prompt(`Nome in inglese di "${c}"`,catEn(c));if(v===null)break;state.settings.catEn={...(state.settings.catEn||{}),[c]:v.trim()};save();render(true);break}
     case 'catRen':{const old=state.categories[+d.i],v=prompt('Nuovo nome della sezione',old);if(!v||!v.trim()||v.trim()===old)break;
       if(allCats().includes(v.trim())){toast('Esiste già una sezione con questo nome');break}
       state.categories[+d.i]=v.trim();state.dishes.forEach(x=>{if(x.cat===old)x.cat=v.trim()});save();render(true);break}
@@ -1049,6 +1224,8 @@ document.addEventListener('input',e=>{
   else if(d.in==='q'){ui.q=el.value;$('#mlist').innerHTML=listHTML()}
   else if(d.in==='didPhone'){ui.didPhone=el.value}
   else if(d.of){ost()[d.of]=el.value;paintOstia()}
+  else if(d.sp){sp()[d.sp]=el.value;clearTimeout(ui.spT);ui.spT=setTimeout(paintSp,250)}
+  else if(d.en){const[k,si,ii]=d.en.split(':').map(Number),m=getMenu(ui.editId);if(m){const it=secList(m,!!k)[si].items[ii];it.en=el.value.trim();save()}}
   else if(d.in==='dq'){ui.dq=el.value;$('#dlist').innerHTML=dishListHTML()}
   else if(d.in==='pickQ'){ui.pickQ=el.value;$('#pklist').innerHTML=pickListHTML()}
 });
@@ -1057,6 +1234,11 @@ document.addEventListener('change',async e=>{
   if(d.fc){const m=getMenu(ui.editId);if(m){m[d.fc]=el.checked;save();if(d.re)render(true)}}
   else if(d.pk==='all'){ui.pickAll=el.checked;$('#pklist').innerHTML=pickListHTML()}
   else if(d.oc){ost()[d.oc]=el.checked;paintOstia()}
+  else if(d.spc){sp()[d.spc]=el.checked;paintSp()}
+  else if(d.en){ // a fine modifica la traduzione va anche nell'archivio, se la portata non ne aveva una
+    const[k,si,ii]=d.en.split(':').map(Number),m=getMenu(ui.editId),it=m&&secList(m,!!k)[si].items[ii],dd=it&&dishOf(it);
+    if(dd&&!dd.en&&it.en&&oneLine(dd.name)===oneLine(it.name)){dd.en=it.en;save()}
+  }
   else if(el.id==='didfile'&&el.files[0]){
     const file=el.files[0],slot=ui.didSlot;
     const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(file)});

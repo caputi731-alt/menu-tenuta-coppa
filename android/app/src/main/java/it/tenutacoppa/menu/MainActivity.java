@@ -95,10 +95,15 @@ public class MainActivity extends AppCompatActivity {
         web.loadUrl("https://" + DOMINIO + "/assets/index.html");
     }
 
+    /**
+     * Tasto indietro: lo gestisce l'app (chiude i fogli aperti, torna alla schermata precedente).
+     * Solo dal calendario, la schermata iniziale, l'app si chiude.
+     */
     @Override
     public void onBackPressed() {
-        if (web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        web.evaluateJavascript("(window.appBack&&window.appBack())?'si':'no'", risposta -> {
+            if (!"\"si\"".equals(risposta)) finish();
+        });
     }
 
     /** Funzioni che l'app web può chiamare: salvataggio e condivisione dei PDF. */

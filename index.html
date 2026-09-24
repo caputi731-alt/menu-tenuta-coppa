@@ -203,6 +203,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .fcard small{color:var(--muted);font-size:13px}
 .thumbs{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px}
 .thumbs img{height:150px;border-radius:6px;border:1px solid var(--line);flex:none}
+.card.warn{background:#FFF7E8;border-color:#E9C98A;color:#6B4A12;font-size:14px;margin-bottom:12px}
 .btn.wa{background:#1F7A4D;border-color:#1F7A4D;color:#fff}
 .e-col{position:absolute;top:0;bottom:0}
 .e-h{position:absolute;top:103px;left:-20px;right:-20px;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:19.5px;letter-spacing:.26em;text-transform:uppercase;line-height:1.1;white-space:nowrap}
@@ -398,6 +399,7 @@ const layoutOf=m=>LAYOUTS[tplOf(m).layout]||LAYOUTS.verticale;
 // Campi che, se non modificati nella proposta, prendono il valore del template
 const INHERIT=['drinks','drinksKids','priceAdult','priceKid','kidLabel','headingKids'];
 const val=(m,f)=>(m[f]===undefined||m[f]===null)?(tplOf(m)[f]??''):m[f];
+const priceInherited=m=>m.priceAdult===undefined||m.priceAdult===null;
 const heading=m=>(m.heading||'').trim()||tplOf(m).heading;
 const menuName=m=>heading(m)+(m.client?` – ${m.client}`:'');
 function newMenu(date){
@@ -483,7 +485,14 @@ function pageHTML(m,t,mode,lang){
   try{return pageHTMLit(m2,t2,mode)}finally{LANG='it';TPL_OV=null}
 }
 const pageHTMLit=(m,t,mode)=>t.layout==='evento'?pageEvento(m,t,mode):t.layout==='classico'?pageClassico(m,t,mode):pageVerticale(m,t,mode);
-function fitPage(pg){
+// adatta il testo alla pagina; restituisce quanto è stato ridotto e se qualcosa esce comunque
+function fitPage(pg){fitPageRaw(pg);
+  let k=1,over=false;
+  pg.querySelectorAll('.v-flow,.c-flow').forEach(f=>{const inn=f.firstElementChild;k=Math.min(k,parseFloat(inn.style.fontSize)/(pg.classList.contains('pg-c')?17:19));if(inn.offsetHeight>f.clientHeight+1)over=true});
+  pg.querySelectorAll('.e-col').forEach(c=>{const b=c.querySelector('.e-body');k=Math.min(k,parseFloat(b.style.fontSize)/11.4);if(b.offsetHeight>c._avail+1)over=true});
+  return{k,over};
+}
+function fitPageRaw(pg){
   if(pg.classList.contains('pg-c')){
     const ti=pg.querySelector('.c-title');let fs=25;ti.style.fontSize=fs+'px';
     while(ti.scrollWidth>ti.clientWidth+1&&fs>14){fs--;ti.style.fontSize=fs+'px'}
@@ -505,7 +514,10 @@ function fitPage(pg){
 function mountPreview(hostId,m,tpl,mode,lang){
   const host=document.getElementById(hostId);if(!host)return;
   host.innerHTML=`<div class="pv-scale">${pageHTML(m,tpl,mode,lang)}</div>`;
-  const sc=host.firstElementChild,pg=sc.firstElementChild;fitPage(pg);
+  const sc=host.firstElementChild,pg=sc.firstElementChild,fit=fitPage(pg);
+  const w=document.getElementById(hostId+'-warn');
+  if(w)w.innerHTML=fit.over?`<div class="card warn">Il menù è troppo lungo: alcune portate escono dalla pagina. Togli qualche portata, unisci quelle simili o scegli un template A4.</div>`
+    :fit.k<.72?`<div class="card warn">Il menù è lungo: il testo è stato rimpicciolito del ${Math.round((1-fit.k)*100)}% e in stampa potrebbe leggersi male. Valuta di togliere qualche portata o di usare un template A4.</div>`:'';
   const W=pg.offsetWidth,H=pg.offsetHeight,avail=host.clientWidth-8;
   const s=Math.min(avail/W,Math.max(380,window.innerHeight*.66)/H,1);
   sc.style.transform=`scale(${s})`;sc.style.marginLeft=((host.clientWidth-W*s)/2)+'px';host.style.height=(H*s+14)+'px';
@@ -708,6 +720,7 @@ function vEdit(){
     ${ev&&m.kids!==false?drinksField(m,'drinksKids','Bevande bambini'):''}
   </section>
   <section class="grp"><h2>Prezzi e note (solo proposta)</h2>
+    ${priceInherited(m)?`<p class="hint" style="color:#8A5A12;margin:0 2px 6px">Prezzo predefinito del template: confermalo o scrivi quello concordato.</p>`:''}
     <div class="row2">${fld('Adulti (€)','priceAdult','text','inputmode="decimal" placeholder="es. 50"',val(m,'priceAdult'))}${fld('Bambini (€)','priceKid','text','inputmode="decimal" placeholder="es. 25"',val(m,'priceKid'))}</div>
     ${ev?'':fld('Dicitura bambini','kidLabel','text','placeholder="Bambini fino a 10 anni"',val(m,'kidLabel'))}
     <p class="hint" id="tot">${totText(m)}</p>
@@ -725,9 +738,11 @@ function vPreview(){
   `<main class="main"><div class="seg" style="margin-bottom:8px"><button class="${ui.pv.lang!=='en'?'on':''}" data-a="pvLang" data-v="it">Italiano</button><button class="${ui.pv.lang==='en'?'on':''}" data-a="pvLang" data-v="en">English</button></div>
   ${ui.pv.lang==='en'&&missingEn(m).length?`<div class="card" style="margin-bottom:12px;font-size:14px">${missingEn(m).length===1?'Una portata non ha':missingEn(m).length+' portate non hanno'} ancora la traduzione e ${missingEn(m).length===1?'resta':'restano'} in italiano. <button class="btn" style="margin-top:8px;width:100%" data-a="back">${I.pen}Completa nella sezione “In inglese” del menù</button></div>`:''}
   <div class="seg"><button class="${ui.pv.mode==='tavolo'?'on':''}" data-a="pvMode" data-v="tavolo">Menù tavolo</button><button class="${ui.pv.mode==='proposta'?'on':''}" data-a="pvMode" data-v="proposta">Proposta</button></div>
+  ${ui.pv.mode==='proposta'&&priceInherited(m)?`<p class="hint" style="color:#8A5A12;margin:0 2px 6px">Stai usando il prezzo predefinito del template: controlla che sia quello concordato.</p>`:''}
   ${ui.pv.mode==='proposta'?`<div class="row2" style="margin-bottom:4px">
     <label class="fld"><span>Prezzo adulti (€)</span><input class="inp" data-f="priceAdult" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceAdult'))}" placeholder="obbligatorio"></label>
     <label class="fld"><span>Prezzo bambini (€)</span><input class="inp" data-f="priceKid" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceKid'))}" placeholder="facoltativo"></label></div>`:''}
+  <div id="pv-warn"></div>
   <div class="pv" id="pv"></div>
   <div class="btns">
     <button class="btn wa wide" data-a="waMenu">${I.wa}Invia su WhatsApp</button>
@@ -794,9 +809,25 @@ async function waFile(m,mode,fmt){
   return fmt==='pdf'?{blob:await makePDF(m,mode),name:base+'.pdf',mime:'application/pdf'}:{blob:await makeImage(m,mode),name:base+'.jpg',mime:'image/jpeg'};
 }
 // la proposta deve sempre riportare il prezzo
+// chiamata dal tasto indietro di Android: true = gestito dall'app, false = si può chiudere
+window.appBack=()=>{
+  if($('.busy'))return true;
+  if(ui.sheet){ui.sheet=null;renderSheet();return true}
+  if(['edit','preview','tpl','dishes'].includes(ui.view)){$('[data-a=back]')?.click();return true}
+  if(ui.view==='ostie'&&ui.stampa==='sp'){ui.stampa='ostie';render();return true}
+  if(ui.view!=='cal'){ui.view='cal';render();return true}
+  return false;
+};
 function prezzoOk(){
   const m=getMenu(ui.editId);
-  if(!m||ui.pv.mode!=='proposta'||num(val(m,'priceAdult'))!=='')return true;
+  if(!m||ui.pv.mode!=='proposta')return true;
+  if(num(val(m,'priceAdult'))!==''){
+    if(!priceInherited(m))return true;
+    const pk=num(val(m,'priceKid'));
+    if(!confirm(`La proposta userà il prezzo predefinito del template: ${eurC(num(val(m,'priceAdult')))} a persona${pk!==''?` e ${eurC(pk)} per i bambini`:''}.\n\nÈ quello concordato con il cliente?`))return false;
+    m.priceAdult=num(val(m,'priceAdult'));if(m.priceKid===undefined||m.priceKid===null)m.priceKid=pk;save();render(true); // confermato: diventa il prezzo del menù
+    return true;
+  }
   toast('Inserisci il prezzo adulti: la proposta deve sempre riportarlo');
   const f=$('[data-f=priceAdult]');if(f){f.focus();f.scrollIntoView({block:'center'})}
   return false;
@@ -1038,6 +1069,7 @@ function vSegnaposto(){
 function curSec(){const m=getMenu(ui.editId);return secList(m,ui.sheet.kids)[ui.sheet.s]}
 function pickListHTML(){
   const s=curSec(),q=norm(ui.pickQ),cat=ui.sheet.kids?KIDS_CAT:s.name;
+  if(!ui.sheet.kids&&!allCats().includes(cat))ui.pickAll=true;
   const uso={};state.menus.forEach(mm=>allSecs(mm).forEach(ss=>ss.items.forEach(it=>{if(it.dishId)uso[it.dishId]=(uso[it.dishId]||0)+1})));
   const L=state.dishes.filter(x=>(ui.pickAll||x.cat===cat)&&(!q||norm(x.name).includes(q))).sort((a,b)=>(uso[b.id]||0)-(uso[a.id]||0)||a.name.localeCompare(b.name,'it'));
   if(!L.length)return`<p class="empty">${q?'Nessuna portata trovata. Scrivila qui sotto per aggiungerla.':'Nessuna portata in questa categoria. Aggiungila qui sotto.'}</p>`;
@@ -1196,7 +1228,10 @@ document.addEventListener('click',e=>{
     case 'catEn':{const c=state.categories[+d.i],v=prompt(`Nome in inglese di "${c}"`,catEn(c));if(v===null)break;state.settings.catEn={...(state.settings.catEn||{}),[c]:v.trim()};save();render(true);break}
     case 'catRen':{const old=state.categories[+d.i],v=prompt('Nuovo nome della sezione',old);if(!v||!v.trim()||v.trim()===old)break;
       if(allCats().includes(v.trim())){toast('Esiste già una sezione con questo nome');break}
-      state.categories[+d.i]=v.trim();state.dishes.forEach(x=>{if(x.cat===old)x.cat=v.trim()});save();render(true);break}
+      const nv=v.trim();state.categories[+d.i]=nv;state.dishes.forEach(x=>{if(x.cat===old)x.cat=nv});
+      state.menus.forEach(mm=>mm.sections.forEach(ss=>{if(ss.name===old)ss.name=nv})); // anche nei menù già creati
+      if(state.settings.catEn&&state.settings.catEn[old]){state.settings.catEn[nv]=state.settings.catEn[old];delete state.settings.catEn[old]}
+      save();render(true);break}
     case 'catDel':{const c=state.categories[+d.i],n=state.dishes.filter(x=>x.cat===c).length;
       if(n){alert(`Nella sezione "${c}" ci sono ${n} portate. Spostale in un'altra sezione o eliminale prima.`);break}
       if(state.categories.length<2)break;

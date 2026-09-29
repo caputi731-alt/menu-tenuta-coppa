@@ -212,6 +212,20 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .e-sep{margin:1.35em 0;letter-spacing:.05em}
 .e-foot{position:absolute;bottom:62.8px;left:-10px;right:-10px;font-size:11.4px;line-height:1.38;white-space:pre-line}
 .e-notes{margin-top:.5em;font-style:italic;font-size:.92em}
+.pg-lc{font-family:'Great Vibes',cursive}
+.lc-t{position:absolute;left:45px;right:45px;top:280px;font-size:44px;line-height:1.2;white-space:nowrap}
+.lc-d{position:absolute;left:0;right:0;top:343px;font-size:27px;line-height:1.2}
+.lc-v{position:absolute;left:0;right:0;top:376px;font-size:21px;line-height:1.2}
+.pg-l{font-family:'Cormorant Garamond',serif}
+.l-col{position:absolute;top:132px;width:246px}
+.l-a{left:43px}.l-b{left:307px}
+.l-rule{position:absolute;left:297px;top:138px;width:0;border-left:.7px solid currentColor;opacity:.3}
+.l-sec+.l-sec{margin-top:.75em}
+.l-sec-t{font-family:'Great Vibes',cursive;font-size:2em;line-height:1.15;margin-bottom:.1em}
+.l-it{font-style:italic;font-weight:500;line-height:1.28;margin-bottom:.3em;white-space:pre-line}
+.l-offer{font-weight:600;line-height:1.35}
+.l-offer .v-notes{font-weight:500}
+.l-alg{font-size:.72em;line-height:1.3}
 </style>
 </head>
 <body>
@@ -231,7 +245,8 @@ const PT_MM=25.4/72;
 const LAYOUTS={
   verticale:{w:810,h:1440,scale:2,label:'Verticale (come i menù della domenica)'},
   evento:{w:842,h:595,scale:3,label:'A4 orizzontale con menù bambini'},
-  classico:{w:595,h:842,scale:3,label:'A4 verticale (come il menù di Pasqua)'}
+  classico:{w:595,h:842,scale:3,label:'A4 verticale (come il menù di Pasqua)'},
+  libretto:{w:595,h:421,scale:3,label:'Libretto A5: copertina + menù, 2 per foglio A4'}
 };
 const STATUS={bozza:{l:'Bozza',c:'#7E8277'},inviata:{l:'Inviata',c:'#B07A1E'},confermata:{l:'Confermata',c:'#3F7A34'},rifiutata:{l:'Rifiutata',c:'#9B3A48'}};
 const DEF_CATS=['Antipasti','Primi Piatti','Secondo Piatto','Dessert'];
@@ -288,9 +303,10 @@ const OSTIA_SHAPES={tonda:{l:'Tonda Ø 20 cm',w:210,h:210},rett:{l:'Rettangolare
 const GOLD='#A8956A';
 const CLASSICO={layout:'classico',heading:'Pranzo di festa',subheading:'Menù',tagline:'Masseria storica del 1735',legend:true,bgColor:'#FFFFFF',ink:'#5C654C',accent:'#354469',drinks:'Vini Cantina Crifo e acqua minerale,\nLiquore e caffè',priceAdult:50,priceKid:25,limit:698};
 const EVENTO={layout:'evento',heading:'Menù',bgColor:'#FFFFFF',ink:'#2B2B2B',drinks:'Vino Nero di Troia Cantina Crifo, acqua minerale, liquori e caffè.',priceAdult:50,priceKid:25,kidLabel:'Menù bambini'};
+const LIBRETTO={layout:'libretto',heading:'Il mio battesimo',headingKids:'Menù bambini',drinksTitle:'Vini',bgColor:'#FFFFFF',ink:'#3A2B22',drinks:'Cantina Crifo, spumante, acqua minerale,\nbibite, rosolio e caffè',priceAdult:50,priceKid:25,kidLabel:'Bambini'};
 const ALLERGENI=['Cereali con glutine','Crostacei','Uova','Pesce','Arachidi','Soia','Latte/Lattosio','Frutta a guscio','Sedano','Senape','Sesamo','Solfiti (>10mg/kg)','Lupini','Molluschi'];
 function defaultTemplates(){
-  const t=(id,name,o)=>({...SUNDAY,id,name,builtIn:true,...o,origBg:o.bgImage});
+  const t=(id,name,o)=>({...SUNDAY,id,name,builtIn:true,...o,origBg:o.bgImage,origCover:o.coverImage});
   return[
     t('tpl-pecore','Domenica – Pecore e ulivo',{bgImage:'assets/domenica-pecore.jpg',bgColor:'#FFFFFF',ink:'#5A3E2B',limit:1240}),
     t('tpl-girasole','Domenica – Girasole',{bgImage:'assets/domenica-girasole.jpg',bgColor:'#FFFFFF',ink:'#4A3626',limit:1290}),
@@ -303,7 +319,8 @@ function defaultTemplates(){
     t('tpl-comunione','Comunione',{...EVENTO,bgImage:'assets/comunione.jpg'}),
     t('tpl-battesimo','Battesimo – Azzurro',{...EVENTO,bgImage:'assets/evento-battesimo.jpg',ink:'#2F3A45'}),
     t('tpl-cresima','Cresima – Salvia',{...EVENTO,bgImage:'assets/evento-cresima.jpg',ink:'#343A2C'}),
-    t('tpl-anniversario','Anniversario e compleanno – Oro',{...EVENTO,bgImage:'assets/evento-anniversario.jpg',ink:'#3A3226'})
+    t('tpl-anniversario','Anniversario e compleanno – Oro',{...EVENTO,bgImage:'assets/evento-anniversario.jpg',ink:'#3A3226'}),
+    t('tpl-lib-orsetto','Libretto battesimo – Orsetto rosa',{...LIBRETTO,bgImage:'assets/libretto-orsetto-menu.jpg',coverImage:'assets/libretto-orsetto-copertina.jpg'})
   ];
 }
 function defaultState(){
@@ -377,7 +394,8 @@ function normalize(s){
       if(t.id==='tpl-pasqua'&&t.name==='Festività – Pasqua'){t.name=b.name;if(t.heading==='Pasqua 2026')t.heading=b.heading}
       if(b&&t.layout==='classico'&&t.tagline===undefined){t.tagline=b.tagline;t.legend=true}
       if(b&&t.builtIn&&(t.priceAdult===''||t.priceAdult===undefined)){t.priceAdult=b.priceAdult;if(t.priceKid===''||t.priceKid===undefined)t.priceKid=b.priceKid}
-      if(b&&t.builtIn){t.bgColor=b.bgColor;if(!t.bgImage||t.bgImage===t.origBg)t.bgImage=b.bgImage;t.origBg=b.origBg}});
+      if(b&&t.builtIn){t.bgColor=b.bgColor;if(!t.bgImage||t.bgImage===t.origBg)t.bgImage=b.bgImage;t.origBg=b.origBg;
+        if(b.coverImage){if(!t.coverImage||t.coverImage===t.origCover)t.coverImage=b.coverImage;t.origCover=b.origCover}}});
     d.templates.forEach(b=>{if(!s.templates.some(t=>t.id===b.id))s.templates.push(b)});
     const ord=d.templates.map(t=>t.id),pos=t=>{const i=ord.indexOf(t.id);return i<0?999:i};
     s.templates=s.templates.map((t,i)=>[t,i]).sort((a,b)=>pos(a[0])-pos(b[0])||a[1]-b[1]).map(x=>x[0]); // nuovi template al loro posto, quelli creati da te in fondo
@@ -479,21 +497,62 @@ function pageClassico(m,t,mode){
     ${dr?`<div class="c-drinks">${nl(dr)}</div>`:''}
     ${t.legend!==false?legendHTML():''}</div>`;
 }
-function pageHTML(m,t,mode,lang){
-  if(lang!=='en')return pageHTMLit(m,t,mode);
-  const[m2,t2]=localize(m,t);LANG='en';TPL_OV=t2;
-  try{return pageHTMLit(m2,t2,mode)}finally{LANG='it';TPL_OV=null}
+/* Libretto A5: copertina e interno su due fogli, ritagliati da A4 e legati con i laccetti sul lato sinistro */
+const LIB={top:132,bottom:392,fs:14};
+const dateBook=s=>s?parseD(s).toLocaleDateString(LANG==='en'?'en-GB':'it-IT',{day:'numeric',month:'long',year:'numeric'}):'';
+function pageCover(m,t){
+  return`<div class="pg pg-lc" style="width:595px;height:421px;background-color:${t.bgColor};color:${t.ink}">
+    ${t.coverImage?`<div class="pg-bg" style="background-image:url('${t.coverImage}')"></div>`:''}
+    <div class="lc-t">${esc(heading(m))}</div>
+    ${m.showDate!==false&&m.date?`<div class="lc-d">${dateBook(m.date)}</div>`:''}
+    ${state.settings.venue?`<div class="lc-v">${esc(state.settings.venue)}</div>`:''}</div>`;
 }
-const pageHTMLit=(m,t,mode)=>t.layout==='evento'?pageEvento(m,t,mode):t.layout==='classico'?pageClassico(m,t,mode):pageVerticale(m,t,mode);
+function pageLibretto(m,t,mode){
+  const P=mode==='proposta',showT=m.showSections!==false;
+  const blk=(title,items,cls='')=>`<div class="l-sec${cls}">${title?`<div class="l-sec-t">${esc(title)}</div>`:''}${items}</div>`;
+  const its=L=>L.map(i=>`<div class="l-it">${nl(i.name)}${algOf(m,i)}</div>`).join('');
+  const secs=m.sections.filter(s=>s.items.length);
+  const B=secs.map(s=>blk(showT?s.name:'',its(s.items)));
+  const kidItems=m.kids!==false?secList(m,true).flatMap(s=>s.items):[];
+  if(kidItems.length)B.push(blk(val(m,'headingKids')||'Menù bambini',its(kidItems)));
+  const dr=String(val(m,'drinks')).trim();
+  if(dr)B.push(blk(showT?(t.drinksTitle||''):'',`<div class="l-it">${nl(dr)}</div>`));
+  if(P){const pl=priceLines(m);if(pl.length||m.notes)B.push(blk('',`${pl.map(nl).join('<br>')}${m.notes?`<div class="v-notes">${nl(m.notes)}</div>`:''}`,' l-offer'))}
+  const al=algLegend(m,[...secs,{items:kidItems}]);if(al)B.push(blk('',al,' l-alg'));
+  if(!B.length)B.push(`<div class="l-sec"><div class="v-empty">Aggiungi le portate per comporre il menù</div></div>`);
+  return`<div class="pg pg-l" style="width:595px;height:421px;background-color:${t.bgColor};color:${t.ink}">
+    ${t.bgImage?`<div class="pg-bg" style="background-image:url('${t.bgImage}')"></div>`:''}
+    <div class="l-col l-a">${B.join('')}</div><div class="l-rule"></div><div class="l-col l-b"></div></div>`;
+}
+function pageHTML(m,t,mode,lang,part){
+  if(lang!=='en')return pageHTMLit(m,t,mode,part);
+  const[m2,t2]=localize(m,t);LANG='en';TPL_OV=t2;
+  try{return pageHTMLit(m2,t2,mode,part)}finally{LANG='it';TPL_OV=null}
+}
+const pageHTMLit=(m,t,mode,part)=>t.layout==='libretto'?(part==='cover'?pageCover(m,t):pageLibretto(m,t,mode)):t.layout==='evento'?pageEvento(m,t,mode):t.layout==='classico'?pageClassico(m,t,mode):pageVerticale(m,t,mode);
 // adatta il testo alla pagina; restituisce quanto è stato ridotto e se qualcosa esce comunque
 function fitPage(pg){fitPageRaw(pg);
   let k=1,over=false;
   pg.querySelectorAll('.v-flow,.c-flow').forEach(f=>{const inn=f.firstElementChild;k=Math.min(k,parseFloat(inn.style.fontSize)/(pg.classList.contains('pg-c')?17:19));if(inn.offsetHeight>f.clientHeight+1)over=true});
   pg.querySelectorAll('.e-col').forEach(c=>{const b=c.querySelector('.e-body');k=Math.min(k,parseFloat(b.style.fontSize)/11.4);if(b.offsetHeight>c._avail+1)over=true});
+  if(pg.classList.contains('pg-l')){const A=pg.querySelector('.l-a'),B=pg.querySelector('.l-b');k=Math.min(k,parseFloat(A.style.fontSize)/LIB.fs);if(Math.max(A.offsetHeight,B.offsetHeight)>LIB.bottom-LIB.top+1)over=true}
   return{k,over};
 }
 function fitPageRaw(pg){
-  if(pg.classList.contains('pg-c')){
+  if(pg.classList.contains('pg-lc')){
+    const ti=pg.querySelector('.lc-t');let fs=44;ti.style.fontSize=fs+'px';
+    while(ti.scrollWidth>ti.clientWidth+1&&fs>22){fs--;ti.style.fontSize=fs+'px'}
+  }else if(pg.classList.contains('pg-l')){
+    // divide i blocchi fra le due colonne in modo che finiscano alla stessa altezza, poi rimpicciolisce se serve
+    const A=pg.querySelector('.l-a'),B=pg.querySelector('.l-b'),blocks=[...pg.querySelectorAll('.l-sec')],avail=LIB.bottom-LIB.top;
+    const lay=k=>{A.style.fontSize=B.style.fontSize=(LIB.fs*k)+'px';blocks.forEach(b=>A.appendChild(b));
+      const h=blocks.map(b=>b.offsetHeight),g=.75*LIB.fs*k,n=h.length,col=(a,b)=>b>a?h.slice(a,b).reduce((x,y)=>x+y,0)+g*(b-a-1):0;
+      let s=n,best=Infinity;for(let i=1;i<=n;i++){const mx=Math.max(col(0,i),col(i,n));if(mx<best-.5){best=mx;s=i}}
+      blocks.slice(s).forEach(b=>B.appendChild(b));return best};
+    let k=1,n=0,hh=lay(k);while(hh>avail&&k>.45&&n++<90){k*=.97;hh=lay(k)}
+    const r=pg.querySelector('.l-rule');r.style.height=Math.max(40,Math.min(hh,avail))+'px';r.style.display=B.children.length?'':'none';
+    if(!B.children.length){A.style.left='50%';A.style.transform='translateX(-50%)'}
+  }else if(pg.classList.contains('pg-c')){
     const ti=pg.querySelector('.c-title');let fs=25;ti.style.fontSize=fs+'px';
     while(ti.scrollWidth>ti.clientWidth+1&&fs>14){fs--;ti.style.fontSize=fs+'px'}
     const f=pg.querySelector('.c-flow'),inn=f.firstElementChild;let k=1,n=0;inn.style.fontSize='17px';
@@ -511,9 +570,9 @@ function fitPageRaw(pg){
     while(cols.some(c=>c.querySelector('.e-body').offsetHeight>c._avail)&&k>.45&&n++<90){k*=.97;set()}
   }
 }
-function mountPreview(hostId,m,tpl,mode,lang){
+function mountPreview(hostId,m,tpl,mode,lang,part){
   const host=document.getElementById(hostId);if(!host)return;
-  host.innerHTML=`<div class="pv-scale">${pageHTML(m,tpl,mode,lang)}</div>`;
+  host.innerHTML=`<div class="pv-scale">${pageHTML(m,tpl,mode,lang,part)}</div>`;
   const sc=host.firstElementChild,pg=sc.firstElementChild,fit=fitPage(pg);
   const w=document.getElementById(hostId+'-warn');
   if(w)w.innerHTML=fit.over?`<div class="card warn">Il menù è troppo lungo: alcune portate escono dalla pagina. Togli qualche portata, unisci quelle simili o scegli un template A4.</div>`
@@ -528,8 +587,8 @@ function sampleMenu(t){
     kidsSections:KIDS_SECS.map((c,i)=>({name:c,items:state.dishes.filter(d=>d.cat===KIDS_CAT).slice(i,i+1).map(d=>({dishId:d.id,name:d.name}))}))};
 }
 function mountPreviews(){
-  if(ui.view==='preview'){const m=getMenu(ui.editId);if(m)mountPreview('pv',m,tplOf(m),ui.pv.mode,ui.pv.lang)}
-  if(ui.view==='tpl'){const t=getTpl(ui.tplId);if(t)mountPreview('tplpv',sampleMenu(t),t,'proposta')}
+  if(ui.view==='preview'){const m=getMenu(ui.editId);if(m){mountPreview('pv',m,tplOf(m),ui.pv.mode,ui.pv.lang);mountPreview('pvc',m,tplOf(m),ui.pv.mode,ui.pv.lang,'cover')}}
+  if(ui.view==='tpl'){const t=getTpl(ui.tplId);if(t){const sm=sampleMenu(t);mountPreview('tplpv',sm,t,'proposta');mountPreview('tplpvc',sm,t,'proposta','it','cover')}}
 }
 const FONTS=['400 20px Raleway','700 20px Raleway','20px Antic','400 20px "Cormorant Garamond"','700 20px "Cormorant Garamond"','italic 500 20px "Cormorant Garamond"','20px "Great Vibes"'];
 const loadFonts=()=>Promise.all(FONTS.map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>document.fonts.ready);
@@ -539,9 +598,42 @@ async function makeImage(m,mode){
   const canvas=await makePDF(m,mode,true);
   return await new Promise(r=>canvas.toBlob(r,'image/jpeg',0.9));
 }
+async function snapPage(m,t,mode,part,scale){
+  const host=$('#rh');host.innerHTML=pageHTML(m,t,mode,ui.view==='preview'?ui.pv.lang:'it',part);
+  const pg=host.firstElementChild;fitPage(pg);
+  const src=part==='cover'?t.coverImage:t.bgImage;
+  if(src)await new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=src});
+  try{return await html2canvas(pg,{scale,backgroundColor:t.bgColor||'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0})}
+  finally{host.innerHTML=''}
+}
+// libretto da mandare al cliente: PDF A5 con copertina e menù
+async function makeBookletPDF(m,mode){
+  const t=tplOf(m),pdf=new window.jspdf.jsPDF({orientation:'l',unit:'mm',format:'a5'});
+  const c1=await snapPage(m,t,mode,'cover',3),c2=await snapPage(m,t,mode,'',3);
+  pdf.addImage(c1.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,148);pdf.addPage('a5','l');
+  pdf.addImage(c2.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,148);
+  return pdf.output('blob');
+}
+// libretto da stampare: A4 verticale, pag. 1 due copertine, pag. 2 due menù; tacche di taglio a metà e segni dei fori a sinistra
+async function makeBookletSheet(m,holes){
+  if(!window.html2canvas||!window.jspdf)throw new Error('librerie non caricate. Riapri l\'app.');
+  await loadFonts();
+  const t=tplOf(m),pdf=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'}),H=148.5;
+  const pages=[await snapPage(m,t,'tavolo','cover',4),await snapPage(m,t,'tavolo','',4)];
+  pages.forEach((cv,i)=>{
+    if(i)pdf.addPage('a4','p');
+    const img=cv.toDataURL('image/jpeg',0.92);
+    pdf.addImage(img,'JPEG',0,0,210,H);pdf.addImage(img,'JPEG',0,H,210,H);
+    pdf.setLineWidth(0.2);pdf.setDrawColor(185);
+    pdf.line(3,H,9,H);pdf.line(201,H,207,H); // taglio: le tacche cadono sulla linea e spariscono col taglio
+    if(holes){pdf.setDrawColor(200);[0,H].forEach(oy=>[H/2-40,H/2+40].forEach(y=>{pdf.line(12-1.6,oy+y,12+1.6,oy+y);pdf.line(12,oy+y-1.6,12,oy+y+1.6)}))}
+  });
+  return pdf.output('blob');
+}
 async function makePDF(m,mode,asCanvas){
   if(!window.html2canvas||!window.jspdf)throw new Error('librerie non caricate. Riapri l\'app.');
   await loadFonts();
+  if(tplOf(m).layout==='libretto'){if(asCanvas)return snapPage(m,tplOf(m),mode,'',3);return makeBookletPDF(m,mode)}
   const t=tplOf(m),L=layoutOf(m),host=$('#rh');host.innerHTML=pageHTML(m,t,mode,ui.view==='preview'?ui.pv.lang:'it');
   const pg=host.firstElementChild;fitPage(pg);
   if(t.bgImage)await new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=t.bgImage});
@@ -558,9 +650,10 @@ async function doPDF(){
   const m=getMenu(ui.editId);if(!m)return;const mode=ui.pv.mode;
   busy(true,'Creo il PDF');
   try{
-    const blob=await makePDF(m,mode);
-    const name=`${mode==='tavolo'?'Menu-tavolo':'Proposta'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}${ui.pv.lang==='en'?'_EN':''}.pdf`;
-    ui.sheet={type:'file',blob,name,mime:'application/pdf',title:mode==='tavolo'?'Menù tavolo pronto':'Proposta pronta'};
+    const lib=tplOf(m).layout==='libretto'&&mode==='tavolo';
+    const blob=lib?await makeBookletSheet(m,m.holes!==false):await makePDF(m,mode);
+    const name=`${lib?'Libretto-da-stampare':mode==='tavolo'?'Menu-tavolo':'Proposta'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}${ui.pv.lang==='en'?'_EN':''}.pdf`;
+    ui.sheet={type:'file',blob,name,mime:'application/pdf',title:lib?'Libretto pronto da stampare':mode==='tavolo'?'Menù tavolo pronto':'Proposta pronta'};
   }catch(e){toast('PDF non creato: '+(e.message||e))}
   finally{busy(false);renderSheet()}
 }
@@ -598,7 +691,7 @@ function menuCard(m,withDate){
   else left=`<span class="mc-bar" style="background:${t.bgColor};box-shadow:inset 0 0 0 1px ${accentOf(t)}55"></span>`;
   return`<button class="mcard" data-a="open" data-id="${m.id}">${left}<span class="mc-body"><span class="mc-t">${esc(heading(m))}</span><span class="mc-s">${esc(sub)}</span></span><span class="pill" style="--c:${st.c}">${st.l}</span></button>`;
 }
-const swatch=t=>`<span class="sw" style="background-color:${t.bgColor};${t.bgImage?`background-image:url('${t.bgImage}');`:''}"></span>`;
+const swatch=t=>{const im=t.coverImage||t.bgImage;return`<span class="sw" style="background-color:${t.bgColor};${im?`background-image:url('${im}');`:''}"></span>`};
 
 /* ---------- Viste ---------- */
 const backupDue=()=>state.menus.length>=3&&(!state.settings.lastBackup||Date.now()-state.settings.lastBackup>30*864e5);
@@ -677,7 +770,7 @@ function drinksField(m,f,label){
   <div class="chips">${state.settings.drinkPresets.map((d,i)=>`<button data-a="drPick" data-f="${f}" data-i="${i}">+ ${esc(d)}</button>`).join('')}</div>`;
 }
 function enSection(m,t){
-  const ev=t.layout==='evento',mis=missingEn(m).length;
+  const ev=t.layout==='evento'||t.layout==='libretto',mis=missingEn(m).length;
   const rows=(kids)=>secList(m,kids).map((sec,si)=>sec.items.length?`<p class="hint" style="margin:10px 2px 4px"><b>${esc(catEn(sec.name))}</b></p>`+sec.items.map((it,ii)=>`<label class="fld" style="margin-bottom:8px"><span>${esc(oneLine(it.name))}</span><textarea class="inp" data-en="${kids?1:0}:${si}:${ii}" rows="2" style="min-height:64px" placeholder="Traduzione in inglese">${esc(oneLine(itemEn(it)))}</textarea></label>`).join(''):'').join('');
   return`<details class="grp card" ${ui.enOpen?'open':''} data-det="en"><summary style="font-weight:600;cursor:pointer">In inglese${mis?` <span class="pill" style="--c:#B07A1E;margin-left:6px">${mis} da tradurre</span>`:''}</summary>
     <p class="hint" style="margin:8px 2px 12px">Serve per la versione English dell'anteprima. Le traduzioni delle portate vengono salvate nell'archivio e riusate nei prossimi menù.</p>
@@ -690,14 +783,15 @@ function enSection(m,t){
 }
 function vEdit(){
   const m=getMenu(ui.editId);if(!m){ui.view='cal';return vCal()}
-  const t=tplOf(m),st=m.status||'bozza',ev=t.layout==='evento',cl=t.layout==='classico';
+  const t=tplOf(m),st=m.status||'bozza',ev=t.layout==='evento',cl=t.layout==='classico',lb=t.layout==='libretto';
   const fld=(label,f,type='text',extra='',v)=>`<label class="fld"><span>${label}</span><input class="inp" type="${type}" data-f="${f}" value="${esc(v!==undefined?v:m[f])}" ${extra}></label>`;
   return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>${esc(heading(m))}</h1><button class="ib" data-a="preview" data-mode="tavolo" aria-label="Anteprima">${I.eye}</button>`)+
   `<main class="main">
   <section class="grp"><h2>Template</h2><div class="tchips">${state.templates.map(x=>`<button class="tchip${x.id===t.id?' on':''}" data-a="setTpl" data-id="${x.id}">${swatch(x)}<span>${esc(x.name)}</span></button>`).join('')}</div></section>
   <section class="grp"><h2>Intestazione</h2>
-    ${fld(ev?'Titolo menù adulti':'Titolo','heading','text',`placeholder="${esc(t.heading)}"`)}
-    ${ev||cl?'':`<label class="tog"><input type="checkbox" data-fc="showDate" ${m.showDate!==false?'checked':''}>Stampa la data sotto il titolo</label>`}
+    ${fld(ev?'Titolo menù adulti':lb?'Titolo in copertina':'Titolo','heading','text',`placeholder="${lb?'es. Il battesimo di Adele':esc(t.heading)}"`)}
+    ${ev||cl?'':`<label class="tog"><input type="checkbox" data-fc="showDate" ${m.showDate!==false?'checked':''}>${lb?'Stampa la data in copertina':'Stampa la data sotto il titolo'}</label>`}
+    ${lb?`<label class="tog"><input type="checkbox" data-fc="holes" ${m.holes!==false?'checked':''}>Segna dove fare i fori per i laccetti</label>`:''}
   </section>
   <section class="grp"><h2>Evento</h2>
     <div class="row2">${fld('Data','date','date')}${fld('Ora','time','time')}</div>
@@ -712,7 +806,7 @@ function vEdit(){
     <label class="tog"><input type="checkbox" data-fc="allergens" ${m.allergens?'checked':''}>Indica gli allergeni accanto alle portate</label>
     <p class="hint">Le sezioni vuote non compaiono. Tocca una portata per modificarla solo in questo menù. Gli allergeni si impostano nell'archivio portate (Altro → Archivio portate).</p>
   </section>
-  ${ev?`<section class="grp"><h2>Menù bambini</h2>
+  ${ev||lb?`<section class="grp"><h2>Menù bambini</h2>
     <label class="tog"><input type="checkbox" data-fc="kids" data-re="1" ${m.kids!==false?'checked':''}>Includi il menù bambini</label>
     ${m.kids!==false?fld('Titolo menù bambini','headingKids','text','',val(m,'headingKids'))+secsHTML(m,true):''}</section>`:''}
   <section class="grp"><h2>Bevande</h2>
@@ -727,7 +821,7 @@ function vEdit(){
     <label class="fld"><span>Note per il cliente</span><textarea class="inp" data-f="notes" placeholder="es. Acconto del 30% alla conferma.">${esc(m.notes)}</textarea></label>
   </section>
   ${enSection(m,t)}
-  <div class="btns two" style="margin-bottom:10px"><button class="btn pri" data-a="preview" data-mode="tavolo">${I.pdf}Menù tavolo</button><button class="btn pri" data-a="preview" data-mode="proposta">${I.pdf}Proposta</button></div>
+  <div class="btns two" style="margin-bottom:10px"><button class="btn pri" data-a="preview" data-mode="tavolo">${I.pdf}${lb?'Libretto':'Menù tavolo'}</button><button class="btn pri" data-a="preview" data-mode="proposta">${I.pdf}Proposta</button></div>
   <p class="hint" style="margin:-2px 2px 14px">Il menù tavolo non riporta prezzi e note; la proposta sì.</p>
   <div class="btns two"><button class="btn" data-a="dup">${I.copy}Duplica</button><button class="btn danger" data-a="del">${I.trash}Elimina</button></div>
   </main>`;
@@ -743,20 +837,21 @@ function vPreview(){
     <label class="fld"><span>Prezzo adulti (€)</span><input class="inp" data-f="priceAdult" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceAdult'))}" placeholder="obbligatorio"></label>
     <label class="fld"><span>Prezzo bambini (€)</span><input class="inp" data-f="priceKid" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceKid'))}" placeholder="facoltativo"></label></div>`:''}
   <div id="pv-warn"></div>
+  ${tplOf(m).layout==='libretto'?`<div class="pv" id="pvc"></div>`:''}
   <div class="pv" id="pv"></div>
   <div class="btns">
     <button class="btn wa wide" data-a="waMenu">${I.wa}Invia su WhatsApp</button>
     <button class="btn wide" data-a="pdf">${I.pdf}Crea PDF (stampa, email…)</button>
   </div>
-  <p class="hint" style="text-align:center;margin-top:10px">${ui.pv.mode==='proposta'?'Il messaggio per il cliente è già pronto: puoi modificarlo prima dell\'invio.':'Per la stampa usa “Crea PDF”.'}</p></main>`;
+  <p class="hint" style="text-align:center;margin-top:10px">${ui.pv.mode==='proposta'?'Il messaggio per il cliente è già pronto: puoi modificarlo prima dell\'invio.':tplOf(m).layout==='libretto'?'“Crea PDF” prepara 2 fogli A4 da stampare solo fronte: il primo con 2 copertine, il secondo con 2 menù. Taglia a metà seguendo le tacche, metti ogni menù dietro la sua copertina, fora a sinistra sui segni e lega con i laccetti.':'Per la stampa usa “Crea PDF”.'}</p></main>`;
 }
 function vTpl(){
   const t=getTpl(ui.tplId);if(!t){ui.view='settings';return vSettings()}
-  const ev=t.layout==='evento',cl=t.layout==='classico';
+  const ev=t.layout==='evento',cl=t.layout==='classico',lb=t.layout==='libretto';
   const f=(label,k,type='text',extra='')=>`<label class="fld"><span>${label}</span><input class="inp" type="${type}" data-tf="${k}" value="${esc(t[k])}" ${extra}></label>`;
   return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>${esc(t.name)}</h1>`)+
-  `<main class="main"><div class="pv" id="tplpv"></div>
-  <section class="grp"><h2>Nome e titoli</h2>${f('Nome del template','name')}${f(ev?'Titolo menù adulti':'Titolo predefinito','heading')}${ev?f('Titolo menù bambini','headingKids'):''}${cl?f('Sottotitolo','subheading'):''}</section>
+  `<main class="main">${lb?`<div class="pv" id="tplpvc"></div>`:''}<div class="pv" id="tplpv"></div>
+  <section class="grp"><h2>Nome e titoli</h2>${f('Nome del template','name')}${f(ev?'Titolo menù adulti':lb?'Titolo in copertina':'Titolo predefinito','heading')}${ev||lb?f('Titolo menù bambini','headingKids'):''}${lb?f('Titolo delle bevande','drinksTitle'):''}${cl?f('Sottotitolo','subheading'):''}</section>
   <section class="grp"><h2>Valori predefiniti per i nuovi menù</h2>
     <label class="fld"><span>Bevande${ev?' adulti':''}</span><textarea class="inp" data-tf="drinks" rows="2" style="min-height:70px">${esc(t.drinks)}</textarea></label>
     ${ev?`<label class="fld"><span>Bevande bambini</span><textarea class="inp" data-tf="drinksKids" rows="2" style="min-height:70px">${esc(t.drinksKids)}</textarea></label>`:''}
@@ -767,11 +862,12 @@ function vTpl(){
     ${cl?`<label class="clr"><input type="color" data-tf="accent" value="${t.accent||'#354469'}">Colore dei titoli</label>`:''}
     <label class="clr"><input type="color" data-tf="bgColor" value="${t.bgColor}">Colore di sfondo</label>
     <p class="hint">Per la stampa su fogli bianchi lascia lo sfondo bianco.</p>
-    ${ev||cl?'':`<div class="rng" style="margin-top:8px"><span>Fine testo</span><input type="range" min="900" max="1420" step="5" value="${t.limit||1240}" data-tl="1"><b id="tl">${Math.round((t.limit||1240)/14.4)}%</b></div><p class="hint">Sposta per non far sovrapporre il testo alle illustrazioni in basso.</p>`}
+    ${ev||cl||lb?'':`<div class="rng" style="margin-top:8px"><span>Fine testo</span><input type="range" min="900" max="1420" step="5" value="${t.limit||1240}" data-tl="1"><b id="tl">${Math.round((t.limit||1240)/14.4)}%</b></div><p class="hint">Sposta per non far sovrapporre il testo alle illustrazioni in basso.</p>`}
   </div></section>
   <section class="grp"><h2>Sfondo</h2><div class="card">
-    <p style="margin:0 0 12px;font-size:15px">Per cambiare illustrazioni, esporta da Canva la pagina <b>senza testi</b> come PNG, nel formato ${ev?'A4 orizzontale':cl?'A4 verticale':'810 × 1440'}.</p>
-    <div class="btns ${t.origBg&&t.bgImage!==t.origBg?'two':''}"><button class="btn" data-a="tplBg">${I.img}Carica immagine</button>${t.origBg&&t.bgImage!==t.origBg?`<button class="btn" data-a="tplBgReset">Ripristina</button>`:''}</div></div></section>
+    <p style="margin:0 0 12px;font-size:15px">Per cambiare illustrazioni, esporta da Canva la pagina <b>senza testi</b> come PNG, nel formato ${ev?'A4 orizzontale':cl?'A4 verticale':lb?'A5 orizzontale (una per la copertina e una per il menù interno)':'810 × 1440'}.</p>
+    ${lb?[['coverImage','origCover','copertina'],['bgImage','origBg','menù interno']].map(([k,o,l])=>`<div class="btns ${t[o]&&t[k]!==t[o]?'two':''}" style="margin-bottom:8px"><button class="btn" data-a="tplBg" data-slot="${k}">${I.img}Carica ${l}</button>${t[o]&&t[k]!==t[o]?`<button class="btn" data-a="tplBgReset" data-slot="${k}">Ripristina</button>`:''}</div>`).join('')
+    :`<div class="btns ${t.origBg&&t.bgImage!==t.origBg?'two':''}"><button class="btn" data-a="tplBg">${I.img}Carica immagine</button>${t.origBg&&t.bgImage!==t.origBg?`<button class="btn" data-a="tplBgReset">Ripristina</button>`:''}</div>`}</div></section>
   <div class="btns two"><button class="btn" data-a="dupTpl">${I.copy}Duplica template</button>${state.templates.length>1?`<button class="btn danger" data-a="delTpl">${I.trash}Elimina</button>`:''}</div>
   </main>`;
 }
@@ -935,7 +1031,8 @@ const ALLERGENS_EN=['Cereals containing gluten','Crustaceans','Eggs','Fish','Pea
 const LAYOUT_EN={
   verticale:{heading:'Sunday Menu',headingKids:'Kids menu',drinks:'Cantina Crifo bottled wines, mineral water\nLiqueurs and coffee',drinksKids:'Mineral water',kidLabel:'Children up to 10 years'},
   classico:{heading:'Festive Lunch',subheading:'Menu',tagline:'Historic farmhouse since 1735',drinks:'Cantina Crifo wines and mineral water,\nLiqueur and coffee',kidLabel:'Children up to 10 years'},
-  evento:{heading:'Menu',headingKids:'Kids menu',drinks:'Cantina Crifo Nero di Troia wine, mineral water, liqueurs and coffee.',drinksKids:'Mineral water',kidLabel:'Kids menu'}
+  evento:{heading:'Menu',headingKids:'Kids menu',drinks:'Cantina Crifo Nero di Troia wine, mineral water, liqueurs and coffee.',drinksKids:'Mineral water',kidLabel:'Kids menu'},
+  libretto:{heading:'My Baptism',headingKids:'Kids menu',drinksTitle:'Wines',drinks:'Cantina Crifo wines, sparkling wine, mineral water,\nsoft drinks, rosolio and coffee',kidLabel:'Children'}
 };
 // traduzioni delle portate di serie: si applicano da sole all'archivio
 const EN_DISHES={
@@ -979,7 +1076,7 @@ let LANG='it',TPL_OV=null;
 const enOf=(t,f)=>{const v=t[f+'En'];return v!==undefined&&v!==''?v:(LAYOUT_EN[t.layout]||LAYOUT_EN.verticale)[f]};
 function localize(m,t){
   const t2={...t};
-  for(const f of ['heading','subheading','tagline','headingKids','drinks','drinksKids','kidLabel']){const v=enOf(t,f);if(v!==undefined)t2[f]=v}
+  for(const f of ['heading','subheading','tagline','headingKids','drinks','drinksKids','kidLabel','drinksTitle']){const v=enOf(t,f);if(v!==undefined)t2[f]=v}
   const tr=S=>S&&S.map(s=>({...s,name:catEn(s.name),items:s.items.map(i=>({...i,name:itemEn(i)||i.name}))}));
   const m2={...m,sections:tr(m.sections),kidsSections:tr(m.kidsSections),heading:m.headingEn||'',notes:m.notesEn||m.notes};
   // campi scritti a mano nel menù: versione inglese se c'è, altrimenti quella inglese del template
@@ -1222,8 +1319,8 @@ document.addEventListener('click',e=>{
     case 'dupTpl':{const t=clone(getTpl(ui.tplId));t.id='tpl-'+uid();t.name=t.name+' (copia)';t.builtIn=false;state.templates.push(t);save();ui.tplId=t.id;render();toast('Template duplicato: cambia nome e titolo');break}
     case 'delTpl':{const t=getTpl(ui.tplId),used=state.menus.filter(x=>x.templateId===t.id).length;
       if(confirm(`Eliminare il template "${t.name}"?${used?`\n${used} menù useranno il primo template della lista.`:''}`)){state.templates=state.templates.filter(x=>x!==t);save();ui.view='settings';render()}break}
-    case 'tplBg':$('#bgfile').click();break;
-    case 'tplBgReset':{const t=getTpl(ui.tplId);t.bgImage=t.origBg;save();render(true);break}
+    case 'tplBg':ui.bgSlot=d.slot||'bgImage';$('#bgfile').click();break;
+    case 'tplBgReset':{const t=getTpl(ui.tplId);if(d.slot==='coverImage')t.coverImage=t.origCover;else t.bgImage=t.origBg;save();render(true);break}
     case 'catMove':{const L=state.categories,i=+d.i,j=i+Number(d.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];save();render(true);break}
     case 'catEn':{const c=state.categories[+d.i],v=prompt(`Nome in inglese di "${c}"`,catEn(c));if(v===null)break;state.settings.catEn={...(state.settings.catEn||{}),[c]:v.trim()};save();render(true);break}
     case 'catRen':{const old=state.categories[+d.i],v=prompt('Nuovo nome della sezione',old);if(!v||!v.trim()||v.trim()===old)break;
@@ -1286,7 +1383,7 @@ document.addEventListener('change',async e=>{
 async function setBg(src){
   try{
     const r=await readImage(src),t=getTpl(ui.tplId),L=LAYOUTS[t.layout]||LAYOUTS.verticale;
-    t.bgImage=r.url;save();render(true);
+    t[ui.bgSlot==='coverImage'?'coverImage':'bgImage']=r.url;ui.bgSlot=null;save();render(true);
     if(Math.abs(r.w/r.h-L.w/L.h)>0.03)toast("L'immagine ha proporzioni diverse dal template: verrà deformata. Esportala da Canva nello stesso formato.");
   }catch(err){toast(err.message)}
 }

@@ -159,6 +159,9 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px}
 .chips button{border:1px dashed var(--line);background:#fff;border-radius:999px;padding:6px 11px;font-size:13px;text-align:left;color:var(--olive-2)}
 .tchip .sw,.trow .sw{background-size:contain;background-repeat:no-repeat;background-position:center}
+.sw-mini{position:relative;overflow:hidden;display:block}
+.sw-in{position:absolute;left:50%;top:0;transform-origin:top center;pointer-events:none}
+.sw-in .pg{box-shadow:none}
 
 /* Pagina menù (anteprima e PDF): misure in punti, identiche ai file Canva */
 .pg{position:relative;overflow:hidden;text-align:center;flex:none}
@@ -424,7 +427,8 @@ const priceInherited=m=>m.priceAdult===undefined||m.priceAdult===null;
 const heading=m=>(m.heading||'').trim()||tplOf(m).heading;
 const menuName=m=>heading(m)+(m.client?` – ${m.client}`:'');
 function newMenu(date){
-  const t=state.templates[0];
+  // riparte dall'ultimo template usato, così un battesimo dopo l'altro non va ricambiato ogni volta
+  const t=getTpl(state.settings.lastTpl)||state.templates[0];
   return{id:uid(),created:Date.now(),templateId:t.id,date:date||today(),time:'',heading:'',client:'',phone:'',guests:'',guestsKids:'',room:'',status:'bozza',notes:'',showSections:true,showDate:true,showTotal:false,kids:true,
     sections:state.categories.map(c=>({name:c,items:[]})),kidsSections:KIDS_SECS.map(c=>({name:c,items:[]}))};
 }
@@ -578,7 +582,9 @@ function mountPreview(hostId,m,tpl,mode,lang,part){
   host.innerHTML=`<div class="pv-scale">${pageHTML(m,tpl,mode,lang,part)}</div>`;
   const sc=host.firstElementChild,pg=sc.firstElementChild,fit=fitPage(pg);
   const w=document.getElementById(hostId+'-warn');
-  if(w)w.innerHTML=fit.over?`<div class="card warn">Il menù è troppo lungo: alcune portate escono dalla pagina. Togli qualche portata, unisci quelle simili o scegli un template A4.</div>`
+  const small=tpl.layout==='libretto';
+  if(w)w.innerHTML=small&&(fit.over||fit.k<.8)?`<div class="card warn">Il libretto è un A5: con tante portate il testo diventa ${fit.over?'troppo lungo e alcune portate escono dalla pagina':`più piccolo del ${Math.round((1-fit.k)*100)}%`}. Accorcia le descrizioni più lunghe o togli qualche portata; per un menù molto ricco scegli un template A4.</div>`
+    :fit.over?`<div class="card warn">Il menù è troppo lungo: alcune portate escono dalla pagina. Togli qualche portata, unisci quelle simili o scegli un template A4.</div>`
     :fit.k<.72?`<div class="card warn">Il menù è lungo: il testo è stato rimpicciolito del ${Math.round((1-fit.k)*100)}% e in stampa potrebbe leggersi male. Valuta di togliere qualche portata o di usare un template A4.</div>`:'';
   const W=pg.offsetWidth,H=pg.offsetHeight,avail=host.clientWidth-8;
   const s=Math.min(avail/W,Math.max(380,window.innerHeight*.66)/H,1);
@@ -633,6 +639,13 @@ async function makeBookletSheet(m,holes){
   });
   return pdf.output('blob');
 }
+// menù verticale (9:16) da stampare: su A4 a tutta altezza, centrato, con margini laterali uguali
+async function makeVerticalA4(m){
+  const cv=await makePDF(m,'tavolo',true),w=297*cv.width/cv.height;
+  const pdf=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  pdf.addImage(cv.toDataURL('image/jpeg',0.93),'JPEG',(210-w)/2,0,w,297);
+  return pdf.output('blob');
+}
 async function makePDF(m,mode,asCanvas){
   if(!window.html2canvas||!window.jspdf)throw new Error('librerie non caricate. Riapri l\'app.');
   await loadFonts();
@@ -653,8 +666,8 @@ async function doPDF(){
   const m=getMenu(ui.editId);if(!m)return;const mode=ui.pv.mode;
   busy(true,'Creo il PDF');
   try{
-    const lib=tplOf(m).layout==='libretto'&&mode==='tavolo';
-    const blob=lib?await makeBookletSheet(m,m.holes!==false):await makePDF(m,mode);
+    const lay=tplOf(m).layout,lib=lay==='libretto'&&mode==='tavolo',vA4=mode==='tavolo'&&!['libretto','evento','classico'].includes(lay);
+    const blob=lib?await makeBookletSheet(m,m.holes!==false):vA4?await makeVerticalA4(m):await makePDF(m,mode);
     const name=`${lib?'Libretto-da-stampare':mode==='tavolo'?'Menu-tavolo':'Proposta'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}${ui.pv.lang==='en'?'_EN':''}.pdf`;
     ui.sheet={type:'file',blob,name,mime:'application/pdf',title:lib?'Libretto pronto da stampare':mode==='tavolo'?'Menù tavolo pronto':'Proposta pronta'};
   }catch(e){toast('PDF non creato: '+(e.message||e))}
@@ -662,17 +675,18 @@ async function doPDF(){
 }
 const AND=window.Android&&window.Android.saveFile?window.Android:null;
 const b64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(b)});
+const backupDone=s=>{if(s&&s.backup){state.settings.lastBackup=Date.now();save()}};
 async function shareFile(){
   const s=ui.sheet;
-  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,true)}catch(e){toast('Condivisione non riuscita')}return}
+  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,true);backupDone(s)}catch(e){toast('Condivisione non riuscita')}return}
   const file=new File([s.blob],s.name,{type:s.mime});
-  try{await navigator.share({files:[file],title:s.name})}catch(e){if(e.name!=='AbortError')downloadFile()}
+  try{await navigator.share({files:[file],title:s.name});backupDone(s)}catch(e){if(e.name!=='AbortError')downloadFile()}
 }
 async function downloadFile(){
   const s=ui.sheet;
-  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,false)}catch(e){toast('Salvataggio non riuscito')}return}
+  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,false);backupDone(s)}catch(e){toast('Salvataggio non riuscito')}return}
   const u=URL.createObjectURL(s.blob),a=document.createElement('a');
-  a.href=u;a.download=s.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);
+  a.href=u;a.download=s.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);backupDone(s);
 }
 const canShareFiles=()=>{if(AND)return true;try{return!!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}))}catch(e){return false}};
 
@@ -694,7 +708,16 @@ function menuCard(m,withDate){
   else left=`<span class="mc-bar" style="background:${t.bgColor};box-shadow:inset 0 0 0 1px ${accentOf(t)}55"></span>`;
   return`<button class="mcard" data-a="open" data-id="${m.id}">${left}<span class="mc-body"><span class="mc-t">${esc(heading(m))}</span><span class="mc-s">${esc(sub)}</span></span><span class="pill" style="--c:${st.c}">${st.l}</span></button>`;
 }
-const swatch=t=>{const im=t.coverImage||t.bgImage;return`<span class="sw" style="background-color:${t.bgColor};${im?`background-image:url('${im}');`:''}"></span>`};
+// miniatura: la pagina vera del template (copertina per il libretto), rimpicciolita e messa in cache
+const THUMBS={};
+function thumbHTML(t){
+  const key=[t.id,t.layout,t.bgImage&&t.bgImage.length,t.bgImage&&t.bgImage.slice(-40),t.coverImage&&t.coverImage.slice(-40),t.ink,t.accent,t.bgColor,t.heading,state.settings.venue].join('|');
+  if(THUMBS[t.id]&&THUMBS[t.id].key===key)return THUMBS[t.id].html;
+  const sm=sampleMenu(t);sm.date='';sm.sections=sm.sections.map(s=>({...s,items:s.items.slice(0,2)}));
+  const html=pageHTML(sm,t,'tavolo','it',t.layout==='libretto'?'cover':'');THUMBS[t.id]={key,html};return html;
+}
+const swatch=(t,h=106)=>{const L=LAYOUTS[t.layout]||LAYOUTS.verticale;
+  return`<span class="sw sw-mini" style="background-color:${t.bgColor}"><span class="sw-in" style="width:${L.w}px;height:${L.h}px;margin-left:-${L.w/2}px;transform:scale(${h/L.h})">${thumbHTML(t)}</span></span>`};
 
 /* ---------- Viste ---------- */
 const backupDue=()=>state.menus.length>=3&&(!state.settings.lastBackup||Date.now()-state.settings.lastBackup>30*864e5);
@@ -748,7 +771,7 @@ function vSettings(){
   return topbar(`<h1>Impostazioni</h1>`)+`<main class="main">
   <section class="grp"><div class="list"><button class="trow" data-a="nav" data-v="dishes"><span class="sw" style="display:grid;place-items:center;color:var(--olive)">${I.dish}</span><span>Archivio portate<small>${state.dishes.length} portate in ${allCats().length} categorie</small></span>${I.right}</button></div></section>
   <section class="grp"><h2>Nome del locale</h2><input class="inp" data-sf="venue" value="${esc(s.venue)}" placeholder="Compare in cima ai menù della domenica"><p class="hint">Lascia vuoto per non stamparlo.</p></section>
-  <section class="grp"><h2>Template</h2><div class="list">${state.templates.map(t=>`<button class="trow" data-a="editTpl" data-id="${t.id}">${swatch(t)}<span>${esc(t.name)}<small>${esc((LAYOUTS[t.layout]||LAYOUTS.verticale).label)}</small></span>${I.right}</button>`).join('')}</div>
+  <section class="grp"><h2>Template</h2><div class="list">${state.templates.map(t=>`<button class="trow" data-a="editTpl" data-id="${t.id}">${swatch(t,56)}<span>${esc(t.name)}<small>${esc((LAYOUTS[t.layout]||LAYOUTS.verticale).label)}</small></span>${I.right}</button>`).join('')}</div>
   <p class="hint">Per un nuovo template (battesimo, compleanno…) apri quello più simile e tocca “Duplica template”.</p></section>
   <section class="grp"><h2>Bevande preimpostate</h2><div class="list">${s.drinkPresets.map((d,i)=>`<div class="crow"><span>${esc(d)}</span><button class="ib" data-a="drDel" data-i="${i}" aria-label="Elimina">${I.trash}</button></div>`).join('')}</div>
   <div class="pk-new" style="margin-top:8px"><input class="inp" id="newdrink" placeholder="es. Prosecco di benvenuto"><button class="btn" data-a="drAdd">Aggiungi</button></div></section>
@@ -1109,8 +1132,14 @@ function menuMsgEn(m,mode){
 // foglio A4 con 6 cartoncini 105 × 99 mm: si ritagliano e si piegano a metà (a tenda)
 const SP_STYLES={
   oro:{l:'Oro',c:'#A8956A'},azzurro:{l:'Azzurro',c:'#6F95B8'},salvia:{l:'Salvia',c:'#7F9270'},
-  ulivo:{l:"Ulivo",c:'#6E7B58',img:'assets/segnaposto/ulivo.png'},spighe:{l:'Spighe',c:'#A88A5C',img:'assets/segnaposto/spighe.png'}
+  ulivo:{l:"Ulivo",c:'#6E7B58',img:'assets/segnaposto/ulivo.png'},spighe:{l:'Spighe',c:'#A88A5C',img:'assets/segnaposto/spighe.png'},
+  orsetto:{l:'Orsetto',c:'#C29A94',img:'assets/segnaposto/orsetto.png'},ghirlanda:{l:'Ghirlanda',c:'#AE9D8E',img:'assets/segnaposto/ghirlanda.png'},
+  cornice:{l:'Cornice oro',c:'#A8956A',frame:true}
 };
+// 8 segnaposto per A4: 2 colonne × 4 righe, cartoncino 105 × 74,25 mm, piegato 105 × 37,1 mm
+const SP={w:105,h:297/4,f:297/8};
+// posizioni (mm dal bordo superiore della facciata) di illustrazione e riga per ogni stile
+const SP_IMG={ulivo:{y:5,h:7},spighe:{y:3,h:11},orsetto:{y:2.5,h:13},ghirlanda:{y:4.5,h:8}};
 const sp=()=>ui.sp||(ui.sp=state.lastSp?{...state.lastSp}:{style:'oro',mode:'nome',text:'',both:true});
 const spImgs={};
 const spImg=src=>spImgs[src]||(spImgs[src]=new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src}));
@@ -1121,32 +1150,38 @@ async function drawSp(cv,o,W){
   x.fillStyle='#fff';x.fillRect(0,0,W,H);
   // linee di taglio tra i cartoncini (tratteggio grigio chiaro)
   x.save();x.strokeStyle='#CFCFCF';x.lineWidth=Math.max(1,.2*px);x.setLineDash([1.6*px,1.6*px]);x.beginPath();
-  x.moveTo(105*px,0);x.lineTo(105*px,H);[99,198].forEach(y=>{x.moveTo(0,y*px);x.lineTo(W,y*px)});x.stroke();x.restore();
-  for(let r=0;r<3;r++)for(let c=0;c<2;c++){
-    const ox=c*105*px,oy=r*99*px;
+  x.moveTo(105*px,0);x.lineTo(105*px,H);[1,2,3].forEach(k=>{x.moveTo(0,k*SP.h*px);x.lineTo(W,k*SP.h*px)});x.stroke();x.restore();
+  for(let r=0;r<4;r++)for(let c=0;c<2;c++){
+    const ox=c*SP.w*px,oy=r*SP.h*px,fy=oy+SP.f*px;
     // linea di piega: solo due tacche ai lati, così non si vede sul cartoncino piegato
     x.save();x.strokeStyle='#BDBDBD';x.lineWidth=Math.max(1,.2*px);x.beginPath();
-    x.moveTo(ox+2*px,oy+49.5*px);x.lineTo(ox+6*px,oy+49.5*px);x.moveTo(ox+99*px,oy+49.5*px);x.lineTo(ox+103*px,oy+49.5*px);x.stroke();x.restore();
-    panel(x,ox,oy+49.5*px,px,o,S,img);                 // fronte: metà inferiore, dritta
-    if(o.both){x.save();x.translate(ox+105*px,oy+49.5*px);x.rotate(Math.PI);panel(x,0,0,px,o,S,img);x.restore()} // retro, capovolto
+    x.moveTo(ox+2*px,fy);x.lineTo(ox+6*px,fy);x.moveTo(ox+99*px,fy);x.lineTo(ox+103*px,fy);x.stroke();x.restore();
+    panel(x,ox,fy,px,o,S,img);                 // fronte: metà inferiore, dritta
+    if(o.both){x.save();x.translate(ox+SP.w*px,fy);x.rotate(Math.PI);panel(x,0,0,px,o,S,img);x.restore()} // retro, capovolto
   }
 }
 function panel(x,ox,oy,px,o,S,img){
   const cx=ox+52.5*px;
-  if(img){const h=(o.style==='spighe'?15:9)*px,w=h*img.width/img.height;x.drawImage(img,cx-w/2,oy+(o.style==='spighe'?5:8)*px,w,h)}
+  if(S.frame){ // doppia cornice con rombi agli angoli, a 4 mm dal taglio
+    x.save();x.strokeStyle=S.c;x.fillStyle=S.c;
+    const a=4,b=3.2,W2=SP.w-2*a,H2=SP.f-a-b;x.lineWidth=.45*px;x.strokeRect(ox+a*px,oy+b*px,W2*px,H2*px);
+    x.lineWidth=.2*px;x.strokeRect(ox+(a+1.3)*px,oy+(b+1.3)*px,(W2-2.6)*px,(H2-2.6)*px);
+    [[a,b],[a+W2,b],[a,b+H2],[a+W2,b+H2]].forEach(([u,v])=>{const X=ox+u*px,Y=oy+v*px,r=1.3*px;x.beginPath();x.moveTo(X,Y-r);x.lineTo(X+r,Y);x.lineTo(X,Y+r);x.lineTo(X-r,Y);x.closePath();x.fill()});
+    x.restore();
+  }else if(img){const g=SP_IMG[o.style]||{y:5,h:8},h=g.h*px,w=h*img.width/img.height;x.drawImage(img,cx-w/2,oy+g.y*px,w,h)}
   else{ // filetto sottile con rombo
-    x.save();x.strokeStyle=S.c;x.fillStyle=S.c;x.lineWidth=.3*px;const y=oy+12*px;
+    x.save();x.strokeStyle=S.c;x.fillStyle=S.c;x.lineWidth=.3*px;const y=oy+9*px;
     x.beginPath();x.moveTo(cx-20*px,y);x.lineTo(cx-3.2*px,y);x.moveTo(cx+3.2*px,y);x.lineTo(cx+20*px,y);x.stroke();
     x.beginPath();x.moveTo(cx,y-1.8*px);x.lineTo(cx+1.8*px,y);x.lineTo(cx,y+1.8*px);x.lineTo(cx-1.8*px,y);x.closePath();x.fill();x.restore();
   }
   x.save();x.strokeStyle=S.c;x.globalAlpha=.75;x.lineWidth=.25*px;x.textAlign='center';x.fillStyle=S.c;
-  const ly=oy+34*px;
+  const ly=oy+(S.frame?22:o.style==='orsetto'?26:25)*px;
   if(o.mode==='tavolo'){
-    x.globalAlpha=1;x.font=`${10*px}px "Great Vibes"`;x.textAlign='right';x.fillText('Tavolo',cx+2*px,ly-.5*px);
+    x.globalAlpha=1;x.font=`${8.5*px}px "Great Vibes"`;x.textAlign='right';x.fillText('Tavolo',cx+2*px,ly-.5*px);
     x.globalAlpha=.75;x.beginPath();x.moveTo(cx+5*px,ly);x.lineTo(cx+26*px,ly);x.stroke();
   }else{x.beginPath();x.moveTo(cx-32*px,ly);x.lineTo(cx+32*px,ly);x.stroke()}
   const t=String(o.text||'').trim();
-  if(t){x.globalAlpha=1;x.textAlign='center';x.font=`italic 500 ${3.4*px}px "Cormorant Garamond"`;x.fillStyle='#6B6B64';x.fillText(t,cx,oy+43*px,90*px)}
+  if(t){x.globalAlpha=1;x.textAlign='center';x.font=`italic 500 ${3*px}px "Cormorant Garamond"`;x.fillStyle='#6B6B64';x.fillText(t,cx,oy+(S.frame?28.6:31.5)*px,S.frame?84*px:90*px)}
   x.restore();
 }
 async function paintSp(){const cv=$('#spcv');if(cv)await drawSp(cv,sp(),900)}
@@ -1167,7 +1202,7 @@ function vSegnaposto(){
     <label class="tog"><input type="checkbox" data-spc="both" ${o.both?'checked':''}>Stampa su entrambi i lati del cartoncino</label>
   </section>
   <button class="btn pri wide" data-a="spPDF">${I.pdf}Crea il foglio da stampare</button>
-  <p class="hint" style="margin-top:10px">Un foglio A4 = 6 segnaposto. Stampa su cartoncino bianco (almeno 160 g) al 100%, ritaglia lungo il tratteggio e piega a metà seguendo le tacche ai lati.</p>`;
+  <p class="hint" style="margin-top:10px">Un foglio A4 = 8 segnaposto. Stampa su cartoncino bianco (almeno 160 g) al 100%, ritaglia lungo il tratteggio e piega a metà seguendo le tacche ai lati.</p>`;
 }
 /* ---------- Fogli (bottom sheet) ---------- */
 function curSec(){const m=getMenu(ui.editId);return secList(m,ui.sheet.kids)[ui.sheet.s]}
@@ -1266,7 +1301,7 @@ document.addEventListener('click',e=>{
       else if(ui.view==='preview')ui.view='edit';
       else if(ui.view==='tpl'||ui.view==='dishes')ui.view='settings';
       render();break;
-    case 'setTpl':if(m){m.templateId=d.id;save();render(true)}break;
+    case 'setTpl':if(m){m.templateId=d.id;state.settings.lastTpl=d.id;save();render(true)}break;
     case 'setStatus':if(m){m.status=d.v;save();render(true)}break;
     case 'pick':ui.sheet={type:'picker',s:+d.s,kids:K};ui.pickQ='';ui.pickAll=false;renderSheet();break;
     case 'pickToggle':{
@@ -1292,7 +1327,10 @@ document.addEventListener('click',e=>{
     case 'pdf':if(prezzoOk())doPDF();break;
     case 'shareFile':shareFile();break;
     case 'downloadFile':downloadFile();break;
-    case 'dup':{const c=clone(m);c.id=uid();c.created=Date.now();c.status='bozza';state.menus.push(c);save();ui.editId=c.id;render();toast('Menù duplicato: cambia data e cliente');break}
+    case 'dup':{const c=clone(m);c.id=uid();c.created=Date.now();c.status='bozza';
+      // la copia è la base per un nuovo evento: tengo portate, prezzi e template, azzero i dati del cliente
+      Object.assign(c,{date:'',time:'',client:'',phone:'',guests:'',guestsKids:'',room:''});
+      state.menus.push(c);save();ui.editId=c.id;render();window.scrollTo(0,0);toast('Copia creata: inserisci data e cliente');break}
     case 'del':if(confirm('Eliminare questo menù?')){state.menus=state.menus.filter(x=>x!==m);save();ui.view=ui.back||'cal';render();toast('Menù eliminato')}break;
     case 'listTab':ui.listTab=d.v;render(true);break;
     case 'editDish':{const x=d.id&&state.dishes.find(z=>z.id===d.id);ui.sheet={type:'dish',id:d.id||null,alg:[...(x&&x.alg||[])]};renderSheet();break}
@@ -1353,7 +1391,7 @@ document.addEventListener('click',e=>{
     case 'catAdd':{const v=$('#newcat').value.trim();if(!v)break;if(allCats().includes(v)){toast('Sezione già presente');break}state.categories.push(v);save();render(true);break}
     case 'drAdd':{const v=$('#newdrink').value.trim();if(!v)break;state.settings.drinkPresets.push(v);save();render(true);break}
     case 'drDel':state.settings.drinkPresets.splice(+d.i,1);save();render(true);break;
-    case 'export':{state.settings.lastBackup=Date.now();save();const blob=new Blob([JSON.stringify(state)],{type:'application/json'});ui.sheet={type:'file',blob,name:`backup-menu_${fmtDash(today())}.json`,mime:'application/json',title:'Backup pronto'};renderSheet();break}
+    case 'export':{const blob=new Blob([JSON.stringify(state)],{type:'application/json'});ui.sheet={type:'file',blob,name:`backup-menu_${fmtDash(today())}.json`,mime:'application/json',title:'Backup pronto',backup:true};renderSheet();break}
     case 'import':$('#importfile').click();break;
   }
 });

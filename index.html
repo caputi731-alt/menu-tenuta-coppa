@@ -212,6 +212,9 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .e-sep{margin:1.35em 0;letter-spacing:.05em}
 .e-foot{position:absolute;bottom:62.8px;left:-10px;right:-10px;font-size:11.4px;line-height:1.38;white-space:pre-line}
 .e-notes{margin-top:.5em;font-style:italic;font-size:.92em}
+.wa-step{display:flex;gap:12px;align-items:flex-start;margin:0 2px 14px;font-size:15px;line-height:1.4}
+.wa-step>b{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--olive);color:var(--olive);font-size:14px}
+.wa-step.done>b{background:var(--olive);color:#fff}
 .pg-lc{font-family:'Great Vibes',cursive}
 .lc-t{position:absolute;left:45px;right:45px;top:280px;font-size:44px;line-height:1.2;white-space:nowrap}
 .lc-d{position:absolute;left:0;right:0;top:343px;font-size:27px;line-height:1.2}
@@ -874,6 +877,10 @@ function vTpl(){
 
 /* ---------- Invio su WhatsApp ---------- */
 const waPhone=p=>{let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.length===10&&d[0]==='3')d='39'+d;return d};
+function waText(sh){
+  const tel=waPhone(sh.phone);
+  location.href=`https://api.whatsapp.com/send?${tel?`phone=${tel}&`:''}text=${encodeURIComponent(sh.text)}`;
+}
 async function sendFiles(files,text,phone,wa){
   const tel=waPhone(phone);
   if(text&&!AND){try{await navigator.clipboard.writeText(text)}catch(e){}}
@@ -1202,13 +1209,18 @@ function renderSheet(){
     <label class="fld"><span>Testo stampato</span><textarea class="inp" id="iname" rows="3" style="min-height:90px">${esc(it.name)}</textarea></label>
     <p class="hint" style="margin:-6px 2px 12px">La modifica vale solo per questo menù, l'archivio resta com'è.</p>
     <button class="btn pri wide" data-a="saveItem">Salva</button>`;
+  }else if(sh.type==='wa'&&sh.step===2){
+    const nf=sh.files.length,cosa=nf>1?`i ${nf} file`:sh.files[0].mime==='application/pdf'?'il PDF':sh.files[0].mime.startsWith('image/')?"l'immagine":'il file';
+    h=head(sh.title)+`<div class="wa-step done"><b>1</b><span>Il messaggio è nella chat: in WhatsApp tocca <b>Invia</b>.</span></div>
+    <div class="wa-step"><b>2</b><span>Torna qui e allega ${cosa}${sh.phone?' nella stessa chat':': in WhatsApp scegli la stessa chat'}.</span></div>
+    <div class="btns"><button class="btn wa" data-a="waFiles">${I.wa}Allega ${cosa}</button><button class="btn" data-a="waStep1">Riapri il messaggio</button></div>`;
   }else if(sh.type==='wa'){
     h=head(sh.title)+(sh.menuId?`<div class="seg" style="margin-bottom:8px"><button class="${sh.fmt!=='pdf'?'on':''}" data-a="waFmt" data-v="img">Immagine</button><button class="${sh.fmt==='pdf'?'on':''}" data-a="waFmt" data-v="pdf">PDF</button></div>
-    <p class="hint" style="margin:0 2px 12px">${sh.fmt==='pdf'?'Il PDF è adatto se il cliente deve stamparlo. WhatsApp potrebbe non mostrare il messaggio sotto al file: in quel caso incollalo tu.':'L\'immagine si vede subito in chat e il messaggio compare sempre come didascalia.'}</p>`:'')+`<p class="hint" style="margin-bottom:12px;word-break:break-all">${sh.files.map(f=>esc(f.name)).join('<br>')}</p>
+    <p class="hint" style="margin:0 2px 12px">${sh.fmt==='pdf'?'Il PDF è adatto se il cliente deve stamparlo.':'L\'immagine si vede subito in chat, senza doverla aprire.'}</p>`:'')+`<p class="hint" style="margin-bottom:12px;word-break:break-all">${sh.files.map(f=>esc(f.name)).join('<br>')}</p>
     <label class="fld"><span>Numero WhatsApp (facoltativo)</span><input class="inp" type="tel" id="waphone" value="${esc(sh.phone)}" placeholder="Se lo lasci vuoto scegli tu la chat"></label>
     <label class="fld"><span>Messaggio</span><textarea class="inp" id="watext" rows="7" style="min-height:160px">${esc(sh.text)}</textarea></label>
     <div class="btns"><button class="btn wa" data-a="waSend">${I.wa}Apri WhatsApp</button><button class="btn" data-a="waOther">${I.share}Invia con un'altra app</button></div>
-    <p class="hint" style="margin-top:10px">Il messaggio viene copiato anche negli appunti: se WhatsApp non lo mostra sotto al file, tieni premuto nel campo di testo e scegli Incolla.</p>`;
+    <p class="hint" style="margin-top:10px">${AND?'Si fa in due passaggi: prima WhatsApp apre la chat con il messaggio già scritto, poi torni qui e alleghi il file. Sei sempre tu a toccare Invia.':'Il messaggio viene copiato anche negli appunti: se non compare sotto al file, tieni premuto nel campo di testo e scegli Incolla.'}</p>`;
   }else if(sh.type==='file'){
     const cs=canShareFiles();
     h=head(sh.title)+`<p class="hint" style="margin-bottom:14px;word-break:break-all">${esc(sh.name)}</p>
@@ -1300,7 +1312,11 @@ document.addEventListener('click',e=>{
       catch(err){toast('Foglio non creato')}finally{busy(false);renderSheet()}})();break;
     case 'waMenu':if(prezzoOk())waMenu();break;
     case 'waFmt':if(ui.sheet.fmt!==d.v){state.settings.waFmt=d.v;save();waMenu(d.v)}break;
-    case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;sendFiles(sh.files,sh.text,sh.phone,a==='waSend');
+    case 'waStep1':waText(ui.sheet);break;
+    case 'waFiles':{const sh=ui.sheet;sendFiles(sh.files,'',sh.phone,true);ui.sheet=null;renderSheet();break}
+    case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;
+      // nell'app: WhatsApp scarta spesso il testo che accompagna i file, quindi prima apro la chat col messaggio scritto, poi si allegano i file
+      if(a==='waSend'&&AND&&sh.text.trim()){waText(sh);sh.step=2;renderSheet()}else sendFiles(sh.files,sh.text,sh.phone,a==='waSend');
       if(sh.menuId){const mm=getMenu(sh.menuId);if(mm){if(mm.status==='bozza'&&sh.mode==='proposta'){mm.status='inviata';toast('Proposta segnata come inviata')}if(!mm.phone&&sh.phone)mm.phone=sh.phone;save()}}
       break}
     case 'ostType':{const o=ost(),p=OSTIA_TYPES[d.v];o.type=d.v;o.top=p.top;o.main=p.main;render(true);break}
@@ -1310,8 +1326,9 @@ document.addEventListener('click',e=>{
       catch(err){toast('File non creato')}finally{busy(false);renderSheet()}})();break;
     case 'ostFile':(async()=>{busy(true,'Preparo il file');try{const f=await ostiaFile(d.v);ui.sheet={type:'file',blob:f.blob,name:f.name,mime:f.mime,title:'Ostia pronta'}}
       catch(err){toast('File non creato')}finally{busy(false);renderSheet()}})();break;
-    case 'didWA':(async()=>{busy(true,'Preparo i file');try{const fs=await Promise.all(DID_FILES.map(x=>didBlob(x.k)));busy(false);await sendFiles(fs,state.settings.didMsg||DID_MSG,ui.didPhone,true)}
-      catch(err){toast('File non disponibili')}finally{busy(false)}})();break;
+    case 'didWA':(async()=>{busy(true,'Preparo i file');try{const fs=await Promise.all(DID_FILES.map(x=>didBlob(x.k)));
+      ui.sheet={type:'wa',title:'Invia i file della fattoria',files:fs,phone:ui.didPhone||'',text:state.settings.didMsg||DID_MSG}}
+      catch(err){toast('File non disponibili')}finally{busy(false);renderSheet()}})();break;
     case 'didShare':(async()=>{try{await sendFiles([await didBlob(d.k)],'','',false)}catch(err){toast('File non disponibile')}})();break;
     case 'didReplace':ui.didSlot=d.k;$('#didfile').click();break;
     case 'didReset':delete state.didattica[d.k];save();render(true);toast('Ripristinato il file originale');break;

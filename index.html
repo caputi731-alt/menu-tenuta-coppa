@@ -16,6 +16,7 @@
 <style>
 :root{--paper:#FAFAF6;--ink:#22281F;--muted:#6B7064;--line:#DEDFD5;--olive:#4E5B31;--olive-2:#3E4926;--olive-soft:#E9ECDF;--wine:#7B2D3B;--r:14px;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 Figtree,system-ui,sans-serif}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -168,7 +169,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .pg-bg{position:absolute;left:0;top:0;width:100%;height:100%;background-size:100% 100%;background-repeat:no-repeat}
 .pg-v{font-family:Raleway,sans-serif;font-weight:400}
 .v-venue{position:absolute;left:0;right:0;top:103.4px;font-size:33px;line-height:1.174}
-.v-title{position:absolute;left:24px;right:24px;top:161.6px;font-size:57px;font-weight:700;line-height:1.174;white-space:nowrap;overflow:hidden}
+.v-title{position:absolute;left:24px;right:24px;top:161.6px;font-size:57px;font-weight:700;line-height:1.174;white-space:nowrap}
 .v-date{position:absolute;left:0;right:0;top:208.3px;font-size:52px;line-height:1.174}
 .v-flow{position:absolute;left:40px;right:40px;top:318.3px}
 .v-in{font-size:19px}
@@ -183,13 +184,13 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .pg-c{font-family:'Cormorant Garamond',serif;font-weight:400}
 .c-venue{position:absolute;left:0;right:0;top:11.6px;font-size:25px;font-weight:700;line-height:1.21}
 .c-tag{position:absolute;left:0;right:0;top:35.3px;font-size:18px;line-height:1.21}
-.c-legend{position:absolute;left:16.4px;top:754.8px;font-size:8px;font-weight:700;line-height:1.09;text-align:left;color:#000}
+.c-legend{position:absolute;left:16.4px;top:754.8px;max-width:360px;font-size:8px;font-weight:700;line-height:1.09;text-align:left;color:#000}
 .alg{font-size:.6em;position:relative;top:-.55em;margin-left:.2em;letter-spacing:.03em;white-space:nowrap}
 .alg-l{font-size:.72em;margin-top:.6em;opacity:.85}
 .algs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
 .algs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;font-size:13px}
 .algs button.on{background:var(--olive);border-color:var(--olive);color:#fff}
-.c-title{position:absolute;left:30px;right:30px;top:67.9px;font-size:25px;font-weight:700;line-height:1.21;white-space:nowrap;overflow:hidden}
+.c-title{position:absolute;left:30px;right:30px;top:67.9px;font-size:25px;font-weight:700;line-height:1.21;white-space:nowrap}
 .c-sub{position:absolute;left:0;right:0;top:106.4px;font-size:28px;font-weight:700;line-height:1.21}
 .c-flow{position:absolute;left:55px;right:55px;top:151px}
 .c-in{font-size:17px}
@@ -198,7 +199,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .c-sec+.c-sec.nt{margin-top:1.1em}
 .c-it{line-height:1.21;margin-bottom:.376em;white-space:pre-line}
 .c-offer{margin-top:1.3em;line-height:1.3}
-.c-drinks{position:absolute;left:16.4px;top:706px;font-size:18px;line-height:.917;text-align:left;white-space:pre-line}
+.c-drinks{position:absolute;left:16.4px;top:706px;max-width:360px;font-size:18px;line-height:.917;text-align:left;white-space:pre-line}
 /* Ostie e fattoria didattica */
 .ost-cv{width:100%;height:auto;display:block;border-radius:12px;background:#fff;border:1px solid var(--line);margin-bottom:14px}
 .fcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
@@ -475,7 +476,9 @@ function eventoCol(m,secs,title,drinks,prices,notes,left,width){
   const full=secs.filter(s=>s.items.length);
   const body=full.length?full.map(s=>s.items.map(i=>`<div class="e-it">${nl(i.name)}${algOf(m,i)}</div>`).join('')).join('<div class="e-sep">~~~~~</div>'):`<div class="e-empty">Aggiungi le portate</div>`;
   const foot=[String(drinks||'').trim(),...prices].filter(Boolean).map(nl).join('<br>')+(notes?`<div class="e-notes">${nl(notes)}</div>`:'')+algLegend(m,full);
-  return`<div class="e-col" style="left:${left}px;width:${width}px"><div class="e-h">${esc(title)}</div><div class="e-body">${body}</div><div class="e-foot">${foot}</div></div>`;
+  // la colonna adulti confina con il logo Tenuta Coppa al centro: il titolo resta a sinistra del logo
+  const hs=left<421&&left+width>300?`left:${(width-196)/2}px;right:${(width-196)/2}px`:'';
+  return`<div class="e-col" style="left:${left}px;width:${width}px"><div class="e-h" style="${hs}">${esc(title)}</div><div class="e-body">${body}</div><div class="e-foot">${foot}</div></div>`;
 }
 function pageEvento(m,t,mode){
   const P=mode==='proposta',kids=m.kids!==false;
@@ -571,7 +574,11 @@ function fitPageRaw(pg){
     while(inn.offsetHeight>f.clientHeight&&k>.45&&n++<90){k*=.97;inn.style.fontSize=(19*k)+'px'}
   }else{
     const cols=[...pg.querySelectorAll('.e-col')];
-    cols.forEach(c=>{const h=c.querySelector('.e-h');let fs=19.5;h.style.fontSize=fs+'px';while(h.scrollWidth>h.clientWidth+1&&fs>12){fs--;h.style.fontSize=fs+'px'}
+    cols.forEach(c=>{const h=c.querySelector('.e-h');let fs=19.5;h.style.whiteSpace='nowrap';h.style.top='103px';h.style.fontSize=fs+'px';
+      while(h.scrollWidth>h.clientWidth+1&&fs>15){fs--;h.style.fontSize=fs+'px'}
+      if(h.scrollWidth>h.clientWidth+1){ // titolo lungo: va su due righe, che crescono verso l'alto per non toccare le portate
+        h.style.whiteSpace='normal';while((h.offsetHeight>fs*1.1*2+2||h.scrollWidth>h.clientWidth+1)&&fs>11){fs--;h.style.fontSize=fs+'px'}
+        h.style.top=(103+19.5*1.1-h.offsetHeight)+'px'}
       c._avail=(595-62.8-c.querySelector('.e-foot').offsetHeight-14)-141});
     let k=1,n=0;const set=()=>cols.forEach(c=>c.querySelector('.e-body').style.fontSize=(11.4*k)+'px');set();
     while(cols.some(c=>c.querySelector('.e-body').offsetHeight>c._avail)&&k>.45&&n++<90){k*=.97;set()}

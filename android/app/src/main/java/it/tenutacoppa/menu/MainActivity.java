@@ -51,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);
+        // Il menù è una pagina a misura fissa: se il telefono ha il testo di sistema ingrandito,
+        // la WebView ingrandirebbe anche titoli e date del menù, che si sovrappongono e vengono tagliati.
+        s.setTextZoom(100);
 
         // I file dell'app vengono serviti su un indirizzo https interno invece che come
         // file://: solo così il browser di Android concede IndexedDB, dove l'app salva i dati.

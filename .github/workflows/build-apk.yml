@@ -55,7 +55,7 @@ jobs:
           DEST=android/app/src/main/assets
           mkdir -p "$DEST"
           cp index.html manifest.webmanifest "$DEST"/
-          cp -r assets icons vendor "$DEST"/
+          cp -r assets icons vendor css js "$DEST"/
           # il service worker non serve dentro l'APK: i file sono già sul telefono
           echo "File inclusi nell'APK:" && du -sh "$DEST"
 

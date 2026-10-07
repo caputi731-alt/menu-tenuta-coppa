@@ -2,12 +2,12 @@ plugins { id 'com.android.application' }
 
 android {
     namespace 'it.tenutacoppa.menu'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "it.tenutacoppa.menu"
         minSdk 24
-        targetSdk 34
+        targetSdk 35
         // su GitHub ogni build ha un numero crescente: serve a riconoscere la versione installata
         def build = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int
         versionCode build

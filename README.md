@@ -34,3 +34,11 @@ Attenzione: cancellare i dati di navigazione di Safari/Chrome cancella anche i d
 ## Aggiornare l'app
 
 Carica i nuovi file sul repository e, in `sw.js`, aumenta il numero in `menu-app-v2` (es. `menu-app-v3`). Alla successiva apertura il telefono scarica la nuova versione. I dati salvati non vengono toccati.
+
+## Com'è fatto il codice
+
+- `index.html`: solo la struttura della pagina e l'elenco dei file da caricare.
+- `css/app.css`: l'aspetto dell'app e delle pagine dei menù.
+- `js/`: il codice, diviso per argomento e caricato nell'ordine dei numeri (`01-dati.js` … `11-avvio.js`).
+- `android/`: il guscio Android che contiene l'app web e la collega al telefono (file, condivisione, backup).
+- `tests/test_app.py`: i controlli automatici che GitHub esegue prima di ogni compilazione.

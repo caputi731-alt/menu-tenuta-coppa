@@ -37,6 +37,16 @@ def ok(cond, msg):
         fails.append(msg)
 
 
+# ---------- file dell'app: tutti presenti, salvati per l'uso offline e copiati nell'APK ----------
+import re
+html = open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read()
+sw = open(os.path.join(ROOT, 'sw.js'), encoding='utf-8').read()
+wf = open(os.path.join(ROOT, '.github', 'workflows', 'build-apk.yml'), encoding='utf-8').read()
+refs = re.findall(r'<script src="([^"]+)"', html) + re.findall(r'<link rel="stylesheet" href="([^"]+)"', html)
+ok(len(refs) >= 14 and all(os.path.isfile(os.path.join(ROOT, r)) for r in refs), 'tutti i file richiamati da index.html esistono')
+ok(all("'./" + r + "'" in sw for r in refs), 'tutti i file sono nella lista offline di sw.js')
+ok(all(re.search(r'cp -r [^\n]*\b' + d + r'\b', wf) for d in {r.split('/')[0] for r in refs}), "tutte le cartelle vengono copiate nell'APK")
+
 with sync_playwright() as p:
     b = p.chromium.launch()
 

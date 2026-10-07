@@ -84,7 +84,22 @@ public class MainActivity extends AppCompatActivity {
         });
 
         web = new WebView(this);
-        setContentView(web);
+        // Da Android 15 le app disegnano anche sotto la barra di stato e quella di navigazione, e la
+        // tastiera non rimpicciolisce più la finestra da sola. Il contenitore lascia libero quello
+        // spazio, così la pagina occupa la stessa area di prima e i campi non finiscono sotto la tastiera.
+        android.widget.FrameLayout contenitore = new android.widget.FrameLayout(this);
+        contenitore.setBackgroundColor(0xFFFAFAF6);
+        contenitore.addView(web, new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+        setContentView(contenitore);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(contenitore, (v, margini) -> {
+            androidx.core.graphics.Insets m = margini.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars()
+                            | androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+                            | androidx.core.view.WindowInsetsCompat.Type.ime());
+            v.setPadding(m.left, m.top, m.right, m.bottom);
+            return androidx.core.view.WindowInsetsCompat.CONSUMED;
+        });
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);

@@ -116,7 +116,31 @@ public class MainActivity extends AppCompatActivity {
                 Uri u = r.getUrl();
                 // i link esterni si aprono nel browser, l'app resta dov'è
                 if (DOMINIO.equals(u.getHost())) return false;
-                startActivity(new Intent(Intent.ACTION_VIEW, u));
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, u));
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Nessuna app può aprire questo collegamento",
+                            Toast.LENGTH_LONG).show();
+                }
+                return true;
+            }
+
+            /**
+             * Android può chiudere il motore della pagina quando la memoria scarseggia (per esempio
+             * mentre si crea un PDF grande). Senza questo metodo l'intera app andrebbe in crash:
+             * così invece si ricarica. I dati sono già salvati a ogni modifica.
+             */
+            @Override
+            public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail d) {
+                if (web != null) {
+                    android.view.ViewParent genitore = web.getParent();
+                    if (genitore instanceof android.view.ViewGroup) ((android.view.ViewGroup) genitore).removeView(web);
+                    web.destroy();
+                    web = null;
+                }
+                Toast.makeText(MainActivity.this, "Memoria insufficiente: l'app è stata ricaricata",
+                        Toast.LENGTH_LONG).show();
+                recreate();
                 return true;
             }
         });
@@ -136,19 +160,47 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Tasto indietro: lo gestisce l'app web (chiude i fogli aperti, torna alla schermata precedente).
+        // Solo dal calendario, la schermata iniziale, l'app si chiude.
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (web == null) {
+                    finish();
+                    return;
+                }
+                web.evaluateJavascript("(window.appBack&&window.appBack())?'si':'no'", risposta -> {
+                    if (!"\"si\"".equals(risposta)) finish();
+                });
+            }
+        });
+
+        pulisciCondivisi();
         web.addJavascriptInterface(new Ponte(), "Android");
         web.loadUrl("https://" + DOMINIO + "/assets/index.html");
     }
 
-    /**
-     * Tasto indietro: lo gestisce l'app (chiude i fogli aperti, torna alla schermata precedente).
-     * Solo dal calendario, la schermata iniziale, l'app si chiude.
-     */
+    /** I file preparati per la condivisione restano in cache: quelli più vecchi di un giorno si eliminano. */
+    private void pulisciCondivisi() {
+        new Thread(() -> {
+            try {
+                File[] vecchi = new File(getCacheDir(), "condivisi").listFiles();
+                if (vecchi == null) return;
+                long limite = System.currentTimeMillis() - 24L * 60 * 60 * 1000;
+                for (File f : vecchi) {
+                    if (f.isFile() && f.lastModified() < limite) f.delete();
+                }
+            } catch (Exception ignored) { }
+        }).start();
+    }
+
     @Override
-    public void onBackPressed() {
-        web.evaluateJavascript("(window.appBack&&window.appBack())?'si':'no'", risposta -> {
-            if (!"\"si\"".equals(risposta)) finish();
-        });
+    protected void onDestroy() {
+        if (web != null) {
+            web.destroy();
+            web = null;
+        }
+        super.onDestroy();
     }
 
     /** Dice all'app web se il "Salva con nome" ha scritto davvero il file. */
@@ -163,6 +215,22 @@ public class MainActivity extends AppCompatActivity {
 
     /** Funzioni che l'app web può chiamare: salvataggio e condivisione dei PDF. */
     private class Ponte {
+        /** Versione installata, mostrata in fondo ad "Altro". */
+        @JavascriptInterface
+        public String version() {
+            try {
+                return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        /** Dimensione del testo scelta nelle impostazioni del telefono (1.0 = normale). */
+        @JavascriptInterface
+        public float fontScale() {
+            return getResources().getConfiguration().fontScale;
+        }
+
         /**
          * Apre il "Salva con nome" di Android (telefono, Drive…). L'esito arriva all'app web
          * con window.onNativeSaved(token, true|false): true solo se il file è stato scritto.

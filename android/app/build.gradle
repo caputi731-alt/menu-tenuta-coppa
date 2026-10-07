@@ -8,8 +8,10 @@ android {
         applicationId "it.tenutacoppa.menu"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        // su GitHub ogni build ha un numero crescente: serve a riconoscere la versione installata
+        def build = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int
+        versionCode build
+        versionName "1." + build
     }
 
     signingConfigs {

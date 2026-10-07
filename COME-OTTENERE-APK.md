@@ -67,6 +67,13 @@ nel repository.
 
 ---
 
+## Che versione ho installato
+
+In fondo alla schermata **Altro** l'app mostra la versione (es. `1.17`): il
+numero dopo il punto è quello della build su GitHub. 
+
+---
+
 ## Se la compilazione fallisce
 
 Nel tab **Actions** la build compare con una X rossa. Aprila, guarda il passo

@@ -35,38 +35,38 @@ button{cursor:pointer}
 .fab{position:fixed;right:18px;bottom:calc(80px + var(--sb));z-index:31;width:58px;height:58px;border-radius:50%;border:0;background:var(--olive);color:#fff;box-shadow:0 6px 18px rgba(62,73,38,.35);display:grid;place-items:center}
 .fab svg{width:28px;height:28px}
 
-.ib{border:0;background:none;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;color:var(--muted);flex:none;padding:0}
+.ib{border:0;background:none;width:44px;height:44px;display:grid;place-items:center;border-radius:10px;color:var(--muted);flex:none;padding:0}
 .ib svg{width:21px;height:21px}
 .ib:active{background:var(--olive-soft)}
-.tb{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;color:var(--olive-2)}
-.btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.tb{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--olive-2)}
+.btn{min-width:0;min-height:46px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn svg{width:19px;height:19px}
 .btn.pri{background:var(--olive);color:#fff;border-color:var(--olive)}
 .btn.danger{color:var(--wine)}
 .btn.wide{width:100%}
 .btns{display:grid;gap:8px}
-.btns.two{grid-template-columns:1fr 1fr}
+.btns.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 
 .grp{margin:0 0 24px}
 .grp>h2{font:600 14px/1.2 Figtree,sans-serif;color:var(--muted);margin:0 0 8px 2px}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .fld{display:block;margin-bottom:12px}
 .fld>span{display:block;font-size:13px;color:var(--muted);margin:0 0 4px 2px}
-.inp{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px 12px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none;min-height:46px}
+.inp{width:100%;min-width:0;border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px 12px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none;min-height:46px}
 textarea.inp{min-height:96px;resize:vertical;line-height:1.4}
 select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7064' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:36px}
 .inp:focus{border-color:var(--olive);box-shadow:0 0 0 3px var(--olive-soft)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .hint{font-size:13px;color:var(--muted);margin:4px 2px 0}
 .tog{display:flex;align-items:center;gap:10px;padding:8px 2px;font-size:15px}
 .tog input{width:20px;height:20px;accent-color:var(--olive);flex:none}
 .empty{color:var(--muted);text-align:center;padding:22px 10px;font-size:15px}
 
 .seg{display:flex;background:var(--olive-soft);border-radius:12px;padding:3px;gap:3px;margin-bottom:14px}
-.seg button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-weight:600;font-size:14px;color:var(--olive-2)}
+.seg button{flex:1;border:0;background:none;padding:12px 6px;border-radius:9px;font-weight:600;font-size:14px;color:var(--olive-2)}
 .seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .stat{display:flex;flex-wrap:wrap;gap:8px}
-.stat button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:14px;display:flex;align-items:center;gap:7px}
+.stat button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 14px;font-size:14px;display:flex;align-items:center;gap:7px}
 .stat button i{width:9px;height:9px;border-radius:50%;background:var(--c)}
 .stat button.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);font-weight:600}
 
@@ -94,7 +94,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .mc-body{flex:1;min-width:0}
 .mc-t{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mc-s{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pill{font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;color:var(--c);background:color-mix(in srgb,var(--c) 13%,#fff);flex:none}
+.pill{font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;color:color-mix(in srgb,var(--c) 62%,#000);background:color-mix(in srgb,var(--c) 13%,#fff);flex:none}
 
 .tchips{display:flex;gap:10px;overflow-x:auto;margin:0 -16px 20px;padding:4px 16px 6px;scrollbar-width:none}
 .tchips::-webkit-scrollbar{display:none}
@@ -107,11 +107,11 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .sec{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
 .sec-h{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 8px 14px;gap:8px}
 .sec-h h3{margin:0;font:italic 500 21px/1.1 'Cormorant Garamond',Georgia,serif}
-.add{border:0;background:var(--olive-soft);color:var(--olive-2);border-radius:999px;padding:7px 12px 7px 9px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:4px}
+.add{border:0;background:var(--olive-soft);color:var(--olive-2);border-radius:999px;padding:11px 14px 11px 10px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:4px}
 .add svg{width:17px;height:17px}
 .it{display:flex;align-items:center;border-top:1px solid var(--line);padding:2px 4px 2px 14px}
-.it .nm{flex:1;border:0;background:none;text-align:left;padding:9px 0;font-size:15px;min-width:0}
-.it .ib{width:36px;height:36px}
+.it .nm{flex:1;border:0;background:none;text-align:left;padding:9px 0;min-height:44px;font-size:15px;min-width:0}
+.it .ib{width:44px;height:44px}
 .it .ib svg{width:18px;height:18px}
 
 .drow,.trow,.crow{width:100%;display:flex;align-items:center;gap:12px;background:#fff;border:0;border-bottom:1px solid var(--line);padding:12px 14px;text-align:left;font-size:15px}
@@ -122,7 +122,8 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .trow .sw{width:44px;height:56px;margin:0;border-radius:6px}
 .trow .sw img{width:32px}
 .trow>svg,.drow>svg{width:18px;height:18px;color:var(--muted);flex:none}
-.crow{padding:6px 4px 6px 14px}
+.crow{padding:6px 4px 6px 14px;gap:2px}
+.crow .ib{width:40px;height:44px}
 .dcat{font:italic 500 20px/1.2 'Cormorant Garamond',Georgia,serif;margin:18px 2px 8px}
 .search{margin-bottom:12px}
 
@@ -137,7 +138,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .clr input{width:44px;height:36px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff}
 
 .shbg{position:fixed;inset:0;background:rgba(20,24,18,.38);z-index:60}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:#fff;border-radius:22px 22px 0 0;max-height:88vh;overflow:auto;padding:12px 16px calc(16px + var(--sb));max-width:720px;margin:0 auto;animation:up .22s ease-out;-webkit-overflow-scrolling:touch}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:#fff;border-radius:22px 22px 0 0;max-height:calc(88vh / var(--z,1));overflow:auto;padding:12px 16px calc(16px + var(--sb));max-width:720px;margin:0 auto;animation:up .22s ease-out;-webkit-overflow-scrolling:touch}
 @keyframes up{from{transform:translateY(28px);opacity:.5}}
 .sh-h{display:flex;align-items:center;justify-content:space-between;margin:0 -6px 10px 0}
 .sh-h h3{margin:0;font:italic 500 26px/1.1 'Cormorant Garamond',Georgia,serif}
@@ -148,7 +149,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .pk i svg{width:16px;height:16px}
 .pk.on i{background:var(--olive);border-color:var(--olive);color:#fff}
 .pk.on{font-weight:600}
-#pklist{max-height:44vh;overflow:auto;margin:6px 0 12px}
+#pklist{max-height:calc(44vh / var(--z,1));overflow:auto;margin:6px 0 12px}
 .pk-new{display:flex;gap:8px;margin-bottom:12px}
 .toast{position:fixed;left:50%;bottom:calc(150px + var(--sb));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:90;max-width:88vw;text-align:center}
 .busy{position:fixed;inset:0;background:rgba(250,250,246,.94);z-index:80;display:grid;place-items:center;text-align:center;font-weight:600;color:var(--olive-2)}
@@ -156,9 +157,16 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}.spin{animation-duration:2s}}
 
+.dlg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:71;background:#fff;border-radius:20px;padding:20px 18px 16px;width:min(88vw,400px);box-shadow:0 20px 50px rgba(20,24,18,.28)}
+.dlg h3{margin:0 0 8px;font:italic 500 24px/1.15 'Cormorant Garamond',Georgia,serif}
+.dlg p{margin:0 0 16px;font-size:15px}
+.dlg .inp{margin-bottom:16px}
+.btn.danger-f{background:var(--wine);border-color:var(--wine);color:#fff}
+.toast button{margin-left:14px;border:0;background:none;color:#DCE6B9;font-weight:700;padding:8px 4px;min-height:36px}
+
 /* Chip preimpostati */
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px}
-.chips button{border:1px dashed var(--line);background:#fff;border-radius:999px;padding:6px 11px;font-size:13px;text-align:left;color:var(--olive-2)}
+.chips button{border:1px dashed var(--line);background:#fff;border-radius:999px;padding:10px 12px;font-size:13px;text-align:left;color:var(--olive-2)}
 .tchip .sw,.trow .sw{background-size:contain;background-repeat:no-repeat;background-position:center}
 .sw-mini{position:relative;overflow:hidden;display:block}
 .sw-in{position:absolute;left:50%;top:0;transform-origin:top center;pointer-events:none}
@@ -188,7 +196,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .alg{font-size:.6em;position:relative;top:-.55em;margin-left:.2em;letter-spacing:.03em;white-space:nowrap}
 .alg-l{font-size:.72em;margin-top:.6em;opacity:.85}
 .algs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
-.algs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;font-size:13px}
+.algs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 12px;font-size:13px}
 .algs button.on{background:var(--olive);border-color:var(--olive);color:#fff}
 .c-title{position:absolute;left:30px;right:30px;top:67.9px;font-size:25px;font-weight:700;line-height:1.21;white-space:nowrap}
 .c-sub{position:absolute;left:0;right:0;top:106.4px;font-size:28px;font-weight:700;line-height:1.21}
@@ -238,6 +246,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 <body>
 <div id="app"></div>
 <div id="sheet"></div>
+<div id="dlg"></div>
 <div id="rh"></div>
 <input type="file" id="bgfile" accept="image/png,image/jpeg,image/webp" hidden>
 <input type="file" id="importfile" accept="application/json,.json" hidden>
@@ -250,9 +259,9 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 /* ---------- Costanti ---------- */
 const PT_MM=25.4/72;
 const LAYOUTS={
-  verticale:{w:810,h:1440,scale:2,label:'Verticale (come i menù della domenica)'},
-  evento:{w:842,h:595,scale:3,label:'A4 orizzontale con menù bambini'},
-  classico:{w:595,h:842,scale:3,label:'A4 verticale (come il menù di Pasqua)'},
+  verticale:{w:810,h:1440,scale:2,print:3,label:'Verticale (come i menù della domenica)'},
+  evento:{w:842,h:595,scale:3,print:4,label:'A4 orizzontale con menù bambini'},
+  classico:{w:595,h:842,scale:3,print:4,label:'A4 verticale (come il menù di Pasqua)'},
   libretto:{w:595,h:421,scale:3,label:'Libretto A5: copertina + menù, 2 per foglio A4'}
 };
 const STATUS={bozza:{l:'Bozza',c:'#7E8277'},inviata:{l:'Inviata',c:'#B07A1E'},confermata:{l:'Confermata',c:'#3F7A34'},rifiutata:{l:'Rifiutata',c:'#9B3A48'}};
@@ -510,6 +519,20 @@ function priceLines(m,kidsCol){
 }
 // allergeni: i numeri vengono dall'archivio portate, così una correzione vale per tutti i menù
 const algNums=i=>{if(i.alg)return i.alg;const d=i.dishId&&state.dishes.find(x=>x.id===i.dishId);return d&&d.alg||[]};
+// Una portata ha gli allergeni "impostati" se ne ha almeno uno oppure se è stato scelto "Nessuno".
+const dishSet=d=>!!d&&((Array.isArray(d.alg)&&d.alg.length>0)||d.algSet===true);
+const itemChanged=i=>{const d=dishOf(i);return!!d&&oneLine(d.name)!==oneLine(i.name)};
+// 'ok', 'manca' (mai indicati) oppure 'verifica' (testo cambiato rispetto all'archivio: quelli ereditati possono non valere più)
+const algState=i=>Array.isArray(i.alg)?'ok':!dishSet(dishOf(i))?'manca':itemChanged(i)?'verifica':'ok';
+const shownSecs=m=>{const l=tplOf(m).layout;return(l==='evento'||l==='libretto')&&m.kids!==false?allSecs(m):m.sections};
+const algTodo=m=>m.allergens?shownSecs(m).flatMap(s=>s.items).filter(i=>algState(i)!=='ok'):[];
+// eliminando una portata dall'archivio, i menù che la usano si tengono i suoi allergeni
+function delDish(id){
+  const d=state.dishes.find(z=>z.id===id);if(!d)return;
+  if(dishSet(d))state.menus.forEach(m=>allSecs(m).forEach(sec=>sec.items.forEach(i=>{if(i.dishId===id&&!Array.isArray(i.alg))i.alg=[...(d.alg||[])]})));
+  state.dishes=state.dishes.filter(z=>z.id!==id);
+}
+const algChips=sh=>`<div class="algs"><button class="${sh.none?'on':''}" data-a="algNone">Nessuno</button>${ALLERGENI.map((a,i)=>`<button class="${(sh.alg||[]).includes(i+1)?'on':''}" data-a="algT" data-n="${i+1}">${i+1}. ${esc(a)}</button>`).join('')}</div>`;
 const algOf=(m,i)=>{if(!m.allergens)return'';const n=algNums(i);return n.length?`<span class="alg">${n.join(',')}</span>`:''};
 function algLegend(m,secs){
   if(!m.allergens)return'';
@@ -708,12 +731,13 @@ async function makeBookletSheet(m,holes){
 }
 // menù verticale (9:16) da stampare: su A4 a tutta altezza, centrato, con margini laterali uguali
 async function makeVerticalA4(m){
-  const cv=await makePDF(m,'tavolo',true),w=297*cv.width/cv.height;
+  const cv=await makePDF(m,'tavolo',true,true),w=297*cv.width/cv.height;
   const pdf=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
-  pdf.addImage(cv.toDataURL('image/jpeg',0.93),'JPEG',(210-w)/2,0,w,297);
+  pdf.addImage(cv.toDataURL('image/jpeg',0.95),'JPEG',(210-w)/2,0,w,297);
   return pdf.output('blob');
 }
-async function makePDF(m,mode,asCanvas){
+// forPrint: risoluzione più alta (circa 290–370 dpi sul foglio) per i PDF da stampare; per WhatsApp resta quella leggera
+async function makePDF(m,mode,asCanvas,forPrint){
   if(!window.html2canvas||!window.jspdf)throw new Error('librerie non caricate. Riapri l\'app.');
   await loadFonts();
   if(tplOf(m).layout==='libretto'){if(asCanvas)return snapPage(m,tplOf(m),mode,'',3);return makeBookletPDF(m,mode)}
@@ -721,11 +745,11 @@ async function makePDF(m,mode,asCanvas){
   const pg=host.firstElementChild;fitPage(pg);
   if(t.bgImage)await new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=t.bgImage});
   try{
-    const canvas=await html2canvas(pg,{scale:L.scale,backgroundColor:t.bgColor||'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0});
+    const canvas=await html2canvas(pg,{scale:forPrint?(L.print||L.scale):L.scale,backgroundColor:t.bgColor||'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0});
     if(asCanvas)return canvas;
     const w=L.w*PT_MM,h=L.h*PT_MM;
     const pdf=new window.jspdf.jsPDF({orientation:w>h?'l':'p',unit:'mm',format:[w,h]});
-    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,w,h);
+    pdf.addImage(canvas.toDataURL('image/jpeg',forPrint?0.95:0.92),'JPEG',0,0,w,h);
     return pdf.output('blob');
   }finally{host.innerHTML=''}
 }
@@ -734,7 +758,7 @@ async function doPDF(){
   busy(true,'Creo il PDF');
   try{
     const lay=tplOf(m).layout,lib=lay==='libretto'&&mode==='tavolo',vA4=mode==='tavolo'&&!['libretto','evento','classico'].includes(lay);
-    const blob=lib?await makeBookletSheet(m,m.holes!==false):vA4?await makeVerticalA4(m):await makePDF(m,mode);
+    const blob=lib?await makeBookletSheet(m,m.holes!==false):vA4?await makeVerticalA4(m):await makePDF(m,mode,false,true);
     const name=`${lib?'Libretto-da-stampare':mode==='tavolo'?'Menu-tavolo':'Proposta'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}${ui.pv.lang==='en'?'_EN':''}.pdf`;
     ui.sheet={type:'file',blob,name,mime:'application/pdf',title:lib?'Libretto pronto da stampare':mode==='tavolo'?'Menù tavolo pronto':'Proposta pronta'};
   }catch(e){toast('PDF non creato: '+(e.message||e))}
@@ -843,13 +867,22 @@ function dishListHTML(){
   allCats().forEach(c=>{
     const L=state.dishes.filter(d=>d.cat===c&&(!q||norm(d.name).includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'it'));
     if(!L.length&&q)return;
-    out+=`<h3 class="dcat">${esc(c)}</h3>`+(L.length?`<div class="list">${L.map(d=>`<button class="drow" data-a="editDish" data-id="${d.id}"><span>${esc(oneLine(d.name))}${d.en?`<small style="display:block;color:var(--muted);font-size:12px;font-style:italic">${esc(oneLine(d.en))}</small>`:''}${d.alg&&d.alg.length?`<small style="display:block;color:var(--muted);font-size:12px">Allergeni ${d.alg.join(', ')}</small>`:''}</span>${I.pen}</button>`).join('')}</div>`:`<div class="hint">Nessuna portata.</div>`);
+    out+=`<h3 class="dcat">${esc(c)}</h3>`+(L.length?`<div class="list">${L.map(d=>`<button class="drow" data-a="editDish" data-id="${d.id}"><span>${esc(oneLine(d.name))}${d.en?`<small style="display:block;color:var(--muted);font-size:12px;font-style:italic">${esc(oneLine(d.en))}</small>`:''}${d.alg&&d.alg.length?`<small style="display:block;color:var(--muted);font-size:12px">Allergeni ${d.alg.join(', ')}</small>`:d.algSet?`<small style="display:block;color:var(--muted);font-size:12px">Nessun allergene</small>`:''}</span>${I.pen}</button>`).join('')}</div>`:`<div class="hint">Nessuna portata.</div>`);
   });
   return out||`<div class="empty">Nessuna portata trovata.</div>`;
 }
 function vDishes(){
   return topbar(`<button class="ib" data-a="back" aria-label="Indietro">${I.back}</button><h1>Archivio portate</h1>`)+`<main class="main"><input class="inp search" type="search" placeholder="Cerca portata" data-in="dq" value="${esc(ui.dq)}"><div id="dlist">${dishListHTML()}</div></main>`+fab('editDish','Nuova portata')+navbar();
 }
+// Dimensione del testo dell'interfaccia: le pagine dei menù restano a misura fissa, si ingrandisce solo l'app
+const ZOOMS=[['auto','Come il telefono'],['1','Normale'],['1.15','Grande'],['1.3','Molto grande']];
+function uiZoom(){
+  const z=(state&&state.settings.uiZoom)||'auto';let k=1;
+  if(z==='auto'){try{k=AND&&AND.fontScale?Number(AND.fontScale())||1:1}catch(e){}}else k=Number(z)||1;
+  return Math.max(1,Math.min(1.3,k));
+}
+function applyZoom(){const k=uiZoom();document.documentElement.style.setProperty('--z',k);['app','sheet','dlg'].forEach(id=>{document.getElementById(id).style.zoom=k===1?'':k})}
+const appVersion=()=>{try{return AND&&AND.version?String(AND.version()||''):''}catch(e){return''}};
 function vSettings(){
   const s=state.settings;
   return topbar(`<h1>Impostazioni</h1>`)+`<main class="main">
@@ -862,11 +895,13 @@ function vSettings(){
   <section class="grp"><h2>Portate del menù adulti</h2><div class="list">${state.categories.map((c,i)=>`<div class="crow"><span>${esc(c)}<small>${state.dishes.filter(d=>d.cat===c).length} portate · <i>${esc(catEn(c))}</i></small></span><button class="ib" data-a="catEn" data-i="${i}" aria-label="Nome in inglese" style="font-size:12px;font-weight:700;color:var(--olive)">EN</button><button class="ib" data-a="catMove" data-i="${i}" data-d="-1" aria-label="Sposta su">${I.up}</button><button class="ib" data-a="catMove" data-i="${i}" data-d="1" aria-label="Sposta giù">${I.down}</button><button class="ib" data-a="catRen" data-i="${i}" aria-label="Rinomina">${I.pen}</button><button class="ib" data-a="catDel" data-i="${i}" aria-label="Elimina">${I.trash}</button></div>`).join('')}</div>
   <div class="pk-new" style="margin-top:8px"><input class="inp" id="newcat" placeholder="es. Contorni"><button class="btn" data-a="catAdd">Aggiungi</button></div>
   <p class="hint">Queste sono le sezioni che compaiono sul menù (Antipasti, Primi Piatti…). Valgono per i nuovi menù.</p></section>
+  <section class="grp"><h2>Dimensione del testo</h2><div class="stat">${ZOOMS.map(([v,l])=>`<button class="${(s.uiZoom||'auto')===v?'on':''}" style="--c:var(--olive)" data-a="setZoom" data-v="${v}">${l}</button>`).join('')}</div><p class="hint" style="margin-top:8px">Ingrandisce l'app, non i menù stampati.</p></section>
   <section class="grp"><h2>Backup</h2><div class="card"><p style="margin:0 0 12px;font-size:15px">Portate, template e menù sono salvati solo su questo telefono. Esporta un backup ogni tanto (su Drive o via email) per non perderli e per spostarli su un altro dispositivo.</p>
   <p class="hint" style="margin:0 2px 12px">Ultimo backup: <b>${s.lastBackup?new Date(s.lastBackup).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'}):'mai fatto'}</b>${window.Android&&window.Android.autoBackup?`<br>Copia automatica sul telefono: <b>${ls.get(AUTO_DAY)?fmtLong(ls.get(AUTO_DAY)).replace(/^./,c=>c.toLowerCase()):'non ancora fatta'}</b>, nella cartella Download/MenuTenutaCoppa. Serve se l'app viene disinstallata o si guasta; non sostituisce il backup fuori dal telefono.`:''}</p>
   <div class="btns two"><button class="btn" data-a="export">${I.dl}Esporta</button><button class="btn" data-a="import">${I.share}Importa</button></div>
   ${ui.preImport?`<button class="btn wide" style="margin-top:8px" data-a="undoImport">Riprendi i dati di prima dell'ultima importazione</button>`:''}
   ${ui.scartati&&ui.scartati.length?`<button class="btn wide" style="margin-top:8px" data-a="exportOld">Esporta i dati messi da parte</button><p class="hint">Sono dati che questa versione dell'app non ha saputo leggere all'avvio.</p>`:''}</div></section>
+  ${appVersion()?`<p class="hint" style="text-align:center">Menù Tenuta Coppa · versione ${esc(appVersion())}</p>`:''}
   </main>`+navbar();
 }
 function totText(m){
@@ -876,7 +911,7 @@ function totText(m){
   return`Totale indicativo: ${parts.join(' + ')} = ${eur(pa*ga+pk*gk)}`;
 }
 function secsHTML(m,kids){
-  return secList(m,kids).map((s,si)=>`<div class="sec"><div class="sec-h"><h3>${esc(s.name)}</h3><button class="add" data-a="pick" data-s="${si}" data-k="${kids?1:''}">${I.plus}Aggiungi</button></div>${s.items.map((it,ii)=>`<div class="it"><button class="nm" data-a="itEdit" data-s="${si}" data-i="${ii}" data-k="${kids?1:''}">${esc(oneLine(it.name))}</button><button class="ib" data-a="itMove" data-s="${si}" data-i="${ii}" data-d="-1" data-k="${kids?1:''}" aria-label="Sposta su">${I.up}</button><button class="ib" data-a="itMove" data-s="${si}" data-i="${ii}" data-d="1" data-k="${kids?1:''}" aria-label="Sposta giù">${I.down}</button><button class="ib" data-a="itDel" data-s="${si}" data-i="${ii}" data-k="${kids?1:''}" aria-label="Togli">${I.x}</button></div>`).join('')}</div>`).join('');
+  return secList(m,kids).map((s,si)=>`<div class="sec"><div class="sec-h"><h3>${esc(s.name)}</h3>${!kids&&!s.items.length&&m.sections.length>1?`<button class="ib" style="margin-left:auto" data-a="secDel" data-s="${si}" aria-label="Togli la sezione ${esc(s.name)}">${I.trash}</button>`:''}<button class="add" data-a="pick" data-s="${si}" data-k="${kids?1:''}">${I.plus}Aggiungi</button></div>${s.items.map((it,ii)=>`<div class="it"><button class="nm" data-a="itEdit" data-s="${si}" data-i="${ii}" data-k="${kids?1:''}">${esc(oneLine(it.name))}${m.allergens&&algState(it)!=='ok'?` <span class="pill" style="--c:#B07A1E;margin-left:4px">allergeni?</span>`:''}</button><button class="ib" data-a="itMove" data-s="${si}" data-i="${ii}" data-d="-1" data-k="${kids?1:''}" aria-label="Sposta su">${I.up}</button><button class="ib" data-a="itMove" data-s="${si}" data-i="${ii}" data-d="1" data-k="${kids?1:''}" aria-label="Sposta giù">${I.down}</button><button class="ib" data-a="itDel" data-s="${si}" data-i="${ii}" data-k="${kids?1:''}" aria-label="Togli">${I.x}</button></div>`).join('')}</div>`).join('');
 }
 function drinksField(m,f,label){
   return`<label class="fld"><span>${label}</span><textarea class="inp" data-f="${f}" rows="2" style="min-height:70px">${esc(val(m,f))}</textarea></label>
@@ -915,6 +950,7 @@ function vEdit(){
   </section>
   <section class="grp"><h2>Portate${ev?' – menù adulti':''}</h2>
     ${secsHTML(m,false)}
+    <button class="btn wide" style="margin:2px 0 10px" data-a="addSec">${I.plus}Aggiungi una sezione</button>
     ${ev?'':`<label class="tog"><input type="checkbox" data-fc="showSections" ${m.showSections!==false?'checked':''}>Stampa i titoli (Antipasti, Primi Piatti…)</label>`}
     <label class="tog"><input type="checkbox" data-fc="allergens" ${m.allergens?'checked':''}>Indica gli allergeni accanto alle portate</label>
     <p class="hint">Le sezioni vuote non compaiono. Tocca una portata per modificarla solo in questo menù. Gli allergeni si impostano nell'archivio portate (Altro → Archivio portate).</p>
@@ -949,6 +985,7 @@ function vPreview(){
   ${ui.pv.mode==='proposta'?`<div class="row2" style="margin-bottom:4px">
     <label class="fld"><span>Prezzo adulti (€)</span><input class="inp" data-f="priceAdult" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceAdult'))}" placeholder="obbligatorio"></label>
     <label class="fld"><span>Prezzo bambini (€)</span><input class="inp" data-f="priceKid" data-pv="1" inputmode="decimal" value="${esc(val(m,'priceKid'))}" placeholder="facoltativo"></label></div>`:''}
+  ${(L=>L.length?`<div class="card warn"><b>Allergeni da controllare</b> per ${L.length===1?'una portata':L.length+' portate'}: ${L.slice(0,4).map(i=>esc(oneLine(i.name))).join('; ')}${L.length>4?'…':''}.<br>Sul menù ${L.some(i=>algState(i)==='manca')?'risulterebbero senza allergeni anche se non li hai mai indicati':'compaiono quelli della portata originale'}. <button class="btn" style="margin-top:8px;width:100%" data-a="back">${I.pen}Torna al menù e tocca le portate segnate</button></div>`:'')(algTodo(m))}
   <div id="pv-warn"></div>
   ${tplOf(m).layout==='libretto'?`<div class="pv" id="pvc"></div>`:''}
   <div class="pv" id="pv"></div>
@@ -1025,19 +1062,25 @@ async function waFile(m,mode,fmt){
 // chiamata dal tasto indietro di Android: true = gestito dall'app, false = si può chiudere
 window.appBack=()=>{
   if($('.busy'))return true;
+  if(dlgRes){closeDlg(false);return true}
   if(ui.sheet){ui.sheet=null;renderSheet();return true}
   if(['edit','preview','tpl','dishes'].includes(ui.view)){$('[data-a=back]')?.click();return true}
   if(ui.view==='ostie'&&ui.stampa==='sp'){ui.stampa='ostie';render();return true}
   if(ui.view!=='cal'){ui.view='cal';render();return true}
   return false;
 };
-function prezzoOk(){
+function markSent(sh){
+  const mm=sh&&sh.menuId&&getMenu(sh.menuId);if(!mm||sh.mode!=='proposta'||mm.status!=='bozza')return;
+  mm.status='inviata';save();
+  toast('Proposta segnata come inviata',{label:'Annulla',fn:()=>{mm.status='bozza';save();render(true)}});
+}
+async function prezzoOk(){
   const m=getMenu(ui.editId);
   if(!m||ui.pv.mode!=='proposta')return true;
   if(num(val(m,'priceAdult'))!==''){
     if(!priceInherited(m))return true;
     const pk=num(val(m,'priceKid'));
-    if(!confirm(`La proposta userà il prezzo predefinito del template: ${eurC(num(val(m,'priceAdult')))} a persona${pk!==''?` e ${eurC(pk)} per i bambini`:''}.\n\nÈ quello concordato con il cliente?`))return false;
+    if(!await ask({title:'Prezzo da confermare',text:`La proposta userà il prezzo predefinito del template: ${eurC(num(val(m,'priceAdult')))} a persona${pk!==''?` e ${eurC(pk)} per i bambini`:''}.\n\nÈ quello concordato con il cliente?`,ok:'Sì, è giusto',cancel:'Lo cambio'}))return false;
     m.priceAdult=num(val(m,'priceAdult'));if(m.priceKid===undefined||m.priceKid===null)m.priceKid=pk;save();render(true); // confermato: diventa il prezzo del menù
     return true;
   }
@@ -1314,6 +1357,11 @@ function renderSheet(){
     <div id="pklist">${pickListHTML()}</div>
     <div class="pk-new"><input class="inp" id="pknew" placeholder="Nuova portata" enterkeyhint="done"><button class="btn" data-a="pickNew">Aggiungi</button></div>
     <button class="btn pri wide" data-a="closeSheet">Fatto</button>`;
+  }else if(sh.type==='addSec'){
+    const mm=getMenu(ui.editId),have=new Set(mm.sections.map(x=>x.name)),miss=state.categories.filter(c=>!have.has(c));
+    h=head('Aggiungi una sezione')+(miss.length?`<div class="list" style="margin-bottom:12px">${miss.map(c=>`<button class="drow" data-a="addSecPick" data-v="${esc(c)}"><span>${esc(c)}</span>${I.plus}</button>`).join('')}</div>`:'')+`
+    <div class="pk-new"><input class="inp" id="secnew" placeholder="${miss.length?'Oppure un altro nome':'es. Contorni'}" enterkeyhint="done" autocomplete="off"><button class="btn" data-a="addSecNew">Aggiungi</button></div>
+    <p class="hint">Vale solo per questo menù. Le sezioni dei nuovi menù si decidono in Altro.</p>`;
   }else if(sh.type==='dish'){
     const d=sh.id?state.dishes.find(x=>x.id===sh.id):{name:'',cat:state.categories[0]};
     h=head(sh.id?'Modifica portata':'Nuova portata')+`
@@ -1321,15 +1369,20 @@ function renderSheet(){
     <label class="fld"><span>Nome in inglese</span><textarea class="inp" id="den" rows="2" style="min-height:70px" placeholder="Per i menù in inglese">${esc(d.en||'')}</textarea></label>
     <p class="hint" style="margin:-6px 2px 12px">Vai a capo per spezzare la riga sul menù, come in Canva.</p>
     <label class="fld"><span>Allergeni</span></label>
-    <div class="algs">${ALLERGENI.map((a,i)=>`<button class="${(sh.alg||[]).includes(i+1)?'on':''}" data-a="algT" data-n="${i+1}">${i+1}. ${esc(a)}</button>`).join('')}</div>
+    ${algChips(sh)}<p class="hint" style="margin:-8px 2px 12px">Se non ne contiene tocca “Nessuno”: così l'app sa che li hai controllati.</p>
     <label class="fld"><span>Categoria</span><select class="inp" id="dcat">${allCats().map(c=>`<option ${c===d.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
     <div class="btns ${sh.id?'two':''}"><button class="btn pri" data-a="saveDish">Salva</button>${sh.id?`<button class="btn danger" data-a="delDish">${I.trash}Elimina</button>`:''}</div>
-    ${sh.id?'<p class="hint">Modifiche ed eliminazioni non toccano i menù già composti.</p>':''}`;
+    ${sh.id?'<p class="hint">Cambiare il nome o eliminare la portata non tocca i menù già composti. Gli allergeni invece valgono per tutti i menù che la usano.</p>':''}`;
   }else if(sh.type==='item'){
-    const it=secList(getMenu(ui.editId),sh.kids)[sh.s].items[sh.i];
+    const it=secList(getMenu(ui.editId),sh.kids)[sh.s].items[sh.i],st=algState(it);
     h=head('Portata in questo menù')+`
     <label class="fld"><span>Testo stampato</span><textarea class="inp" id="iname" rows="3" style="min-height:90px">${esc(it.name)}</textarea></label>
-    <p class="hint" style="margin:-6px 2px 12px">La modifica vale solo per questo menù, l'archivio resta com'è.</p>
+    <p class="hint" style="margin:-6px 2px 12px">La modifica del testo vale solo per questo menù, l'archivio resta com'è.</p>
+    <label class="fld"><span>Allergeni</span></label>
+    ${st==='manca'?`<p class="hint" style="color:#8A5A12;margin:-2px 2px 8px">Non sono mai stati indicati per questa portata.</p>`:st==='verifica'?`<p class="hint" style="color:#8A5A12;margin:-2px 2px 8px">Il testo è diverso da quello dell'archivio: controlla che questi allergeni valgano ancora.</p>`:''}
+    ${algChips(sh)}
+    ${st!=='ok'?`<label class="tog" style="margin:-6px 0 10px"><input type="checkbox" id="algok">Li ho controllati, vanno bene così</label>`:''}
+    <p class="hint" style="margin:0 2px 12px">Se il testo è quello dell'archivio gli allergeni vengono salvati nell'archivio e valgono per tutti i menù; se lo hai cambiato valgono solo qui.</p>
     <button class="btn pri wide" data-a="saveItem">Salva</button>`;
   }else if(sh.type==='wa'&&sh.step===2){
     const nf=sh.files.length,cosa=nf>1?`i ${nf} file`:sh.files[0].mime==='application/pdf'?'il PDF':sh.files[0].mime.startsWith('image/')?"l'immagine":'il file';
@@ -1369,7 +1422,25 @@ function render(keep){
   if(ui.view==='ostie')ui.stampa==='sp'?paintSp():paintOstia();
 }
 let toastT;
-function toast(msg){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),3400)}
+let toastAct=null;
+function toast(msg,act){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}
+  t.textContent=msg;toastAct=null;
+  if(act){toastAct=act.fn;const b=document.createElement('button');b.textContent=act.label;b.dataset.toast='1';t.appendChild(b)}
+  clearTimeout(toastT);toastT=setTimeout(()=>{t.remove();toastAct=null},act?7000:3400)}
+// Finestre di conferma dell'app (al posto di quelle di sistema, che nell'app Android mostrano un indirizzo interno).
+// ask() risponde true/false; con "input" risponde il testo scritto, oppure null se si annulla.
+let dlgRes=null,dlgInput=false;
+function ask(o){
+  return new Promise(res=>{
+    if(dlgRes)closeDlg(false);
+    dlgRes=res;dlgInput=o.input!==undefined;
+    $('#dlg').innerHTML=`<div class="shbg" data-dlg="no" style="z-index:70"></div><div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgt"><h3 id="dlgt">${esc(o.title)}</h3>${o.text?`<p>${nl(o.text)}</p>`:''}
+      ${dlgInput?`<input class="inp" id="dlgin" value="${esc(o.input)}" placeholder="${esc(o.placeholder||'')}" enterkeyhint="done" autocomplete="off">`:''}
+      <div class="btns ${o.alert?'':'two'}">${o.alert?'':`<button class="btn" data-dlg="no">${esc(o.cancel||'Annulla')}</button>`}<button class="btn ${o.danger?'danger-f':'pri'}" data-dlg="yes">${esc(o.ok||'OK')}</button></div></div>`;
+    if(dlgInput)setTimeout(()=>{const i=$('#dlgin');if(i){i.focus();i.select()}},60);
+  });
+}
+function closeDlg(yes){const r=dlgRes;if(!r)return;const i=$('#dlgin');dlgRes=null;$('#dlg').innerHTML='';r(dlgInput?(yes&&i?i.value:null):!!yes)}
 function busy(on,msg){let b=$('.busy');if(on){if(!b){b=document.createElement('div');b.className='busy';document.body.appendChild(b)}b.innerHTML=`<div><div class="spin"></div>${esc(msg)}</div>`}else b?.remove()}
 // L'archivio non si legge: non apro un archivio vuoto, che al primo salvataggio sovrascriverebbe quello vero
 function fatal(){
@@ -1388,10 +1459,13 @@ function openEditor(id){ui.back=['cal','list'].includes(ui.view)?ui.view:ui.back
 /* ---------- Azioni ---------- */
 document.addEventListener('toggle',e=>{if(e.target.dataset&&e.target.dataset.det==='en')ui.enOpen=e.target.open},true);
 document.addEventListener('click',e=>{
+  const dg=e.target.closest('[data-dlg]');if(dg){closeDlg(dg.dataset.dlg==='yes');return}
+  if(e.target.closest('[data-toast]')){const f=toastAct;toastAct=null;clearTimeout(toastT);$('.toast')?.remove();if(f)f();return}
   const b=e.target.closest('[data-a]');if(!b)return;
   const a=b.dataset.a,d=b.dataset,m=ui.editId?getMenu(ui.editId):null,K=!!d.k;
   switch(a){
     case 'reload':location.reload();break;
+    case 'setZoom':state.settings.uiZoom=d.v;save();applyZoom();render(true);break;
     case 'nav':leaveEdit();ui.view=d.v;render();break;
     case 'calMove':{let mm=ui.cal.m+Number(d.d),yy=ui.cal.y;if(mm<0){mm=11;yy--}if(mm>11){mm=0;yy++}ui.cal={y:yy,m:mm};render(true);break}
     case 'calToday':{const n=new Date();ui.cal={y:n.getFullYear(),m:n.getMonth()};ui.selDate=today();render();break}
@@ -1406,6 +1480,16 @@ document.addEventListener('click',e=>{
     case 'setTpl':if(m){m.templateId=d.id;state.settings.lastTpl=d.id;save();render(true)}break;
     case 'setStatus':if(m){m.status=d.v;save();render(true)}break;
     case 'pick':ui.sheet={type:'picker',s:+d.s,kids:K};ui.pickQ='';ui.pickAll=false;renderSheet();break;
+    case 'addSec':ui.sheet={type:'addSec'};renderSheet();break;
+    case 'addSecPick':case 'addSecNew':{
+      const name=(a==='addSecPick'?d.v:$('#secnew').value).trim();if(!name)break;
+      if(m.sections.some(x=>norm(x.name)===norm(name))){toast('Questa sezione è già nel menù');break}
+      // le sezioni note vanno al loro posto nell'ordine di Altro, le altre in fondo
+      const ord=state.categories.indexOf(name);let pos=m.sections.length;
+      if(ord>=0){const j=m.sections.findIndex(x=>state.categories.indexOf(x.name)>ord);if(j>=0)pos=j}
+      m.sections.splice(pos,0,{name,items:[]});save();ui.sheet=null;renderSheet();render(true);break}
+    case 'secDel':{const i=+d.s,sec=m.sections[i];if(!sec||sec.items.length)break;m.sections.splice(i,1);save();render(true);
+      toast('Sezione tolta dal menù',{label:'Annulla',fn:()=>{m.sections.splice(Math.min(i,m.sections.length),0,sec);save();if(ui.view==='edit')render(true)}});break}
     case 'pickToggle':{
       const s=curSec(),x=state.dishes.find(z=>z.id===d.id);if(!x)break;
       const i=s.items.findIndex(z=>z.dishId===x.id);
@@ -1419,45 +1503,61 @@ document.addEventListener('click',e=>{
       if(!s.items.some(z=>z.dishId===x.id))s.items.push({dishId:x.id,name:x.name});
       inp.value='';save();$('#pklist').innerHTML=pickListHTML();render(true);toast("Portata aggiunta al menù e all'archivio");break}
     case 'itMove':{const L=secList(m,K)[+d.s].items,i=+d.i,j=i+Number(d.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];save();render(true);break}
-    case 'itDel':secList(m,K)[+d.s].items.splice(+d.i,1);save();render(true);break;
-    case 'itEdit':ui.sheet={type:'item',s:+d.s,i:+d.i,kids:K};renderSheet();break;
-    case 'saveItem':{const v=$('#iname').value.trim();if(v){secList(m,ui.sheet.kids)[ui.sheet.s].items[ui.sheet.i].name=v;save()}ui.sheet=null;renderSheet();render(true);break}
+    case 'itDel':{const L=secList(m,K)[+d.s].items,i=+d.i,[tolta]=L.splice(i,1);save();render(true);
+      toast('Portata tolta dal menù',{label:'Annulla',fn:()=>{L.splice(Math.min(i,L.length),0,tolta);save();if(ui.view==='edit')render(true)}});break}
+    case 'itEdit':{const it=secList(m,K)[+d.s].items[+d.i],al=[...algNums(it)];ui.sheet={type:'item',s:+d.s,i:+d.i,kids:K,alg:al,none:algState(it)==='ok'&&!al.length};renderSheet();break}
+    case 'saveItem':{const sh=ui.sheet,it=secList(m,sh.kids)[sh.s].items[sh.i],v=$('#iname').value.trim();if(v)it.name=v;
+      if(sh.touched||$('#algok')?.checked){
+        const alg=[...sh.alg],set=alg.length>0||sh.none||!!$('#algok')?.checked,dd=dishOf(it);
+        if(!set)delete it.alg;                                                   // tolto tutto senza scegliere "Nessuno": torna da indicare
+        else if(dd&&!itemChanged(it)){dd.alg=alg;dd.algSet=true;delete it.alg}   // stesso testo dell'archivio: vale per tutti i menù
+        else it.alg=alg;                                                         // testo cambiato o portata non più in archivio: solo qui
+      }
+      save();ui.sheet=null;renderSheet();render(true);break}
     case 'drPick':{const p=state.settings.drinkPresets[+d.i],cur=String(val(m,d.f)).trim();m[d.f]=cur?cur+'\n'+p:p;save();render(true);break}
     case 'preview':ui.pv={mode:d.mode||'tavolo',lang:(ui.pv&&ui.pv.lang)||'it'};ui.view='preview';render();break;
     case 'pvMode':ui.pv.mode=d.v;render(true);break;
     case 'pvLang':ui.pv.lang=d.v;render(true);break;
-    case 'pdf':if(prezzoOk())doPDF();break;
+    case 'pdf':prezzoOk().then(ok=>{if(ok)doPDF()});break;
     case 'shareFile':shareFile();break;
     case 'downloadFile':downloadFile();break;
     case 'dup':{const c=clone(m);c.id=uid();c.created=Date.now();c.status='bozza';
       // la copia è la base per un nuovo evento: tengo portate, prezzi e template, azzero i dati del cliente
       Object.assign(c,{date:'',time:'',client:'',phone:'',guests:'',guestsKids:'',room:''});
       state.menus.push(c);save();ui.editId=c.id;render();window.scrollTo(0,0);toast('Copia creata: inserisci data e cliente');break}
-    case 'del':if(confirm('Eliminare questo menù?')){state.menus=state.menus.filter(x=>x!==m);save();ui.view=ui.back||'cal';render();toast('Menù eliminato')}break;
+    case 'del':ask({title:'Eliminare questo menù?',text:menuName(m),ok:'Elimina',danger:true}).then(ok=>{if(!ok)return;
+      const pos=state.menus.indexOf(m);state.menus=state.menus.filter(x=>x!==m);save();ui.view=ui.back||'cal';render();
+      toast('Menù eliminato',{label:'Annulla',fn:()=>{state.menus.splice(Math.min(pos,state.menus.length),0,m);save();render(true)}})});break;
     case 'listTab':ui.listTab=d.v;render(true);break;
-    case 'editDish':{const x=d.id&&state.dishes.find(z=>z.id===d.id);ui.sheet={type:'dish',id:d.id||null,alg:[...(x&&x.alg||[])]};renderSheet();break}
-    case 'algT':{const n=+d.n,A=ui.sheet.alg,i=A.indexOf(n);i<0?A.push(n):A.splice(i,1);A.sort((a,b)=>a-b);b.classList.toggle('on',i<0);break}
+    case 'editDish':{const x=d.id&&state.dishes.find(z=>z.id===d.id),al=[...(x&&x.alg||[])];ui.sheet={type:'dish',id:d.id||null,alg:al,none:!!x&&x.algSet===true&&!al.length};renderSheet();break}
+    case 'algT':{const sh=ui.sheet,n=+d.n,A=sh.alg,i=A.indexOf(n);i<0?A.push(n):A.splice(i,1);A.sort((a,b)=>a-b);b.classList.toggle('on',i<0);
+      sh.touched=true;if(A.length){sh.none=false;$('.algs [data-a=algNone]')?.classList.remove('on')}break}
+    case 'algNone':{const sh=ui.sheet;sh.none=!sh.none;sh.touched=true;if(sh.none){sh.alg.length=0;document.querySelectorAll('.algs button.on').forEach(x=>x.classList.remove('on'))}b.classList.toggle('on',sh.none);break}
     case 'saveDish':{
       const name=$('#dname').value.trim(),cat=$('#dcat').value;if(!name){toast('Scrivi il nome della portata');break}
       const alg=[...(ui.sheet.alg||[])];
       const en=($('#den')?.value||'').trim();
-      if(ui.sheet.id){const x=state.dishes.find(z=>z.id===ui.sheet.id);x.name=name;x.cat=cat;x.alg=alg;x.en=en}else state.dishes.push({id:uid(),name,cat,alg,en});
+      const algSet=alg.length>0||!!ui.sheet.none;
+      if(ui.sheet.id){const x=state.dishes.find(z=>z.id===ui.sheet.id);x.name=name;x.cat=cat;x.alg=alg;x.algSet=algSet;x.en=en}else state.dishes.push({id:uid(),name,cat,alg,algSet,en});
       save();ui.sheet=null;renderSheet();render(true);toast('Portata salvata');break}
-    case 'delDish':if(confirm("Eliminare questa portata dall'archivio?")){state.dishes=state.dishes.filter(z=>z.id!==ui.sheet.id);save();ui.sheet=null;renderSheet();render(true)}break;
+    case 'delDish':{const id=ui.sheet.id;ask({title:'Eliminare la portata?',text:"Viene tolta dall'archivio. I menù già composti restano come sono, allergeni compresi.",ok:'Elimina',danger:true}).then(ok=>{if(!ok)return;
+      delDish(id);save();ui.sheet=null;renderSheet();render(true);toast('Portata eliminata')});break}
     case 'closeSheet':ui.sheet=null;renderSheet();break;
     case 'stampaTab':ui.stampa=d.v;render();break;
     case 'spStyle':sp().style=d.v;render(true);break;
     case 'spMode':sp().mode=d.v;render(true);break;
     case 'spPDF':(async()=>{busy(true,'Preparo il foglio');try{const f=await spPDF();ui.sheet={type:'file',blob:f.blob,name:f.name,mime:f.mime,title:'Segnaposto pronti'}}
       catch(err){toast('Foglio non creato')}finally{busy(false);renderSheet()}})();break;
-    case 'waMenu':if(prezzoOk())waMenu();break;
+    case 'waMenu':prezzoOk().then(ok=>{if(ok)waMenu()});break;
     case 'waFmt':if(ui.sheet.fmt!==d.v){state.settings.waFmt=d.v;save();waMenu(d.v)}break;
     case 'waStep1':waText(ui.sheet);break;
-    case 'waFiles':{const sh=ui.sheet;sendFiles(sh.files,'',sh.phone,true);ui.sheet=null;renderSheet();break}
+    case 'waFiles':{const sh=ui.sheet;sendFiles(sh.files,'',sh.phone,true);ui.sheet=null;renderSheet();markSent(sh);if(ui.view==='edit')render(true);break}
     case 'waSend':case 'waOther':{const sh=ui.sheet;sh.text=$('#watext').value;sh.phone=$('#waphone').value;
       // nell'app: WhatsApp scarta spesso il testo che accompagna i file, quindi prima apro la chat col messaggio scritto, poi si allegano i file
-      if(a==='waSend'&&AND&&sh.text.trim()){waText(sh);sh.step=2;renderSheet()}else sendFiles(sh.files,sh.text,sh.phone,a==='waSend');
-      if(sh.menuId){const mm=getMenu(sh.menuId);if(mm){if(mm.status==='bozza'&&sh.mode==='proposta'){mm.status='inviata';toast('Proposta segnata come inviata')}if(!mm.phone&&sh.phone)mm.phone=sh.phone;save()}}
+      let due=false; // in due passaggi la proposta risulta inviata solo quando alleghi il file
+      if(a==='waSend'&&AND&&sh.text.trim()){waText(sh);sh.step=2;due=true;renderSheet()}else sendFiles(sh.files,sh.text,sh.phone,a==='waSend');
+      if(sh.menuId){const mm=getMenu(sh.menuId);if(mm&&!mm.phone&&sh.phone){mm.phone=sh.phone;save()}}
+      if(!due)markSent(sh);
       break}
     case 'ostType':{const o=ost(),p=OSTIA_TYPES[d.v];o.type=d.v;o.top=p.top;o.main=p.main;render(true);break}
     case 'ostShape':ost().shape=d.v;render(true);break;
@@ -1475,24 +1575,25 @@ document.addEventListener('click',e=>{
     case 'editTpl':ui.tplId=d.id;ui.view='tpl';render();break;
     case 'dupTpl':{const t=clone(getTpl(ui.tplId));t.id='tpl-'+uid();t.name=t.name+' (copia)';t.builtIn=false;state.templates.push(t);save();ui.tplId=t.id;render();toast('Template duplicato: cambia nome e titolo');break}
     case 'delTpl':{const t=getTpl(ui.tplId),used=state.menus.filter(x=>x.templateId===t.id).length;
-      if(confirm(`Eliminare il template "${t.name}"?${used?`\n${used} menù useranno il primo template della lista.`:''}`)){state.templates=state.templates.filter(x=>x!==t);save();ui.view='settings';render()}break}
+      ask({title:'Eliminare il template?',text:`${t.name}${used?`\n\n${used} menù useranno il primo template della lista.`:''}`,ok:'Elimina',danger:true}).then(ok=>{if(ok){state.templates=state.templates.filter(x=>x!==t);save();ui.view='settings';render()}});break}
     case 'tplBg':ui.bgSlot=d.slot||'bgImage';$('#bgfile').click();break;
     case 'tplBgReset':{const t=getTpl(ui.tplId);if(d.slot==='coverImage')t.coverImage=t.origCover;else t.bgImage=t.origBg;save();render(true);break}
     case 'catMove':{const L=state.categories,i=+d.i,j=i+Number(d.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];save();render(true);break}
-    case 'catEn':{const c=state.categories[+d.i],v=prompt(`Nome in inglese di "${c}"`,catEn(c));if(v===null)break;state.settings.catEn={...(state.settings.catEn||{}),[c]:v.trim()};save();render(true);break}
-    case 'catRen':{const old=state.categories[+d.i],v=prompt('Nuovo nome della sezione',old);if(!v||!v.trim()||v.trim()===old)break;
-      if(allCats().includes(v.trim())){toast('Esiste già una sezione con questo nome');break}
-      const nv=v.trim();state.categories[+d.i]=nv;state.dishes.forEach(x=>{if(x.cat===old)x.cat=nv});
+    case 'catEn':{const c=state.categories[+d.i];ask({title:'Nome in inglese',text:c,input:catEn(c),ok:'Salva'}).then(v=>{if(v===null)return;state.settings.catEn={...(state.settings.catEn||{}),[c]:v.trim()};save();render(true)});break}
+    case 'catRen':{const idx=+d.i,old=state.categories[idx];ask({title:'Rinomina la sezione',input:old,ok:'Salva'}).then(v=>{
+      if(!v||!v.trim()||v.trim()===old)return;
+      if(allCats().includes(v.trim())){toast('Esiste già una sezione con questo nome');return}
+      const nv=v.trim();state.categories[idx]=nv;state.dishes.forEach(x=>{if(x.cat===old)x.cat=nv});
       state.menus.forEach(mm=>mm.sections.forEach(ss=>{if(ss.name===old)ss.name=nv})); // anche nei menù già creati
       if(state.settings.catEn&&state.settings.catEn[old]){state.settings.catEn[nv]=state.settings.catEn[old];delete state.settings.catEn[old]}
-      save();render(true);break}
+      save();render(true)});break}
     case 'catDel':{const c=state.categories[+d.i],n=state.dishes.filter(x=>x.cat===c).length;
-      if(n){alert(`Nella sezione "${c}" ci sono ${n} portate. Spostale in un'altra sezione o eliminale prima.`);break}
+      if(n){ask({title:'Sezione non vuota',text:`Nella sezione "${c}" ci sono ${n} portate. Spostale in un'altra sezione o eliminale prima.`,alert:true});break}
       if(state.categories.length<2)break;
-      if(confirm(`Eliminare la sezione "${c}"?`)){state.categories.splice(+d.i,1);save();render(true)}break}
+      {const idx=+d.i;ask({title:'Eliminare la sezione?',text:`${c}\n\nI menù già composti la mantengono.`,ok:'Elimina',danger:true}).then(ok=>{if(ok&&state.categories[idx]===c){state.categories.splice(idx,1);save();render(true)}})}break}
     case 'catAdd':{const v=$('#newcat').value.trim();if(!v)break;if(allCats().includes(v)){toast('Sezione già presente');break}state.categories.push(v);save();render(true);break}
     case 'drAdd':{const v=$('#newdrink').value.trim();if(!v)break;state.settings.drinkPresets.push(v);save();render(true);break}
-    case 'drDel':state.settings.drinkPresets.splice(+d.i,1);save();render(true);break;
+    case 'drDel':{const L=state.settings.drinkPresets,i=+d.i,[tolta]=L.splice(i,1);save();render(true);toast('Bevanda tolta',{label:'Annulla',fn:()=>{L.splice(Math.min(i,L.length),0,tolta);save();if(ui.view==='settings')render(true)}});break}
     case 'export':{const blob=new Blob([JSON.stringify(state)],{type:'application/json'});ui.sheet={type:'file',blob,name:`backup-menu_${fmtDash(today())}.json`,mime:'application/json',title:'Backup pronto',backup:true};renderSheet();break}
     case 'import':$('#importfile').click();break;
     case 'undoImport':undoImport();break;
@@ -1556,7 +1657,7 @@ async function applyBackup(text){
     if(!obj||!Array.isArray(obj.menus)||!Array.isArray(obj.dishes))throw new Error('Il file non è un backup di questa app.');
     if(obj.v!==2&&obj.v!==3)throw new Error("Questo backup viene da una versione diversa dell'app: aggiorna l'app e riprova.");
   }catch(err){toast(err instanceof SyntaxError?'Il file non è un backup di questa app.':(err.message||'File non valido'));return}
-  if(!confirm(`Il backup contiene ${obj.menus.length} menù e ${obj.dishes.length} portate. Sostituire i dati attuali?\n\nI dati di adesso vengono messi da parte: puoi riprenderli da Altro → Backup.`))return;
+  if(!await ask({title:'Importare il backup?',text:`Contiene ${obj.menus.length} menù e ${obj.dishes.length} portate e sostituisce i dati attuali.\n\nQuelli di adesso vengono messi da parte: puoi riprenderli da Altro → Backup.`,ok:'Importa'}))return;
   await swapState(obj,'Backup importato');
 }
 // sostituisce i dati tenendo da parte quelli attuali (un solo livello di "annulla")
@@ -1570,7 +1671,7 @@ async function undoImport(){
   try{
     const p=await idb.get('prima-importazione');if(!p||!p.dati){ui.preImport=false;render(true);return}
     const obj=JSON.parse(p.dati);
-    if(!confirm(`Riprendere i dati del ${new Date(p.quando).toLocaleDateString('it-IT',{day:'numeric',month:'long'})}, prima dell'importazione (${obj.menus.length} menù, ${obj.dishes.length} portate)?\n\nQuelli di adesso vengono messi da parte al loro posto.`))return;
+    if(!await ask({title:'Riprendere i dati di prima?',text:`Sono quelli del ${new Date(p.quando).toLocaleDateString('it-IT',{day:'numeric',month:'long'})}, prima dell'importazione (${obj.menus.length} menù, ${obj.dishes.length} portate).\n\nQuelli di adesso vengono messi da parte al loro posto.`,ok:'Riprendi'}))return;
     await swapState(obj,'Dati di prima ripristinati');
   }catch(e){toast('Ripristino non riuscito')}
 }
@@ -1582,7 +1683,8 @@ async function exportOld(){
 
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
-  const map={pknew:'pickNew',newcat:'catAdd',newdrink:'drAdd'};
+  if(e.target.id==='dlgin'){e.preventDefault();closeDlg(true);return}
+  const map={pknew:'pickNew',newcat:'catAdd',newdrink:'drAdd',secnew:'addSecNew'};
   if(map[e.target.id]){e.preventDefault();$(`[data-a="${map[e.target.id]}"]`).click()}
 });
 function readImage(src){ // accetta un File oppure un data URI (dall'app Android)
@@ -1612,7 +1714,7 @@ let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(m
     const ks=await idb.keys();
     ui.scartati=ks.filter(k=>String(k).startsWith('scartato-')).sort();ui.preImport=ks.includes('prima-importazione');
   }catch(e){return fatal()}
-  state=normalize(s);canSave=true;
+  state=normalize(s);canSave=true;applyZoom();
   flush().then(ok=>{if(ok)cleanBlobs()});
   if(ls.get(AUTO_KEY)==='1')setTimeout(autoCopy,4000); // modifiche della volta scorsa non ancora copiate
   render();

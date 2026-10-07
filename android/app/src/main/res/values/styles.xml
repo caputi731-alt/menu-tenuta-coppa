@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stessi colori dell'app web: niente lampo bianco all'avvio, barra di stato color carta con icone scure -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/carta</item>
+        <item name="android:statusBarColor">@color/carta</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="colorPrimary">@color/oliva</item>
+        <item name="colorAccent">@color/oliva</item>
+    </style>
+</resources>

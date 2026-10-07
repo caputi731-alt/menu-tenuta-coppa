@@ -205,6 +205,14 @@ with sync_playwright() as p:
     dims = pg.evaluate("makePDF(getMenu('m1'),'tavolo',true,true).then(c=>[c.width,c.height])")
     dimw = pg.evaluate("makePDF(getMenu('m1'),'tavolo',true).then(c=>[c.width,c.height])")
     ok(dims == [2380, 3368] and dimw == [1785, 2526], f'PDF da stampare a risoluzione più alta ({dims[0]}×{dims[1]} contro {dimw[0]}×{dimw[1]})')
+    # nei menù verticali il testo cresce se c'è spazio libero, e non esce mai dallo spazio sopra l'illustrazione
+    FS = """n=>{const m={...getMenu('m1'),templateId:'tpl-pecore',sections:[{name:'Antipasti',items:Array.from({length:n},(_,i)=>({name:'Portata di prova numero '+(i+1)+' con contorno di stagione'}))}]};
+      const h=document.getElementById('rh');h.innerHTML=pageHTML(m,tplOf(m),'tavolo','it');const pg=h.firstElementChild;fitPage(pg);
+      const f=pg.querySelector('.v-flow'),inn=f.firstElementChild,r=[parseFloat(inn.style.fontSize),inn.offsetHeight<=f.clientHeight];h.innerHTML='';return r}"""
+    corto, medio, lungo = pg.evaluate(FS, 4), pg.evaluate(FS, 18), pg.evaluate(FS, 40)
+    ok(abs(corto[0] - 24.7) < 0.01 and corto[1], f'menù verticale corto: testo ingrandito del 30% ({corto[0]:.1f} contro 19)')
+    ok(19 < medio[0] < 24.7 and medio[1], f'menù medio: testo ingrandito quanto basta a riempire lo spazio ({medio[0]:.1f})')
+    ok(lungo[0] < 19 and lungo[1], f'menù lungo: testo rimpicciolito come prima ({lungo[0]:.1f})')
     # i menù verticali (9:16) devono uscire su una pagina A4, centrati, in tutte e due le versioni e anche per WhatsApp
     BOX = """async([mode,pr])=>{const m={...getMenu('m1'),templateId:'tpl-pecore',priceAdult:50};const t=new TextDecoder('latin1').decode(await (await makePDF(m,mode,false,pr)).arrayBuffer());
       const b=t.match(/\\/MediaBox\\s*\\[([^\\]]+)\\]/)[1].trim().split(/\\s+/).map(Number),c=t.match(/([\\d.]+) 0 0 ([\\d.]+) ([\\d.]+) ([\\d.]+) cm/).slice(1).map(Number);return [b[2],b[3],c[0],c[1],c[2]]}"""

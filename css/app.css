@@ -165,11 +165,11 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 .v-date{position:absolute;left:0;right:0;top:208.3px;font-size:52px;line-height:1.174}
 .v-flow{position:absolute;left:40px;right:40px;top:318.3px}
 .v-in{font-size:19px}
-.v-sec-t{font-size:1.5105em;font-weight:700;line-height:1.174;margin-bottom:.54em}
-.v-sec+.v-sec .v-sec-t{margin-top:1.36em}
-.v-sec+.v-sec.nt{margin-top:2.05em}
-.v-it{line-height:1.421;margin-bottom:.3em;white-space:pre-line}
-.v-foot{margin-top:2.25em;font-size:.926em;line-height:1.364;white-space:pre-line}
+.v-sec-t{font-size:1.5105em;font-weight:700;line-height:1.174;margin-bottom:calc(.54em*var(--sp,1))}
+.v-sec+.v-sec .v-sec-t{margin-top:calc(1.36em*var(--sp,1))}
+.v-sec+.v-sec.nt{margin-top:calc(2.05em*var(--sp,1))}
+.v-it{line-height:1.421;margin-bottom:calc(.3em*var(--sp,1));white-space:pre-line;text-wrap:balance}
+.v-foot{margin-top:calc(2.25em*var(--sp,1));font-size:.926em;line-height:1.364;white-space:pre-line}
 .v-notes{margin-top:.8em;font-size:.9em;font-style:italic}
 .v-empty,.e-empty{opacity:.45;font-style:italic}
 .pg-e{font-family:Antic,sans-serif}

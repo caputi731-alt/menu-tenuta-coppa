@@ -126,6 +126,7 @@ function fitPage(pg){fitPageRaw(pg);
   if(pg.classList.contains('pg-l')){const A=pg.querySelector('.l-a'),B=pg.querySelector('.l-b');k=Math.min(k,parseFloat(A.style.fontSize)/LIB.fs);if(Math.max(A.offsetHeight,B.offsetHeight)>LIB.bottom-LIB.top+1)over=true}
   return{k,over};
 }
+const V_GROW=1.3; // ingrandimento massimo del testo nei menù verticali corti
 function fitPageRaw(pg){
   if(pg.classList.contains('pg-lc')){
     const ti=pg.querySelector('.lc-t');let fs=44;ti.style.fontSize=fs+'px';
@@ -150,6 +151,14 @@ function fitPageRaw(pg){
     while(ti.scrollWidth>ti.clientWidth+1&&fs>26){fs--;ti.style.fontSize=fs+'px'}
     const f=pg.querySelector('.v-flow'),inn=f.firstElementChild;let k=1,n=0;inn.style.fontSize='19px';
     while(inn.offsetHeight>f.clientHeight&&k>.45&&n++<90){k*=.97;inn.style.fontSize=(19*k)+'px'}
+    // Menù che non riempie la pagina: il testo cresce (al massimo del 30%) finché occupa lo spazio libero sopra
+    // l'illustrazione. Se a spaziatura normale non arriva al massimo, gli stacchi fra le sezioni si stringono
+    // di un quinto e riprova: a quel punto conta di più la grandezza delle scritte.
+    inn.style.removeProperty('--sp');
+    if(k===1){const max=f.clientHeight*.95;let g=1;
+      const cresci=()=>{while(g<V_GROW){const t=Math.min(V_GROW,g+.01);inn.style.fontSize=(19*t)+'px';if(inn.offsetHeight>max){inn.style.fontSize=(19*g)+'px';break}g=t}};
+      cresci();
+      if(g<V_GROW){const prima=g;inn.style.setProperty('--sp','.8');cresci();if(g<prima+.02){g=prima;inn.style.removeProperty('--sp');inn.style.fontSize=(19*g)+'px'}}}
   }else{
     const cols=[...pg.querySelectorAll('.e-col')];
     cols.forEach(c=>{const h=c.querySelector('.e-h');let fs=19.5;h.style.whiteSpace='nowrap';h.style.top='103px';h.style.fontSize=fs+'px';

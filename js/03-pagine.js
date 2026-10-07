@@ -224,13 +224,6 @@ async function makeBookletSheet(m,holes){
   });
   return pdf.output('blob');
 }
-// menù verticale (9:16) da stampare: su A4 a tutta altezza, centrato, con margini laterali uguali
-async function makeVerticalA4(m){
-  const cv=await makePDF(m,'tavolo',true,true),w=297*cv.width/cv.height;
-  const pdf=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
-  pdf.addImage(cv.toDataURL('image/jpeg',0.95),'JPEG',(210-w)/2,0,w,297);
-  return pdf.output('blob');
-}
 // forPrint: risoluzione più alta (circa 290–370 dpi sul foglio) per i PDF da stampare; per WhatsApp resta quella leggera
 async function makePDF(m,mode,asCanvas,forPrint){
   if(!window.html2canvas||!window.jspdf)throw new Error('librerie non caricate. Riapri l\'app.');
@@ -242,9 +235,18 @@ async function makePDF(m,mode,asCanvas,forPrint){
   try{
     const canvas=await html2canvas(pg,{scale:forPrint?(L.print||L.scale):L.scale,backgroundColor:t.bgColor||'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0});
     if(asCanvas)return canvas;
+    const img=canvas.toDataURL('image/jpeg',forPrint?0.95:0.92);
+    if(L===LAYOUTS.verticale){
+      // Il verticale (9:16) non è un formato di carta: in una pagina di quella misura, stampando su A4 il menù
+      // finisce rimpicciolito contro il bordo sinistro. Il PDF è quindi sempre un A4, con il menù a tutta altezza e centrato.
+      const pdf=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'}),iw=297*L.w/L.h,bg=String(t.bgColor||'#ffffff').toLowerCase();
+      if(bg!=='#ffffff'&&bg!=='#fff'){pdf.setFillColor(bg);pdf.rect(0,0,210,297,'F')}
+      pdf.addImage(img,'JPEG',(210-iw)/2,0,iw,297);
+      return pdf.output('blob');
+    }
     const w=L.w*PT_MM,h=L.h*PT_MM;
     const pdf=new window.jspdf.jsPDF({orientation:w>h?'l':'p',unit:'mm',format:[w,h]});
-    pdf.addImage(canvas.toDataURL('image/jpeg',forPrint?0.95:0.92),'JPEG',0,0,w,h);
+    pdf.addImage(img,'JPEG',0,0,w,h);
     return pdf.output('blob');
   }finally{host.innerHTML=''}
 }
@@ -252,8 +254,8 @@ async function doPDF(){
   const m=getMenu(ui.editId);if(!m)return;const mode=ui.pv.mode;
   busy(true,'Creo il PDF');
   try{
-    const lay=tplOf(m).layout,lib=lay==='libretto'&&mode==='tavolo',vA4=mode==='tavolo'&&!['libretto','evento','classico'].includes(lay);
-    const blob=lib?await makeBookletSheet(m,m.holes!==false):vA4?await makeVerticalA4(m):await makePDF(m,mode,false,true);
+    const lay=tplOf(m).layout,lib=lay==='libretto'&&mode==='tavolo';
+    const blob=lib?await makeBookletSheet(m,m.holes!==false):await makePDF(m,mode,false,true);
     const name=`${lib?'Libretto-da-stampare':mode==='tavolo'?'Menu-tavolo':'Proposta'}_${slug(heading(m)+' '+(m.client||''))}_${fmtDash(m.date)||'senza-data'}${ui.pv.lang==='en'?'_EN':''}.pdf`;
     ui.sheet={type:'file',blob,name,mime:'application/pdf',title:lib?'Libretto pronto da stampare':mode==='tavolo'?'Menù tavolo pronto':'Proposta pronta'};
   }catch(e){toast('PDF non creato: '+(e.message||e))}

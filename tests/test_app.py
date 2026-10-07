@@ -205,6 +205,14 @@ with sync_playwright() as p:
     dims = pg.evaluate("makePDF(getMenu('m1'),'tavolo',true,true).then(c=>[c.width,c.height])")
     dimw = pg.evaluate("makePDF(getMenu('m1'),'tavolo',true).then(c=>[c.width,c.height])")
     ok(dims == [2380, 3368] and dimw == [1785, 2526], f'PDF da stampare a risoluzione più alta ({dims[0]}×{dims[1]} contro {dimw[0]}×{dimw[1]})')
+    # i menù verticali (9:16) devono uscire su una pagina A4, centrati, in tutte e due le versioni e anche per WhatsApp
+    BOX = """async([mode,pr])=>{const m={...getMenu('m1'),templateId:'tpl-pecore',priceAdult:50};const t=new TextDecoder('latin1').decode(await (await makePDF(m,mode,false,pr)).arrayBuffer());
+      const b=t.match(/\\/MediaBox\\s*\\[([^\\]]+)\\]/)[1].trim().split(/\\s+/).map(Number),c=t.match(/([\\d.]+) 0 0 ([\\d.]+) ([\\d.]+) ([\\d.]+) cm/).slice(1).map(Number);return [b[2],b[3],c[0],c[1],c[2]]}"""
+    for mode, pr in (('proposta', True), ('tavolo', True), ('proposta', False)):
+        bx = pg.evaluate(BOX, [mode, pr])
+        a4 = abs(bx[0] - 595.28) < 0.5 and abs(bx[1] - 841.89) < 0.5
+        centrato = abs(bx[4] - (bx[0] - bx[2]) / 2) < 0.5 and abs(bx[3] - bx[1]) < 0.5
+        ok(a4 and centrato, f"menù verticale, {mode}{'' if pr else ' per WhatsApp'}: pagina A4 con il menù centrato (margine {bx[4] / 72 * 25.4:.1f} mm per lato)")
     pg.click('[data-a=pdf]')
     pg.wait_for_selector('.sheet [data-a=saveAs]', timeout=60000)
     ok(pg.evaluate("ui.sheet.blob.size") > 50000, 'PDF del menù tavolo creato')

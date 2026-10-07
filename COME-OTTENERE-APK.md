@@ -70,7 +70,18 @@ nel repository.
 ## Che versione ho installato
 
 In fondo alla schermata **Altro** l'app mostra la versione (es. `1.17`): il
-numero dopo il punto è quello della build su GitHub. 
+numero dopo il punto è quello della build su GitHub. Nella sezione Releases
+restano le ultime 5 versioni; le più vecchie vengono tolte da sole.
+
+---
+
+## Cosa succede prima di ogni compilazione
+
+GitHub prova da solo l'app (archivio, backup, allergeni, creazione dei PDF) con
+i controlli in `tests/test_app.py`. Se un controllo fallisce l'APK non viene
+pubblicato e si apre una issue con l'elenco. Lo stesso succede se mancano i
+Secrets della chiave di firma: un APK firmato con un'altra chiave non si
+installerebbe sopra quello che hai.
 
 ---
 

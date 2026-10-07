@@ -383,14 +383,74 @@ const I={
 /* ---------- Archivio (IndexedDB) ---------- */
 const idb={
   _p:null,
-  open(){return this._p||(this._p=new Promise((res,rej)=>{const r=indexedDB.open('menu-app',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
+  open(){return this._p||(this._p=new Promise((res,rej)=>{const r=indexedDB.open('menu-app',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>{this._p=null;rej(r.error)};r.onblocked=()=>{this._p=null;rej(new Error('archivio bloccato'))}}))},
   async get(k){const db=await this.open();return new Promise((res,rej)=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
-  async set(k,v){const db=await this.open();return new Promise((res,rej)=>{const tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+  async keys(){const db=await this.open();return new Promise((res,rej)=>{const q=db.transaction('kv').objectStore('kv').getAllKeys();q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
+  // scrive (o cancella, con valore undefined) più chiavi insieme: o tutte o nessuna.
+  // onabort serve per la memoria piena: in quel caso il browser annulla la transazione senza passare da onerror.
+  async setMany(pairs){const db=await this.open();return new Promise((res,rej)=>{const tx=db.transaction('kv','readwrite'),st=tx.objectStore('kv');
+    pairs.forEach(([k,v])=>v===undefined?st.delete(k):st.put(v,k));
+    tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error||new Error('scrittura non riuscita'));tx.onabort=()=>rej(tx.error||new Error('scrittura annullata'))})},
+  set(k,v){return this.setMany([[k,v]])}
 };
-let state,saveT=null;
-function save(){clearTimeout(saveT);saveT=setTimeout(flush,250)}
-function flush(){clearTimeout(saveT);saveT=null;if(state)idb.set('state',state).catch(()=>toast('Salvataggio non riuscito: memoria del telefono piena?'))}
+let state,saveT=null,canSave=false;
+// Immagini di sfondo e file della didattica pesano centinaia di KB: stanno in chiavi separate ("blob:…")
+// e nello stato salvato resta solo un riferimento, così a ogni tasto premuto si riscrive solo il testo.
+// In memoria e nel file di backup restano invece dentro lo stato, come prima.
+const REF='idb:',blobId=new Map(),blobSaved=new Set();
+const isBig=v=>typeof v==='string'&&v.startsWith('data:');
+const refOf=v=>{let id=blobId.get(v);if(!id){id=uid();blobId.set(v,id)}return id};
+function dehydrate(st){
+  const todo=new Map(),ref=v=>{const id=refOf(v);if(!blobSaved.has(id))todo.set(id,v);return REF+id};
+  const lite={...st,
+    templates:st.templates.map(t=>isBig(t.bgImage)||isBig(t.coverImage)?{...t,...(isBig(t.bgImage)?{bgImage:ref(t.bgImage)}:{}),...(isBig(t.coverImage)?{coverImage:ref(t.coverImage)}:{})}:t),
+    didattica:Object.fromEntries(Object.entries(st.didattica||{}).map(([k,o])=>[k,o&&isBig(o.data)?{...o,data:ref(o.data)}:o]))};
+  return{lite,todo};
+}
+async function hydrate(s){
+  if(!s||typeof s!=='object')return s;
+  const load=async v=>{const id=v.slice(REF.length),d=await idb.get('blob:'+id);if(isBig(d)){blobId.set(d,id);blobSaved.add(id)}return d};
+  const isRef=v=>typeof v==='string'&&v.startsWith(REF);
+  for(const t of Array.isArray(s.templates)?s.templates:[]){
+    if(isRef(t.bgImage))t.bgImage=(await load(t.bgImage))||t.origBg||'';
+    if(isRef(t.coverImage))t.coverImage=(await load(t.coverImage))||t.origCover||'';
+  }
+  for(const[k,o]of Object.entries(s.didattica||{}))if(o&&isRef(o.data)){const d=await load(o.data);if(d)o.data=d;else delete s.didattica[k]}
+  return s;
+}
+function save(){clearTimeout(saveT);saveT=setTimeout(flush,250);autoMark()}
+let saveErrT=0;
+function flush(){
+  clearTimeout(saveT);saveT=null;if(!state||!canSave)return Promise.resolve(false);
+  const{lite,todo}=dehydrate(state);
+  return idb.setMany([...[...todo].map(([id,v])=>['blob:'+id,v]),['state',lite]])
+    .then(()=>{todo.forEach((v,id)=>blobSaved.add(id));return true})
+    .catch(()=>{if(Date.now()-saveErrT>8000){saveErrT=Date.now();toast('Salvataggio non riuscito: memoria del telefono piena? Fai subito un backup da Altro.')}return false});
+}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveT)flush()});
+// elimina immagini e file non più usati da nessun template
+async function cleanBlobs(){
+  try{const ks=await idb.keys();if(ks.some(k=>String(k).startsWith('scartato-')))return;
+    const del=ks.filter(k=>String(k).startsWith('blob:')&&!blobSaved.has(String(k).slice(5)));
+    if(del.length)await idb.setMany(del.map(k=>[k,undefined]))}catch(e){}
+}
+/* ---------- Copia automatica (solo app Android) ----------
+   Una volta al giorno, se qualcosa è cambiato, l'app scrive da sola una copia completa dei dati nella
+   cartella Download/MenuTenutaCoppa del telefono. La copia resta anche se l'app viene disinstallata. */
+const AUTO_KEY='menu-auto-dirty',AUTO_DAY='menu-auto-day';
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let autoT=null,autoDirty=false;
+// chiamata a ogni modifica: la copia parte un minuto dopo l'ultima, così non si scrive mentre stai lavorando
+function autoMark(){if(!autoDirty){autoDirty=true;ls.set(AUTO_KEY,'1')}clearTimeout(autoT);autoT=setTimeout(autoCopy,60000)}
+function autoCopy(){
+  const A=window.Android;
+  if(!A||!A.autoBackup||!state||!canSave||ls.get(AUTO_KEY)!=='1')return false;
+  if(!state.menus.length&&!state.templates.some(t=>!t.builtIn))return false; // niente di tuo da proteggere
+  try{
+    if(A.autoBackup(JSON.stringify(state),`copia-automatica_${today()}.json`)){autoDirty=false;ls.set(AUTO_KEY,'0');ls.set(AUTO_DAY,today());return true}
+  }catch(e){}
+  return false;
+}
 function normalize(s){
   const d=defaultState();
   if(!s||(s.v!==2&&s.v!==3))return d; // dati della versione di prova precedente: si riparte puliti
@@ -682,19 +742,36 @@ async function doPDF(){
 }
 const AND=window.Android&&window.Android.saveFile?window.Android:null;
 const b64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(b)});
-const backupDone=s=>{if(s&&s.backup){state.settings.lastBackup=Date.now();save()}};
+const markBackup=()=>{const s=ui.sheet;if(s&&s.old)return;state.settings.lastBackup=Date.now();save()};
+const backupDone=s=>{if(s&&s.backup)markBackup()};
 async function shareFile(){
   const s=ui.sheet;
-  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,true);backupDone(s)}catch(e){toast('Condivisione non riuscita')}return}
+  if(AND){
+    try{AND.saveFile(await b64(s.blob),s.name,s.mime,true);
+      // dall'app non si può sapere se l'invio è andato a buon fine o è stato annullato: lo chiedo
+      if(s.backup){s.step='conf';setTimeout(renderSheet,800)}
+    }catch(e){toast('Condivisione non riuscita')}return}
   const file=new File([s.blob],s.name,{type:s.mime});
   try{await navigator.share({files:[file],title:s.name});backupDone(s)}catch(e){if(e.name!=='AbortError')downloadFile()}
 }
 async function downloadFile(){
   const s=ui.sheet;
-  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,false);backupDone(s)}catch(e){toast('Salvataggio non riuscito')}return}
+  if(AND){try{AND.saveFile(await b64(s.blob),s.name,s.mime,false)}catch(e){toast('Apertura non riuscita')}return} // nell'app Android apre il file, non lo salva
   const u=URL.createObjectURL(s.blob),a=document.createElement('a');
   a.href=u;a.download=s.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);backupDone(s);
 }
+// "Salva con nome" di Android: l'app sa se il file è stato scritto davvero
+let saveTok=null;
+async function saveAsNative(){
+  const s=ui.sheet;if(!s||!AND||!AND.saveAs)return;
+  try{saveTok=uid();AND.saveAs(saveTok,await b64(s.blob),s.name,s.mime)}catch(e){saveTok=null;toast('Salvataggio non riuscito')}
+}
+window.onNativeSaved=(tok,ok)=>{
+  if(tok!==saveTok)return;saveTok=null;
+  if(!ok){toast('Non salvato: nessun file è stato scritto');return}
+  const s=ui.sheet;if(s&&s.backup){markBackup();ui.sheet=null;renderSheet();render(true)}
+  toast('File salvato');
+};
 const canShareFiles=()=>{if(AND)return true;try{return!!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}))}catch(e){return false}};
 
 /* ---------- Componenti ---------- */
@@ -785,8 +862,11 @@ function vSettings(){
   <section class="grp"><h2>Portate del menù adulti</h2><div class="list">${state.categories.map((c,i)=>`<div class="crow"><span>${esc(c)}<small>${state.dishes.filter(d=>d.cat===c).length} portate · <i>${esc(catEn(c))}</i></small></span><button class="ib" data-a="catEn" data-i="${i}" aria-label="Nome in inglese" style="font-size:12px;font-weight:700;color:var(--olive)">EN</button><button class="ib" data-a="catMove" data-i="${i}" data-d="-1" aria-label="Sposta su">${I.up}</button><button class="ib" data-a="catMove" data-i="${i}" data-d="1" aria-label="Sposta giù">${I.down}</button><button class="ib" data-a="catRen" data-i="${i}" aria-label="Rinomina">${I.pen}</button><button class="ib" data-a="catDel" data-i="${i}" aria-label="Elimina">${I.trash}</button></div>`).join('')}</div>
   <div class="pk-new" style="margin-top:8px"><input class="inp" id="newcat" placeholder="es. Contorni"><button class="btn" data-a="catAdd">Aggiungi</button></div>
   <p class="hint">Queste sono le sezioni che compaiono sul menù (Antipasti, Primi Piatti…). Valgono per i nuovi menù.</p></section>
-  <section class="grp"><h2>Backup</h2><div class="card"><p style="margin:0 0 12px;font-size:15px">Portate, template e menù sono salvati solo su questo telefono. Esporta un backup ogni tanto (su Drive, email o WhatsApp) per non perderli e per spostarli su un altro dispositivo.</p>
-  <div class="btns two"><button class="btn" data-a="export">${I.dl}Esporta</button><button class="btn" data-a="import">${I.share}Importa</button></div></div></section>
+  <section class="grp"><h2>Backup</h2><div class="card"><p style="margin:0 0 12px;font-size:15px">Portate, template e menù sono salvati solo su questo telefono. Esporta un backup ogni tanto (su Drive o via email) per non perderli e per spostarli su un altro dispositivo.</p>
+  <p class="hint" style="margin:0 2px 12px">Ultimo backup: <b>${s.lastBackup?new Date(s.lastBackup).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'}):'mai fatto'}</b>${window.Android&&window.Android.autoBackup?`<br>Copia automatica sul telefono: <b>${ls.get(AUTO_DAY)?fmtLong(ls.get(AUTO_DAY)).replace(/^./,c=>c.toLowerCase()):'non ancora fatta'}</b>, nella cartella Download/MenuTenutaCoppa. Serve se l'app viene disinstallata o si guasta; non sostituisce il backup fuori dal telefono.`:''}</p>
+  <div class="btns two"><button class="btn" data-a="export">${I.dl}Esporta</button><button class="btn" data-a="import">${I.share}Importa</button></div>
+  ${ui.preImport?`<button class="btn wide" style="margin-top:8px" data-a="undoImport">Riprendi i dati di prima dell'ultima importazione</button>`:''}
+  ${ui.scartati&&ui.scartati.length?`<button class="btn wide" style="margin-top:8px" data-a="exportOld">Esporta i dati messi da parte</button><p class="hint">Sono dati che questa versione dell'app non ha saputo leggere all'avvio.</p>`:''}</div></section>
   </main>`+navbar();
 }
 function totText(m){
@@ -1263,10 +1343,17 @@ function renderSheet(){
     <label class="fld"><span>Messaggio</span><textarea class="inp" id="watext" rows="7" style="min-height:160px">${esc(sh.text)}</textarea></label>
     <div class="btns"><button class="btn wa" data-a="waSend">${I.wa}Apri WhatsApp</button><button class="btn" data-a="waOther">${I.share}Invia con un'altra app</button></div>
     <p class="hint" style="margin-top:10px">${AND?'Si fa in due passaggi: prima WhatsApp apre la chat con il messaggio già scritto, poi torni qui e alleghi il file. Sei sempre tu a toccare Invia.':'Il messaggio viene copiato anche negli appunti: se non compare sotto al file, tieni premuto nel campo di testo e scegli Incolla.'}</p>`;
+  }else if(sh.type==='file'&&sh.backup&&AND&&sh.step==='conf'){
+    h=head(sh.title)+`<p style="margin:0 2px 16px;font-size:15px">Hai inviato o salvato il file fino in fondo? Se hai annullato o chiuso l'altra app, il backup non è stato fatto.</p>
+    <div class="btns"><button class="btn pri" data-a="bkYes">${I.check}Sì, il backup è al sicuro</button><button class="btn" data-a="bkNo">No, riprovo</button></div>`;
+  }else if(sh.type==='file'&&sh.backup&&AND){
+    h=head(sh.title)+`<p class="hint" style="margin-bottom:14px;word-break:break-all">${esc(sh.name)}</p>
+    <div class="btns">${AND.saveAs?`<button class="btn pri" data-a="saveAs">${I.dl}Salva in una cartella (telefono, Drive…)</button>`:''}<button class="btn ${AND.saveAs?'':'pri'}" data-a="shareFile">${I.share}Invia (email, WhatsApp…)</button></div>
+    <p class="hint" style="margin-top:12px">Il file contiene nomi e telefoni dei clienti: mandalo solo a te stesso. Per proteggerti dalla rottura o dalla perdita del telefono deve finire fuori dal telefono (Drive o email).</p>`;
   }else if(sh.type==='file'){
     const cs=canShareFiles();
     h=head(sh.title)+`<p class="hint" style="margin-bottom:14px;word-break:break-all">${esc(sh.name)}</p>
-    <div class="btns">${cs?`<button class="btn pri" data-a="shareFile">${I.share}Condividi (WhatsApp, email, stampa…)</button>`:''}<button class="btn ${cs?'':'pri'}" data-a="downloadFile">${I.dl}Scarica</button></div>`;
+    <div class="btns">${cs?`<button class="btn pri" data-a="shareFile">${I.share}Condividi (WhatsApp, email, stampa…)</button>`:''}${AND&&AND.saveAs?`<div class="btns two"><button class="btn" data-a="saveAs">${I.dl}Salva</button><button class="btn" data-a="downloadFile">${I.eye}Apri</button></div>`:`<button class="btn ${cs?'':'pri'}" data-a="downloadFile">${I.dl}Scarica</button>`}</div>`;
   }
   el.innerHTML=`<div class="shbg" data-a="closeSheet"></div><div class="sheet" role="dialog" aria-modal="true">${h}</div>`;
   if(sh.type==='dish'&&!sh.id)setTimeout(()=>$('#dname')?.focus(),250);
@@ -1284,6 +1371,13 @@ function render(keep){
 let toastT;
 function toast(msg){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),3400)}
 function busy(on,msg){let b=$('.busy');if(on){if(!b){b=document.createElement('div');b.className='busy';document.body.appendChild(b)}b.innerHTML=`<div><div class="spin"></div>${esc(msg)}</div>`}else b?.remove()}
+// L'archivio non si legge: non apro un archivio vuoto, che al primo salvataggio sovrascriverebbe quello vero
+function fatal(){
+  canSave=false;
+  $('#app').innerHTML=`<main class="main" style="padding-top:20vh;text-align:center"><h1 style="font:italic 500 30px/1.2 'Cormorant Garamond',Georgia,serif;margin:0 0 14px">Archivio non raggiungibile</h1>
+  <p style="color:var(--muted);margin:0 0 22px">L'app non riesce a leggere i dati salvati sul telefono. Per non rischiare di sovrascriverli non ho aperto un archivio vuoto.<br><br>Chiudi del tutto l'app e riaprila. Se succede ancora, riavvia il telefono.</p>
+  <button class="btn pri" data-a="reload">Riprova</button></main>`;
+}
 function leaveEdit(){
   if(ui.view!=='edit')return;
   const m=getMenu(ui.editId);
@@ -1297,6 +1391,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]');if(!b)return;
   const a=b.dataset.a,d=b.dataset,m=ui.editId?getMenu(ui.editId):null,K=!!d.k;
   switch(a){
+    case 'reload':location.reload();break;
     case 'nav':leaveEdit();ui.view=d.v;render();break;
     case 'calMove':{let mm=ui.cal.m+Number(d.d),yy=ui.cal.y;if(mm<0){mm=11;yy--}if(mm>11){mm=0;yy++}ui.cal={y:yy,m:mm};render(true);break}
     case 'calToday':{const n=new Date();ui.cal={y:n.getFullYear(),m:n.getMonth()};ui.selDate=today();render();break}
@@ -1400,6 +1495,11 @@ document.addEventListener('click',e=>{
     case 'drDel':state.settings.drinkPresets.splice(+d.i,1);save();render(true);break;
     case 'export':{const blob=new Blob([JSON.stringify(state)],{type:'application/json'});ui.sheet={type:'file',blob,name:`backup-menu_${fmtDash(today())}.json`,mime:'application/json',title:'Backup pronto',backup:true};renderSheet();break}
     case 'import':$('#importfile').click();break;
+    case 'undoImport':undoImport();break;
+    case 'exportOld':exportOld();break;
+    case 'saveAs':saveAsNative();break;
+    case 'bkYes':markBackup();ui.sheet=null;renderSheet();render(true);toast('Backup segnato come fatto');break;
+    case 'bkNo':ui.sheet.step=null;renderSheet();break;
   }
 });
 document.addEventListener('input',e=>{
@@ -1450,11 +1550,34 @@ async function setBg(src){
   }catch(err){toast(err.message)}
 }
 async function applyBackup(text){
+  let obj;
   try{
-    const obj=JSON.parse(text);
+    obj=JSON.parse(text);
     if(!obj||!Array.isArray(obj.menus)||!Array.isArray(obj.dishes))throw new Error('Il file non è un backup di questa app.');
-    if(confirm(`Il backup contiene ${obj.menus.length} menù e ${obj.dishes.length} portate. Sostituire i dati attuali?`)){state=normalize(obj);flush();render();toast('Backup importato')}
-  }catch(err){toast(err.message||'File non valido')}
+    if(obj.v!==2&&obj.v!==3)throw new Error("Questo backup viene da una versione diversa dell'app: aggiorna l'app e riprova.");
+  }catch(err){toast(err instanceof SyntaxError?'Il file non è un backup di questa app.':(err.message||'File non valido'));return}
+  if(!confirm(`Il backup contiene ${obj.menus.length} menù e ${obj.dishes.length} portate. Sostituire i dati attuali?\n\nI dati di adesso vengono messi da parte: puoi riprenderli da Altro → Backup.`))return;
+  await swapState(obj,'Backup importato');
+}
+// sostituisce i dati tenendo da parte quelli attuali (un solo livello di "annulla")
+async function swapState(obj,msg){
+  try{await idb.set('prima-importazione',{quando:Date.now(),dati:JSON.stringify(state)})}
+  catch(e){toast('Memoria insufficiente per mettere da parte i dati attuali: non ho cambiato nulla.');return}
+  ui.preImport=true;state=normalize(obj);ui.sheet=null;ui.editId=null;ui.view='settings';
+  const ok=await flush();render();renderSheet();if(ok)toast(msg);
+}
+async function undoImport(){
+  try{
+    const p=await idb.get('prima-importazione');if(!p||!p.dati){ui.preImport=false;render(true);return}
+    const obj=JSON.parse(p.dati);
+    if(!confirm(`Riprendere i dati del ${new Date(p.quando).toLocaleDateString('it-IT',{day:'numeric',month:'long'})}, prima dell'importazione (${obj.menus.length} menù, ${obj.dishes.length} portate)?\n\nQuelli di adesso vengono messi da parte al loro posto.`))return;
+    await swapState(obj,'Dati di prima ripristinati');
+  }catch(e){toast('Ripristino non riuscito')}
+}
+async function exportOld(){
+  try{const k=ui.scartati[ui.scartati.length-1],v=await idb.get(k);
+    ui.sheet={type:'file',blob:new Blob([JSON.stringify(v)],{type:'application/json'}),name:`dati-messi-da-parte_${fmtDash(today())}.json`,mime:'application/json',title:'Dati messi da parte',backup:true,old:true};renderSheet();
+  }catch(e){toast('File non creato')}
 }
 
 document.addEventListener('keydown',e=>{
@@ -1477,8 +1600,21 @@ let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(m
 
 /* ---------- Avvio ---------- */
 (async()=>{
-  try{const s=await idb.get('state');state=normalize(s);if(!s||s.v!==2)flush()}
-  catch(e){state=normalize(null);toast('Archivio non disponibile: i dati non verranno salvati')}
+  let s;
+  try{
+    try{s=await idb.get('state')}
+    catch(e){idb._p=null;await new Promise(r=>setTimeout(r,500));s=await idb.get('state')} // secondo tentativo
+    if(s&&s.v!==2&&s.v!==3){
+      // dati di una versione che questa app non conosce: li metto da parte invece di cancellarli
+      await idb.set('scartato-'+Date.now(),s);s=null;
+      setTimeout(()=>toast('I dati salvati non sono leggibili da questa versione: ne ho tenuta una copia in Altro → Backup'),600);
+    }else s=await hydrate(s);
+    const ks=await idb.keys();
+    ui.scartati=ks.filter(k=>String(k).startsWith('scartato-')).sort();ui.preImport=ks.includes('prima-importazione');
+  }catch(e){return fatal()}
+  state=normalize(s);canSave=true;
+  flush().then(ok=>{if(ok)cleanBlobs()});
+  if(ls.get(AUTO_KEY)==='1')setTimeout(autoCopy,4000); // modifiche della volta scorsa non ancora copiate
   render();
   loadFonts().then(mountPreviews);
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}

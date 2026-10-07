@@ -55,9 +55,15 @@ sopra: i dati restano.
 ## Dove stanno i dati
 
 Dentro l'app, sul telefono. Non vengono caricati da nessuna parte e non sono
-nel repository. Fai ogni tanto **Impostazioni → Esporta** e salva il file di
-backup su Drive o mandatelo via email: è l'unico modo per recuperarli se il
-telefono si rompe o se disinstalli l'app.
+nel repository.
+
+- **Copia automatica** (Android 10 o successivo): nei giorni in cui modifichi
+  qualcosa l'app salva da sola una copia in `Download/MenuTenutaCoppa` e tiene
+  le ultime 7. Resta sul telefono anche se disinstalli l'app; per riprenderla
+  usa **Impostazioni → Importa** e scegli il file.
+- **Backup fuori dal telefono**: ogni tanto fai **Impostazioni → Esporta →
+  Salva in una cartella** e scegli Google Drive. È l'unico modo per recuperare
+  i dati se il telefono si rompe o va perso.
 
 ---
 

@@ -30,6 +30,16 @@ public class MainActivity extends AppCompatActivity {
     private ValueCallback<Uri[]> fileCallback;
     private ActivityResultLauncher<String> filePicker;
 
+    /** "Salva con nome": il file aspetta qui finché non scegli dove metterlo. */
+    private ActivityResultLauncher<Intent> salvaCome;
+    private byte[] daSalvare;
+    private String tokenSalva;
+
+    /** Cartella delle copie automatiche dentro Download e quante tenerne. */
+    private static final String CARTELLA_COPIE = "MenuTenutaCoppa";
+    private static final String PREFISSO_COPIE = "copia-automatica_";
+    private static final int COPIE_DA_TENERE = 7;
+
     @Override
     protected void onCreate(Bundle stato) {
         super.onCreate(stato);
@@ -39,6 +49,38 @@ public class MainActivity extends AppCompatActivity {
             if (fileCallback == null) return;
             fileCallback.onReceiveValue(uri == null ? null : new Uri[]{uri});
             fileCallback = null;
+        });
+
+        salvaCome = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), esito -> {
+            final byte[] dati = daSalvare;
+            final String token = tokenSalva;
+            daSalvare = null;
+            tokenSalva = null;
+            final Uri dove = (esito.getResultCode() == RESULT_OK && esito.getData() != null)
+                    ? esito.getData().getData() : null;
+            if (dati == null || dove == null) {   // annullato, oppure l'app è stata riavviata nel frattempo
+                rispondiSalvato(token, false);
+                return;
+            }
+            new Thread(() -> {
+                boolean ok = false;
+                try (java.io.OutputStream out = getContentResolver().openOutputStream(dove)) {
+                    if (out != null) {
+                        out.write(dati);
+                        out.flush();
+                        ok = true;
+                    }
+                } catch (Exception e) {
+                    ok = false;
+                }
+                // un file rimasto a metà sarebbe un backup che sembra buono e non lo è
+                if (!ok) {
+                    try {
+                        android.provider.DocumentsContract.deleteDocument(getContentResolver(), dove);
+                    } catch (Exception ignored) { }
+                }
+                rispondiSalvato(token, ok);
+            }).start();
         });
 
         web = new WebView(this);
@@ -109,8 +151,121 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /** Dice all'app web se il "Salva con nome" ha scritto davvero il file. */
+    private void rispondiSalvato(String token, boolean ok) {
+        if (token == null) return;
+        final String js = "window.onNativeSaved&&window.onNativeSaved('"
+                + token.replaceAll("[^A-Za-z0-9]", "") + "'," + ok + ")";
+        runOnUiThread(() -> {
+            if (web != null) web.evaluateJavascript(js, null);
+        });
+    }
+
     /** Funzioni che l'app web può chiamare: salvataggio e condivisione dei PDF. */
     private class Ponte {
+        /**
+         * Apre il "Salva con nome" di Android (telefono, Drive…). L'esito arriva all'app web
+         * con window.onNativeSaved(token, true|false): true solo se il file è stato scritto.
+         */
+        @JavascriptInterface
+        public void saveAs(String token, String base64, String nome, String tipo) {
+            try {
+                final byte[] dati = Base64.decode(base64, Base64.DEFAULT);
+                final Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType(tipo == null || tipo.isEmpty() ? "application/octet-stream" : tipo);
+                i.putExtra(Intent.EXTRA_TITLE, nome);
+                runOnUiThread(() -> {
+                    try {
+                        daSalvare = dati;
+                        tokenSalva = token;
+                        salvaCome.launch(i);
+                    } catch (Exception e) {
+                        daSalvare = null;
+                        tokenSalva = null;
+                        rispondiSalvato(token, false);
+                    }
+                });
+            } catch (Exception e) {
+                rispondiSalvato(token, false);
+            }
+        }
+
+        /**
+         * Copia automatica dei dati in Download/MenuTenutaCoppa: resta sul telefono anche se
+         * l'app viene disinstallata. Una copia per giorno, si tengono le ultime 7.
+         * Serve Android 10 o successivo; sui precedenti restituisce false e non fa nulla.
+         */
+        @JavascriptInterface
+        public boolean autoBackup(String testo, String nome) {
+            if (android.os.Build.VERSION.SDK_INT < 29) return false;
+            final String pulito = nome.replaceAll("[^A-Za-z0-9._-]", "_");
+            if (!pulito.startsWith(PREFISSO_COPIE)) return false;
+            final android.content.ContentResolver cr = getContentResolver();
+            final Uri raccolta = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+            final String cartella = android.os.Environment.DIRECTORY_DOWNLOADS + "/" + CARTELLA_COPIE + "/";
+            Uri nuovo = null;
+            try {
+                // copie già presenti (Android mostra all'app solo i file creati da lei)
+                java.util.ArrayList<String> nomi = new java.util.ArrayList<>();
+                java.util.ArrayList<Long> ids = new java.util.ArrayList<>();
+                try (android.database.Cursor c = cr.query(raccolta,
+                        new String[]{android.provider.MediaStore.MediaColumns._ID,
+                                android.provider.MediaStore.MediaColumns.DISPLAY_NAME},
+                        android.provider.MediaStore.MediaColumns.RELATIVE_PATH + " LIKE ?",
+                        new String[]{"%" + CARTELLA_COPIE + "%"}, null)) {
+                    while (c != null && c.moveToNext()) {
+                        String n = c.getString(1);
+                        if (n != null && n.startsWith(PREFISSO_COPIE)) {
+                            ids.add(c.getLong(0));
+                            nomi.add(n);
+                        }
+                    }
+                }
+
+                // prima scrivo la copia nuova per intero, solo dopo tocco quelle vecchie
+                android.content.ContentValues v = new android.content.ContentValues();
+                v.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, pulito);
+                v.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/json");
+                v.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, cartella);
+                v.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1);
+                nuovo = cr.insert(raccolta, v);
+                if (nuovo == null) return false;
+                try (java.io.OutputStream out = cr.openOutputStream(nuovo)) {
+                    if (out == null) throw new Exception("file non apribile");
+                    out.write(testo.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    out.flush();
+                }
+                android.content.ContentValues fine = new android.content.ContentValues();
+                fine.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0);
+                cr.update(nuovo, fine, null, null);
+
+                // la copia di oggi sostituisce quella precedente di oggi; delle altre restano le più recenti
+                String radice = pulito.endsWith(".json") ? pulito.substring(0, pulito.length() - 5) : pulito;
+                java.util.ArrayList<String> altre = new java.util.ArrayList<>();
+                for (int k = 0; k < nomi.size(); k++) {
+                    if (nomi.get(k).startsWith(radice)) {
+                        cr.delete(android.content.ContentUris.withAppendedId(raccolta, ids.get(k)), null, null);
+                    } else {
+                        altre.add(nomi.get(k));
+                    }
+                }
+                java.util.Collections.sort(altre, java.util.Collections.reverseOrder());
+                for (int k = COPIE_DA_TENERE - 1; k < altre.size(); k++) {
+                    int pos = nomi.indexOf(altre.get(k));
+                    cr.delete(android.content.ContentUris.withAppendedId(raccolta, ids.get(pos)), null, null);
+                }
+                return true;
+            } catch (Exception e) {
+                if (nuovo != null) {
+                    try {
+                        cr.delete(nuovo, null, null);
+                    } catch (Exception ignored) { }
+                }
+                return false;
+            }
+        }
+
         @JavascriptInterface
         public void saveFile(String base64, String nome, String tipo, boolean condividi) {
             try {
